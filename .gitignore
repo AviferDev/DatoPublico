@@ -1,3 +1,5 @@
-.agents/
+# IDE (IntelliJ / Android Studio)
 .idea/
+
+# macOS
 .DS_Store

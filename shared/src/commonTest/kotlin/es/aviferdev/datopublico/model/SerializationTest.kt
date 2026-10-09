@@ -21,9 +21,9 @@ class SerializationTest {
         titulo = "Resolución de convocatoria de plazas",
         fechaPublicacion = "2026-10-09",
         organismo = "Ministerio de Hacienda",
-        seccion = SeccionBoe.II_B,
+        seccion = SeccionBoeDto.II_B,
         epigrafe = "II.B. Autoridades y personal - Oposiciones y concursos",
-        categoria = Categoria.OPOSICIONES_Y_EMPLEO_PUBLICO,
+        categoria = CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
         urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-B-2026-1234",
         resumen = resumen,
         plazo = PlazoDto(fechaLimite = "2026-10-30", descripcion = "20 días hábiles"),
@@ -46,9 +46,9 @@ class SerializationTest {
             titulo = "Ley de prueba",
             fechaPublicacion = "2026-10-09",
             organismo = null,
-            seccion = SeccionBoe.I,
+            seccion = SeccionBoeDto.I,
             epigrafe = null,
-            categoria = Categoria.NORMAS_Y_LEGISLACION,
+            categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
             urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
         )
 

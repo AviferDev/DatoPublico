@@ -7,36 +7,36 @@ import kotlin.test.assertEquals
 class CategoriaWireTest {
 
     private val tokensEsperados = mapOf(
-        Categoria.NORMAS_Y_LEGISLACION to "normas_y_legislacion",
-        Categoria.NOMBRAMIENTOS_Y_CESES to "nombramientos_y_ceses",
-        Categoria.OPOSICIONES_Y_EMPLEO_PUBLICO to "oposiciones_y_empleo_publico",
-        Categoria.BECAS_SUBVENCIONES_Y_AYUDAS to "becas_subvenciones_y_ayudas",
-        Categoria.PREMIOS to "premios",
-        Categoria.CONVENIOS_Y_ACUERDOS to "convenios_y_acuerdos",
-        Categoria.EDUCACION_Y_PLANES_DE_ESTUDIO to "educacion_y_planes_de_estudio",
-        Categoria.MEDIO_AMBIENTE to "medio_ambiente",
-        Categoria.RECURSOS_Y_RESOLUCIONES to "recursos_y_resoluciones",
-        Categoria.INFORMACION_PUBLICA_Y_CONCESIONES to "informacion_publica_y_concesiones",
-        Categoria.OTRAS_DISPOSICIONES_Y_ANUNCIOS to "otras_disposiciones_y_anuncios",
+        CategoriaDto.NORMAS_Y_LEGISLACION to "normas_y_legislacion",
+        CategoriaDto.NOMBRAMIENTOS_Y_CESES to "nombramientos_y_ceses",
+        CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO to "oposiciones_y_empleo_publico",
+        CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS to "becas_subvenciones_y_ayudas",
+        CategoriaDto.PREMIOS to "premios",
+        CategoriaDto.CONVENIOS_Y_ACUERDOS to "convenios_y_acuerdos",
+        CategoriaDto.EDUCACION_Y_PLANES_DE_ESTUDIO to "educacion_y_planes_de_estudio",
+        CategoriaDto.MEDIO_AMBIENTE to "medio_ambiente",
+        CategoriaDto.RECURSOS_Y_RESOLUCIONES to "recursos_y_resoluciones",
+        CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES to "informacion_publica_y_concesiones",
+        CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS to "otras_disposiciones_y_anuncios",
     )
 
     private val tokensSeccion = mapOf(
-        SeccionBoe.I to "I",
-        SeccionBoe.II_A to "II.A",
-        SeccionBoe.II_B to "II.B",
-        SeccionBoe.III to "III",
-        SeccionBoe.V_B to "V.B",
+        SeccionBoeDto.I to "I",
+        SeccionBoeDto.II_A to "II.A",
+        SeccionBoeDto.II_B to "II.B",
+        SeccionBoeDto.III to "III",
+        SeccionBoeDto.V_B to "V.B",
     )
 
     @Test
     fun categoriasUseStableSnakeCaseWireTokens() {
-        assertEquals(11, Categoria.entries.size)
+        assertEquals(11, CategoriaDto.entries.size)
         tokensEsperados.forEach { (categoria, token) ->
-            val json = DatoPublicoJson.encodeToString(Categoria.serializer(), categoria)
+            val json = DatoPublicoJson.encodeToString(CategoriaDto.serializer(), categoria)
             assertEquals("\"$token\"", json)
             assertEquals(
                 categoria,
-                DatoPublicoJson.decodeFromString(Categoria.serializer(), json),
+                DatoPublicoJson.decodeFromString(CategoriaDto.serializer(), json),
             )
         }
     }
@@ -48,13 +48,13 @@ class CategoriaWireTest {
 
     @Test
     fun seccionBoeUsesOfficialNotation() {
-        assertEquals(5, SeccionBoe.entries.size)
+        assertEquals(5, SeccionBoeDto.entries.size)
         tokensSeccion.forEach { (seccion, token) ->
-            val json = DatoPublicoJson.encodeToString(SeccionBoe.serializer(), seccion)
+            val json = DatoPublicoJson.encodeToString(SeccionBoeDto.serializer(), seccion)
             assertEquals("\"$token\"", json)
             assertEquals(
                 seccion,
-                DatoPublicoJson.decodeFromString(SeccionBoe.serializer(), json),
+                DatoPublicoJson.decodeFromString(SeccionBoeDto.serializer(), json),
             )
         }
     }

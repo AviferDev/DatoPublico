@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * cliente.
  */
 @Serializable
-enum class SeccionBoe {
+enum class SeccionBoeDto {
     @SerialName("I")
     I,
 

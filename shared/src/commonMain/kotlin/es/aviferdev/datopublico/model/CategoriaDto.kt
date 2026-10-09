@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * compartido entre backend y cliente y no debe renombrarse sin una migración.
  */
 @Serializable
-enum class Categoria {
+enum class CategoriaDto {
     @SerialName("normas_y_legislacion")
     NORMAS_Y_LEGISLACION,
 

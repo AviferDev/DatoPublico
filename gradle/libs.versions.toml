@@ -1,9 +1,10 @@
 # Version catalog de DatoPublico.
 #
-# FT00001 solo activa Kotlin multiplatform/JVM y `kotlin("test")`. El resto de
-# versiones (AGP, Compose Multiplatform, Ktor, serialization, coroutines) quedan
-# predeclaradas para que las features siguientes (FT00002/04/05) las activen sin
-# tocar la raíz del build.
+# FT00001 activó Kotlin multiplatform/JVM y `kotlin("test")`; FT00002 activó la
+# serialización; FT00003 activa Flyway y el driver PostgreSQL. El resto de
+# versiones (AGP, Compose Multiplatform, Ktor, coroutines) quedan predeclaradas
+# para que las features siguientes (FT00004/05) las activen sin tocar la raíz del
+# build.
 
 [versions]
 kotlin = "2.1.20"
@@ -12,6 +13,8 @@ composeMultiplatform = "1.7.3"
 ktor = "3.0.3"
 kotlinxSerialization = "1.8.0"
 kotlinxCoroutines = "1.10.1"
+flyway = "11.20.3"
+postgresql = "42.7.14"
 androidMinSdk = "26"
 androidTargetSdk = "35"
 androidCompileSdk = "35"
@@ -20,6 +23,12 @@ androidCompileSdk = "35"
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+
+# Flyway 10+ reparte los dialectos por motor: PostgreSQL necesita
+# `flyway-database-postgresql` además del driver JDBC. Ambas van en la
+# configuración `flyway` de `:backend` (no en el classpath de producción).
+flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -35,3 +44,6 @@ compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMu
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
+# Tareas Flyway explícitas (`flywayMigrate`/`flywayInfo`); nunca se enganchan a
+# `build`/`check` (la CI corre sin base de datos).
+flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }

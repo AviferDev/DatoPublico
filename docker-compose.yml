@@ -1,0 +1,32 @@
+# Entorno local de base de datos de DatoPublico (FT00003).
+#
+# Levanta PostgreSQL 17 con la extensión pgvector. Los valores de conexión se
+# resuelven del entorno (`.env`, ignorado por git) con valores por defecto de
+# desarrollo; nunca son secretos reales (los de producción llegan en FT00041).
+#
+# Las migraciones **no** las aplica este compose, sino Flyway desde Gradle:
+#   ./gradlew :backend:flywayMigrate
+services:
+  postgres:
+    # Imagen oficial de pgvector, etiqueta fijada a PostgreSQL 17 (multi-arq,
+    # funciona en Apple Silicon/Colima).
+    image: pgvector/pgvector:pg17
+    container_name: datopublico-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-datopublico}
+      POSTGRES_USER: ${POSTGRES_USER:-datopublico}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-datopublico}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-datopublico} -d ${POSTGRES_DB:-datopublico}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  # Persistencia del cluster: sobrevive a `docker compose down` (no a `down -v`).
+  pgdata:

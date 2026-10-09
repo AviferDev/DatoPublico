@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * BOE y su epígrafe se conservan como metadato de trazabilidad.
  */
 @Serializable
-data class Publicacion(
+data class PublicacionDto(
     val id: String,
     val titulo: String,
     val fechaPublicacion: String,
@@ -20,6 +20,6 @@ data class Publicacion(
     val epigrafe: String?,
     val categoria: Categoria,
     val urlOficial: String,
-    val resumen: Resumen? = null,
-    val plazo: Plazo? = null,
+    val resumen: ResumenDto? = null,
+    val plazo: PlazoDto? = null,
 )

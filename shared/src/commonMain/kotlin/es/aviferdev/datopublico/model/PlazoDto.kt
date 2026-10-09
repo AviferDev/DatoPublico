@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  * plataforma.
  */
 @Serializable
-data class Plazo(
+data class PlazoDto(
     val fechaLimite: String,
     val descripcion: String? = null,
 )

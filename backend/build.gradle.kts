@@ -44,12 +44,17 @@ dependencies {
 // enganchan a `build`/`check`: la CI corre en `ubuntu-latest` sin base de datos y
 // el gate de build no debe depender de servicios externos.
 //
-// La conexión se resuelve del entorno (`FLYWAY_*`). Para comodidad de desarrollo
-// se carga además el `.env` de la raíz del producto (ignorado por git) cuando la
-// variable de entorno no está definida. **No hay contraseña por defecto**: si
-// `FLYWAY_PASSWORD` falta, la tarea Flyway falla con un mensaje claro (fail-fast)
-// en lugar de conectar con una credencial implícita. La validación se hace en
-// tiempo de ejecución para no romper `./gradlew build` (CI sin base de datos).
+// La conexión se **deriva** de las mismas variables `POSTGRES_*` que usa
+// docker-compose (host/puerto/db/usuario), con las variables `FLYWAY_*` como
+// *overrides* opcionales pieza a pieza y `FLYWAY_URL` como override explícito de
+// la URL completa. Así no se duplica la conexión: cambiar `POSTGRES_PORT` basta
+// para que Flyway apunte al mismo sitio. Para comodidad de desarrollo se carga
+// además el `.env` de la raíz del producto (ignorado por git) cuando la variable
+// de entorno no está definida. **No hay contraseña por defecto**: si faltan
+// `FLYWAY_PASSWORD` y `POSTGRES_PASSWORD`, la tarea Flyway falla con un mensaje
+// claro (fail-fast) en lugar de conectar con una credencial implícita. La
+// validación se hace en tiempo de ejecución para no romper `./gradlew build`
+// (CI sin base de datos).
 val migrationDir = layout.projectDirectory.dir("src/main/resources/db/migration").asFile
 
 // Parser mínimo `clave=valor` del `.env` de la raíz. Nunca imprime valores.
@@ -74,17 +79,40 @@ fun resolveSetting(key: String): String? =
     System.getenv(key)?.takeIf { it.isNotBlank() }
         ?: dotEnv[key]?.takeIf { it.isNotBlank() }
 
+// Devuelve el primer valor resuelto de las claves dadas o el default. Se usa
+// para derivar la conexión: `FLYWAY_*` (override) > `POSTGRES_*` (fuente única
+// compartida con docker-compose) > default de desarrollo.
+fun resolveWithDefault(vararg keys: String, default: String): String {
+    keys.forEach { key -> resolveSetting(key)?.let { return it } }
+    return default
+}
+
+// La URL se **deriva** de las piezas salvo que `FLYWAY_URL` la sobrescriba
+// explícitamente. Así, cambiar `POSTGRES_PORT` (o host/db) basta para que Flyway
+// apunte al mismo sitio que docker-compose, sin duplicar la conexión.
 fun flywayUrl(): String =
-    resolveSetting("FLYWAY_URL") ?: "jdbc:postgresql://localhost:5432/datopublico"
+    resolveSetting("FLYWAY_URL")
+        ?: buildString {
+            append("jdbc:postgresql://")
+            append(resolveWithDefault("FLYWAY_HOST", "POSTGRES_HOST", default = "localhost"))
+            append(':')
+            append(resolveWithDefault("FLYWAY_PORT", "POSTGRES_PORT", default = "5432"))
+            append('/')
+            append(resolveWithDefault("FLYWAY_DB", "POSTGRES_DB", default = "datopublico"))
+        }
 
 fun flywayUser(): String =
-    resolveSetting("FLYWAY_USER") ?: "datopublico"
+    resolveWithDefault("FLYWAY_USER", "POSTGRES_USER", default = "datopublico")
 
-// Sin valor por defecto a propósito: un `FLYWAY_PASSWORD` ausente debe fallar,
-// nunca caer en una credencial versionada.
+// Sin valor por defecto a propósito: una contraseña ausente (ni `FLYWAY_PASSWORD`
+// ni `POSTGRES_PASSWORD`) debe fallar, nunca caer en una credencial versionada.
 fun flywayPasswordOrFail(): String =
     resolveSetting("FLYWAY_PASSWORD")
-        ?: error("FLYWAY_PASSWORD no definido: copia .env.example a .env o expórtalo")
+        ?: resolveSetting("POSTGRES_PASSWORD")
+        ?: error(
+            "Contraseña de base de datos no definida: define POSTGRES_PASSWORD " +
+                "en .env (o expórtala, o usa FLYWAY_PASSWORD como override)"
+        )
 
 flyway {
     url = flywayUrl()

@@ -8,15 +8,15 @@ import kotlin.test.assertTrue
 
 class SerializationTest {
 
-    private val resumen = Resumen(
+    private val resumen = ResumenDto(
         queCambia = "Se convocan 120 plazas de auxiliar administrativo.",
         aQuienAfecta = "Personas con título de ESO o equivalente.",
         cifrasClave = listOf("120 plazas", "20 días hábiles"),
         fuenteOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-B-2026-1234",
-        plazo = Plazo(fechaLimite = "2026-10-30", descripcion = "20 días hábiles"),
+        plazo = PlazoDto(fechaLimite = "2026-10-30", descripcion = "20 días hábiles"),
     )
 
-    private val publicacion = Publicacion(
+    private val publicacion = PublicacionDto(
         id = "BOE-B-2026-1234",
         titulo = "Resolución de convocatoria de plazas",
         fechaPublicacion = "2026-10-09",
@@ -26,13 +26,13 @@ class SerializationTest {
         categoria = Categoria.OPOSICIONES_Y_EMPLEO_PUBLICO,
         urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-B-2026-1234",
         resumen = resumen,
-        plazo = Plazo(fechaLimite = "2026-10-30", descripcion = "20 días hábiles"),
+        plazo = PlazoDto(fechaLimite = "2026-10-30", descripcion = "20 días hábiles"),
     )
 
     @Test
     fun publicationWithResumenRoundTrips() {
-        val json = DatoPublicoJson.encodeToString(Publicacion.serializer(), publicacion)
-        val decoded = DatoPublicoJson.decodeFromString(Publicacion.serializer(), json)
+        val json = DatoPublicoJson.encodeToString(PublicacionDto.serializer(), publicacion)
+        val decoded = DatoPublicoJson.decodeFromString(PublicacionDto.serializer(), json)
 
         assertEquals(publicacion, decoded)
         assertTrue(json.contains("\"oposiciones_y_empleo_publico\""))
@@ -41,7 +41,7 @@ class SerializationTest {
 
     @Test
     fun publicationWithoutOptionalsRoundTripsAsNull() {
-        val minima = Publicacion(
+        val minima = PublicacionDto(
             id = "BOE-A-2026-1",
             titulo = "Ley de prueba",
             fechaPublicacion = "2026-10-09",
@@ -53,8 +53,8 @@ class SerializationTest {
         )
 
         val decoded = DatoPublicoJson.decodeFromString(
-            Publicacion.serializer(),
-            DatoPublicoJson.encodeToString(Publicacion.serializer(), minima),
+            PublicacionDto.serializer(),
+            DatoPublicoJson.encodeToString(PublicacionDto.serializer(), minima),
         )
 
         assertEquals(minima, decoded)
@@ -65,10 +65,10 @@ class SerializationTest {
 
     @Test
     fun plazoKeepsIsoDateAsString() {
-        val plazo = Plazo(fechaLimite = "2026-10-30")
+        val plazo = PlazoDto(fechaLimite = "2026-10-30")
         val decoded = DatoPublicoJson.decodeFromString(
-            Plazo.serializer(),
-            DatoPublicoJson.encodeToString(Plazo.serializer(), plazo),
+            PlazoDto.serializer(),
+            DatoPublicoJson.encodeToString(PlazoDto.serializer(), plazo),
         )
 
         assertEquals(plazo, decoded)
@@ -78,15 +78,15 @@ class SerializationTest {
 
     @Test
     fun resumenDefaultsRoundTrip() {
-        val minimo = Resumen(
+        val minimo = ResumenDto(
             queCambia = "Cambio",
             aQuienAfecta = "Afectados",
             fuenteOficial = "https://www.boe.es/",
         )
 
         val decoded = DatoPublicoJson.decodeFromString(
-            Resumen.serializer(),
-            DatoPublicoJson.encodeToString(Resumen.serializer(), minimo),
+            ResumenDto.serializer(),
+            DatoPublicoJson.encodeToString(ResumenDto.serializer(), minimo),
         )
 
         assertEquals(minimo, decoded)
@@ -97,11 +97,11 @@ class SerializationTest {
 
     @Test
     fun dailySummaryRoundTrips() {
-        val summary = DailySummary(fecha = "2026-10-09", publicaciones = listOf(publicacion))
+        val summary = ResumenDiarioDto(fecha = "2026-10-09", publicaciones = listOf(publicacion))
 
         val decoded = DatoPublicoJson.decodeFromString(
-            DailySummary.serializer(),
-            DatoPublicoJson.encodeToString(DailySummary.serializer(), summary),
+            ResumenDiarioDto.serializer(),
+            DatoPublicoJson.encodeToString(ResumenDiarioDto.serializer(), summary),
         )
 
         assertEquals(summary, decoded)
@@ -117,15 +117,15 @@ class SerializationTest {
             }
         """.trimIndent()
 
-        val decoded = DatoPublicoJson.decodeFromString(DailySummary.serializer(), json)
+        val decoded = DatoPublicoJson.decodeFromString(ResumenDiarioDto.serializer(), json)
 
-        assertEquals(DailySummary(fecha = "2026-10-09"), decoded)
+        assertEquals(ResumenDiarioDto(fecha = "2026-10-09"), decoded)
     }
 
     @Test
     fun dailySummaryWithoutPublicacionesDefaults() {
         val decoded = DatoPublicoJson.decodeFromString(
-            DailySummary.serializer(),
+            ResumenDiarioDto.serializer(),
             """{"fecha":"2026-10-09"}""",
         )
 

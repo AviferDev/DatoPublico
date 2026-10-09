@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  * [fecha] es una fecha ISO-8601 como `String` (sin `java.time`).
  */
 @Serializable
-data class DailySummary(
+data class ResumenDiarioDto(
     val fecha: String,
-    val publicaciones: List<Publicacion> = emptyList(),
+    val publicaciones: List<PublicacionDto> = emptyList(),
 )

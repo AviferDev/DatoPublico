@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Familia estable de cara al ciudadano para clasificar una [Publicacion] del BOE.
+ * Familia estable de cara al ciudadano para clasificar una [PublicacionDto] del BOE.
  *
  * La taxonomía es un contrato curado de 11 valores. Cada valor declara un
  * `@SerialName` en `snake_case`, **sin acentos ni espacios**: es el token de wire

@@ -3,3 +3,14 @@
 
 # macOS
 .DS_Store
+
+# Gradle
+.gradle/
+build/
+**/build/
+.kotlin/
+local.properties
+*.hprof
+
+# El wrapper Gradle SÍ se versiona (gradlew, gradlew.bat,
+# gradle/wrapper/gradle-wrapper.jar y gradle-wrapper.properties).

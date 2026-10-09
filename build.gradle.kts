@@ -10,3 +10,13 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.ktor) apply false
 }
+
+// KMP no genera una tarea `test` a nivel de proyecto: `./gradlew test` desde la
+// raíz solo encontraría `:backend:test` y dejaría sin ejecutar los tests de
+// `:shared` y `:composeApp`. Esta tarea raíz agrega los tests de los tres
+// módulos en un único comando (`./gradlew test`).
+tasks.register("test") {
+    group = "verification"
+    description = "Ejecuta los tests de :shared, :backend y :composeApp."
+    dependsOn(":backend:test", ":shared:jvmTest", ":composeApp:jvmTest")
+}

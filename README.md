@@ -1,27 +1,35 @@
 # DatoPublico
 
-> Legislación española (BOE) explicada en lenguaje claro.
+> Publicaciones del BOE explicadas en lenguaje claro, por categoría.
 
-**DatoPublico** explica en lenguaje claro **qué cambia** una norma publicada en el
-BOE y **a quién afecta**, con enlace siempre a la fuente oficial.
+**DatoPublico** explica en lenguaje claro **qué se ha publicado** en el BOE
+(normas, nombramientos, empleo público, becas y subvenciones, premios, convenios,
+información pública…) y **a quién afecta**, con enlace siempre a la fuente
+oficial.
 
 Es un proyecto **gratuito, de código abierto y de interés público**, sin cuentas,
 sin datos personales y sin analítica.
 
 ## El problema
 
-El ciudadano no puede saber de forma fiable y comprensible cómo le afecta una
-norma recién publicada. La información oficial está en lenguaje jurídico y
+El ciudadano no puede saber de forma fiable y comprensible cómo le afecta lo
+recién publicado en el BOE. La información oficial está en lenguaje jurídico y
 burocrático, y las vías alternativas (prensa y redes) no ofrecen una explicación
 trazable a la fuente.
 
 ## Funcionalidades
 
-- **Feed diario de novedades.** Las normas publicadas en el BOE, resumidas y
+- **Feed diario de novedades.** Las publicaciones del BOE, resumidas y
   actualizadas cada día.
-- **Resúmenes en lenguaje claro.** Cada norma explicada en «¿Qué cambia?»,
+- **Categorías.** Normas, nombramientos, empleo público, becas y subvenciones,
+  premios, convenios, educación, medio ambiente, información pública y más.
+- **Destacados del día.** Lo más relevante, ordenado con un criterio automático
+  y explicable.
+- **Resúmenes en lenguaje claro.** Cada publicación explicada en «¿Qué cambia?»,
   «¿A quién afecta?» y «Cifras clave».
-- **Búsqueda** en el histórico reciente de normas.
+- **Búsqueda con filtros** por categoría y fecha en el histórico reciente.
+- **Chat en lenguaje natural.** Pregunta o verifica una afirmación y obtén una
+  respuesta con enlace a la fuente oficial.
 - **Trazabilidad a la fuente oficial.** Cada resumen enlaza al texto oficial del
   BOE.
 - **Aviso de contenido resumido por IA.**

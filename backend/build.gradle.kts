@@ -42,15 +42,64 @@ dependencies {
 // Migraciones Flyway de FT00003. Las tareas son explícitas
 // (`./gradlew :backend:flywayMigrate` / `:backend:flywayInfo`) y **no** se
 // enganchan a `build`/`check`: la CI corre en `ubuntu-latest` sin base de datos y
-// el gate de build no debe depender de servicios externos. La conexión se
-// resuelve del entorno (`FLYWAY_*`) con valores por defecto de desarrollo
-// (ver `.env.example`).
+// el gate de build no debe depender de servicios externos.
+//
+// La conexión se resuelve del entorno (`FLYWAY_*`). Para comodidad de desarrollo
+// se carga además el `.env` de la raíz del producto (ignorado por git) cuando la
+// variable de entorno no está definida. **No hay contraseña por defecto**: si
+// `FLYWAY_PASSWORD` falta, la tarea Flyway falla con un mensaje claro (fail-fast)
+// en lugar de conectar con una credencial implícita. La validación se hace en
+// tiempo de ejecución para no romper `./gradlew build` (CI sin base de datos).
 val migrationDir = layout.projectDirectory.dir("src/main/resources/db/migration").asFile
 
+// Parser mínimo `clave=valor` del `.env` de la raíz. Nunca imprime valores.
+fun loadDotEnv(): Map<String, String> {
+    val envFile = rootDir.resolve(".env")
+    if (!envFile.isFile) return emptyMap()
+    return envFile.readLines()
+        .asSequence()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() && !it.startsWith("#") && it.contains('=') }
+        .associate { line ->
+            val key = line.substringBefore('=').trim().removePrefix("export ").trim()
+            val value = line.substringAfter('=').trim().trim('"', '\'')
+            key to value
+        }
+}
+
+val dotEnv: Map<String, String> = loadDotEnv()
+
+// Prioridad: variable de entorno > `.env` > valor por defecto no sensible.
+fun resolveSetting(key: String): String? =
+    System.getenv(key)?.takeIf { it.isNotBlank() }
+        ?: dotEnv[key]?.takeIf { it.isNotBlank() }
+
+fun flywayUrl(): String =
+    resolveSetting("FLYWAY_URL") ?: "jdbc:postgresql://localhost:5432/datopublico"
+
+fun flywayUser(): String =
+    resolveSetting("FLYWAY_USER") ?: "datopublico"
+
+// Sin valor por defecto a propósito: un `FLYWAY_PASSWORD` ausente debe fallar,
+// nunca caer en una credencial versionada.
+fun flywayPasswordOrFail(): String =
+    resolveSetting("FLYWAY_PASSWORD")
+        ?: error("FLYWAY_PASSWORD no definido: copia .env.example a .env o expórtalo")
+
 flyway {
-    url = System.getenv("FLYWAY_URL") ?: "jdbc:postgresql://localhost:5432/datopublico"
-    user = System.getenv("FLYWAY_USER") ?: "datopublico"
-    password = System.getenv("FLYWAY_PASSWORD") ?: "datopublico"
+    url = flywayUrl()
+    user = flywayUser()
     locations = arrayOf("filesystem:${migrationDir.absolutePath}")
     configurations = arrayOf(flywayConfiguration.name)
+}
+
+// La conexión se fija en ejecución: así `./gradlew build` sigue verde sin `.env`
+// ni base de datos, y las tareas Flyway fallan con el mensaje claro si falta
+// `FLYWAY_PASSWORD`.
+tasks.withType<org.flywaydb.gradle.task.AbstractFlywayTask>().configureEach {
+    doFirst {
+        url = flywayUrl()
+        user = flywayUser()
+        password = flywayPasswordOrFail()
+    }
 }

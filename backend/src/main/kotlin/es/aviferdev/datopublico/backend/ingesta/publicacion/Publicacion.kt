@@ -1,6 +1,7 @@
 package es.aviferdev.datopublico.backend.ingesta.publicacion
 
 import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.PlazoDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 
 /**
@@ -49,4 +50,10 @@ data class Publicacion(
     val rango: String?,
     /** Categoría curada; **pendiente de FT00012**, siempre `null` aquí. */
     val categoria: CategoriaDto? = null,
+    /**
+     * Plazo de solicitud (convocatorias de empleo público, becas o subvenciones);
+     * **pendiente de FT00012**, siempre `null` aquí. Es aditivo para que la
+     * persistencia (FT00008) pueda guardar y recuperar el plazo cuando exista.
+     */
+    val plazo: PlazoDto? = null,
 )

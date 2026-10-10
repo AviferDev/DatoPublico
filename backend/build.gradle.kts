@@ -43,6 +43,12 @@ dependencies {
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
 
+    // Persistencia JDBC (FT00008): driver PostgreSQL y pool HikariCP en el
+    // classpath de producción de los repositorios (el driver también está en la
+    // configuración `flyway`, que usa su propio classpath).
+    implementation(libs.postgresql)
+    implementation(libs.hikaricp)
+
     testImplementation(kotlin("test"))
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.client.mock)

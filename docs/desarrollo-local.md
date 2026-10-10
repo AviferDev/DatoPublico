@@ -139,6 +139,38 @@ sin base de datos):
 ./gradlew :backend:flywayInfo
 ```
 
+## Persistencia (repositorios JDBC)
+
+La capa de datos de `:backend` vive en
+`es.aviferdev.datopublico.backend.persistencia` (repositorios **JDBC** +
+entidades `...Entity`) con la configuración de conexión
+(`infra/ConfiguracionBd`, derivada de `POSTGRES_*`) y el pool **HikariCP**
+(`infra/BaseDatos`, tamaño ≤5). **No** se cablea en el arranque del servidor: la
+crea y la cierra quien la consume (job o test).
+
+La migración `V2__persistencia_publicaciones.sql` crea las tablas `publicacion`,
+`fragmento`, `resumen` y `cola_revision`; el embedding `vector(384)` de `fragmento`
+y su índice HNSW llegan con FT00016, y los valores de `categoria`/`plazo` con
+FT00012 (columnas nullable). El driver PostgreSQL y HikariCP están en el
+classpath de producción de `:backend`.
+
+Los tests del gate cubren la configuración de conexión, el mapeo
+dominio↔entidad y el contrato SQL de la migración **sin** base de datos. La
+prueba real (guardar/recuperar con categoría/sección/epígrafe/plazo, *upsert*
+idempotente, nulos conservados y FK `ON DELETE CASCADE`) es **opt-in** y queda
+fuera de `build`/`test`/`init.sh` y de la CI:
+
+```sh
+cp .env.example .env
+docker compose up -d
+./gradlew :backend:flywayMigrate
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*PublicacionPersistenciaLiveTest'
+docker compose down -v
+```
+
+El test opt-in lee `POSTGRES_*` del entorno y, si faltan, de la `.env` de la raíz
+(no hace falta exportarlas).
+
 ## Variables de entorno
 
 - `POSTGRES_*` es la **fuente única de verdad**: la usa `docker-compose` y de ella

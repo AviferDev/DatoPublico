@@ -3,6 +3,7 @@ package es.aviferdev.datopublico.backend.ingesta.publicacion
 import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioResponseDto
 import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
 import es.aviferdev.datopublico.backend.ingesta.sumario.toEntradasSumario
+import es.aviferdev.datopublico.model.CategoriaDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.client.HttpClient
@@ -22,7 +23,8 @@ import kotlinx.coroutines.test.runTest
 
 /**
  * Orquestador [BoePublicacionParser] sobre los **fixtures reales** del sumario y
- * del XML (sin red): cubre los escenarios 1, 3, 4 y 7 del spec.
+ * del XML (sin red): cubre las secciones, el rango y, desde FT00012, la
+ * **categoría** y el **plazo** de cada publicación.
  *
  * El `MockEngine` sirve el XML local correspondiente al `id` pedido, de modo que
  * el flujo sumario real → descarga → parseo → [Publicacion] se ejercita de punta
@@ -45,7 +47,8 @@ class BoePublicacionParserTest {
             assertEquals(entrada.seccion, publicacion.seccion)
             assertEquals(entrada.urlOficial, publicacion.urlOficial)
             assertEquals(rango, publicacion.rango, "$identificador: rango")
-            assertNull(publicacion.categoria, "$identificador: categoría (FT00012)")
+            assertEquals(CATEGORIAS_POR_ID[identificador], publicacion.categoria, "$identificador: categoría")
+            assertEquals(PLAZOS_POR_ID[identificador], publicacion.plazo?.fechaLimite, "$identificador: plazo")
             val texto = assertNotNull(publicacion.texto, "$identificador sin texto")
             assertTrue(texto.isNotBlank(), "$identificador con texto vacío")
         }
@@ -164,6 +167,30 @@ class BoePublicacionParserTest {
             "BOE-A-2024-87" to "Resolución",
             "BOE-A-2024-93" to "Resolución",
             "BOE-A-2024-117" to "Orden",
+            "BOE-B-2024-1" to null,
+            "BOE-B-2024-25" to null,
+            "BOE-B-2024-76" to null,
+            "BOE-B-2024-92" to null,
+        )
+
+        /** Categoría curada esperada por identificador (FT00012, escenario 1). */
+        val CATEGORIAS_POR_ID: Map<String, CategoriaDto> = mapOf(
+            "BOE-A-2026-20979" to CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+            "BOE-A-2024-87" to CategoriaDto.NOMBRAMIENTOS_Y_CESES,
+            "BOE-A-2024-93" to CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
+            "BOE-A-2024-117" to CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+            "BOE-B-2024-1" to CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
+            "BOE-B-2024-25" to CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
+            "BOE-B-2024-76" to CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
+            "BOE-B-2024-92" to CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
+        )
+
+        /** Fecha límite esperada por identificador (FT00012, escenarios 2 y 3). */
+        val PLAZOS_POR_ID: Map<String, String?> = mapOf(
+            "BOE-A-2026-20979" to null,
+            "BOE-A-2024-87" to null,
+            "BOE-A-2024-93" to "2024-01-23",
+            "BOE-A-2024-117" to "2024-01-23",
             "BOE-B-2024-1" to null,
             "BOE-B-2024-25" to null,
             "BOE-B-2024-76" to null,

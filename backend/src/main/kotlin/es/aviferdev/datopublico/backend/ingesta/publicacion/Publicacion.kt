@@ -22,8 +22,9 @@ import es.aviferdev.datopublico.model.SeccionBoeDto
  * `fechaDisposicion`, `numeroOficial`, `origenLegislativo`) se conservan en
  * [DocumentoBoe.metadatos] para que la persistencia decida qué guarda.
  *
- * [categoria] queda **sin asignar** (`null`) a propósito: la clasificación curada
- * es no-objetivo de esta feature y llega en FT00012 (`categorizacion-publicaciones`).
+ * [categoria] y [plazo] los rellena [PublicacionParser] al construir el modelo
+ * (FT00012): la categoría es siempre una de las 11 curadas y el plazo queda
+ * `null` cuando la fuente no lo indica de forma fiable.
  */
 data class Publicacion(
     /** Identificador oficial del BOE (p. ej. `BOE-A-2026-20979`). */
@@ -48,12 +49,12 @@ data class Publicacion(
     val urlPdf: String?,
     /** Rango normativo del XML (`Real Decreto`, `Orden`…); opcional. */
     val rango: String?,
-    /** Categoría curada; **pendiente de FT00012**, siempre `null` aquí. */
+    /** Categoría curada (FT00012); la asigna [PublicacionParser], nunca `null`. */
     val categoria: CategoriaDto? = null,
     /**
      * Plazo de solicitud (convocatorias de empleo público, becas o subvenciones);
-     * **pendiente de FT00012**, siempre `null` aquí. Es aditivo para que la
-     * persistencia (FT00008) pueda guardar y recuperar el plazo cuando exista.
+     * lo extrae [PublicacionParser] cuando es fiable, o `null`. Es aditivo para
+     * que la persistencia (FT00008) pueda guardar y recuperar el plazo.
      */
     val plazo: PlazoDto? = null,
 )

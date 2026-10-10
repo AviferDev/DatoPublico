@@ -122,6 +122,31 @@ falla con `SunCertPathBuilderException` si el truststore del JVM no incluye la
 raíz **FNMT-RCM** (misma limitación documentada arriba); `curl` sí valida porque
 usa el llavero del sistema. El gate no se ve afectado.
 
+## Clasificación por categoría y plazos (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.ingesta.categorizacion` añade, en
+`PublicacionParser`, dos piezas **puras** (sin IA, red, BD ni reloj):
+
+- `PublicationClassifier`: clasifica cada publicación en una de las **11
+  categorías** curadas (`CategoriaDto`) a partir de la **sección** y el
+  **epígrafe** (el título como respaldo), con reglas ordenadas y una categoría por
+  defecto por sección. **Siempre** devuelve categoría (nunca `null`) y **conserva**
+  el epígrafe original como metadato.
+- `DeadlineExtractor`: extrae el **plazo de solicitud** de las convocatorias
+  (`Publicacion.plazo`) de forma **heurística y acotada**: `plazo de <N> días
+  [hábiles|naturales]` con la coletilla «a contar/contados/a partir … el día
+  siguiente al de la publicación», y fechas explícitas («hasta el <d> de <mes> de
+  <aaaa>» / «hasta el dd/mm/aaaa»). Si no es fiable devuelve `null` (**nunca
+  inventa una fecha**); descarta plazos de ejecución, resolución, recurso,
+  subsanación, alegaciones o informe. Los «días hábiles» cuentan solo sábados y
+  domingos, **sin** calendario de festivos.
+
+Ambas se cablean con colaboradores por defecto, así que el job diario y el
+backfill las heredan sin cambios en el arranque. El comportamiento y los límites
+quedan en `docs/adr/0007` (en el harness privado). No hay endpoint ni UI: la
+clasificación se prueba con los **fixtures reales** de las ocho secciones en el
+gate.
+
 ## Arranque de la base de datos
 
 ```sh
@@ -150,9 +175,9 @@ crea y la cierra quien la consume (job o test).
 
 La migración `V2__persistencia_publicaciones.sql` crea las tablas `publicacion`,
 `fragmento`, `resumen` y `cola_revision`; el embedding `vector(384)` de `fragmento`
-y su índice HNSW llegan con FT00016, y los valores de `categoria`/`plazo` con
-FT00012 (columnas nullable). El driver PostgreSQL y HikariCP están en el
-classpath de producción de `:backend`.
+y su índice HNSW llegan con FT00016, y los valores de `categoria`/`plazo` los
+produce la ingesta desde FT00012 (columnas nullable). El driver PostgreSQL y
+HikariCP están en el classpath de producción de `:backend`.
 
 Los tests del gate cubren la configuración de conexión, el mapeo
 dominio↔entidad y el contrato SQL de la migración **sin** base de datos. La

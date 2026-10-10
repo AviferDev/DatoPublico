@@ -25,7 +25,10 @@ class CategoriaWireTest {
         SeccionBoeDto.II_A to "II.A",
         SeccionBoeDto.II_B to "II.B",
         SeccionBoeDto.III to "III",
+        SeccionBoeDto.IV to "IV",
+        SeccionBoeDto.V_A to "V.A",
         SeccionBoeDto.V_B to "V.B",
+        SeccionBoeDto.V_C to "V.C",
     )
 
     @Test
@@ -48,7 +51,7 @@ class CategoriaWireTest {
 
     @Test
     fun seccionBoeUsesOfficialNotation() {
-        assertEquals(5, SeccionBoeDto.entries.size)
+        assertEquals(8, SeccionBoeDto.entries.size)
         tokensSeccion.forEach { (seccion, token) ->
             val json = DatoPublicoJson.encodeToString(SeccionBoeDto.serializer(), seccion)
             assertEquals("\"$token\"", json)

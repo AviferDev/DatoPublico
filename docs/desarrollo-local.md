@@ -70,6 +70,28 @@ Los logs son **JSON de una línea por evento en stdout** (Logback +
 `logstash-logback-encoder`), con los campos `app` y `env` tomados de esas
 variables. Sin telemetría ni destino externo.
 
+## Cliente del sumario del BOE (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.ingesta.sumario` encapsula la API de
+datos abiertos del BOE
+(`GET https://www.boe.es/datosabiertos/api/boe/sumario/{YYYYMMDD}` con
+`Accept: application/json`). Devuelve las entradas de las Secciones I, II.A,
+II.B, III y V.B (excluye IV y V.A) y **no** se cablea en el arranque del backend.
+
+Los tests con `MockEngine` (sin red) corren en el gate. La prueba contra la API
+real es **opt-in** y queda fuera de `build`/`test`/`init.sh` y de la CI:
+
+```sh
+BOE_LIVE_TEST=1 ./gradlew :backend:test --tests '*BoeSumarioLiveTest'
+```
+
+Nota (macOS con el JBR de Android Studio): su `cacerts` no incluye la raíz
+**FNMT-RCM** que firma `*.boe.es`, así que el test opt-in falla con
+`SunCertPathBuilderException`. Añade esa raíz a un truststore y pásalo al JVM
+(`JAVA_TOOL_OPTIONS="-Djavax.net.ssl.trustStore=… -Djavax.net.ssl.trustStorePassword=…"`),
+o ejecuta con un JDK cuyo truststore la incluya. `curl` sí valida el certificado
+porque usa el llavero del sistema; el gate no se ve afectado.
+
 ## Arranque de la base de datos
 
 ```sh

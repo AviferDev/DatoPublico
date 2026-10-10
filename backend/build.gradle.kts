@@ -38,8 +38,15 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.logstash.logback.encoder)
 
+    // Cliente HTTP de salida (sumario del BOE, FT00006): motor CIO + negociación.
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+
     testImplementation(kotlin("test"))
     testImplementation(libs.ktor.server.test.host)
+    testImplementation(libs.ktor.client.mock)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     add(flywayConfiguration.name, libs.flyway.database.postgresql)
     add(flywayConfiguration.name, libs.postgresql)

@@ -1,10 +1,10 @@
 # Version catalog de DatoPublico.
 #
 # FT00001 activó Kotlin multiplatform/JVM y `kotlin("test")`; FT00002 activó la
-# serialización; FT00003 activa Flyway y el driver PostgreSQL. El resto de
-# versiones (AGP, Compose Multiplatform, Ktor, coroutines) quedan predeclaradas
-# para que las features siguientes (FT00004/05) las activen sin tocar la raíz del
-# build.
+# serialización; FT00003 activó Flyway y el driver PostgreSQL; FT00004 activa el
+# servidor Ktor (Netty) y el logging JSON. El resto de versiones (AGP, Compose
+# Multiplatform, coroutines) quedan predeclaradas para que las features
+# siguientes (FT00005+) las activen sin tocar la raíz del build.
 
 [versions]
 kotlin = "2.1.20"
@@ -15,6 +15,8 @@ kotlinxSerialization = "1.8.0"
 kotlinxCoroutines = "1.10.1"
 flyway = "11.20.3"
 postgresql = "42.7.14"
+logback = "1.5.12"
+logstashLogback = "8.0"
 androidMinSdk = "26"
 androidTargetSdk = "35"
 androidCompileSdk = "35"
@@ -35,6 +37,13 @@ ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+
+# Logging estructurado: una línea JSON por evento en stdout (sin destino externo).
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logstashLogback" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

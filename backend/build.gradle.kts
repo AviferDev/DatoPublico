@@ -10,11 +10,19 @@ buildscript {
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.flyway)
+    application
+    alias(libs.plugins.ktor)
 }
 
 kotlin {
     jvmToolchain(21)
+}
+
+// `main()` propio, no el `EngineMain` del plugin de Ktor (que exigiría application.conf).
+application {
+    mainClass.set("es.aviferdev.datopublico.backend.ApplicationKt")
 }
 
 val flywayConfiguration = configurations.create("flyway")
@@ -22,7 +30,16 @@ val flywayConfiguration = configurations.create("flyway")
 dependencies {
     implementation(project(":shared"))
 
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.call.logging)
+    implementation(libs.logback.classic)
+    implementation(libs.logstash.logback.encoder)
+
     testImplementation(kotlin("test"))
+    testImplementation(libs.ktor.server.test.host)
 
     add(flywayConfiguration.name, libs.flyway.database.postgresql)
     add(flywayConfiguration.name, libs.postgresql)

@@ -420,6 +420,46 @@ Variables de entorno (opcionales; la CLI hereda el entorno del proceso):
 
 Decisión durable en el ADR 0013 (harness privado).
 
+## Generación del resumen ciudadano (`:backend`)
+
+Los paquetes `es.aviferdev.datopublico.backend.rag.generation` y
+`...backend.rag.summary` (FT00020) generan el **resumen ciudadano** de una
+publicación a partir de los fragmentos recuperados, sin cablearse en el arranque:
+
+- `TextGenerationProvider` es la interfaz **intercambiable** de generación de
+  texto (`suspend`); `OpenCodeTextGenerationProvider` la implementa contra la API
+  OpenAI-compatible de OpenCode (`POST {baseUrl}/chat/completions` con
+  `Authorization: Bearer`), con DTOs de wire y `openCodeHttpClient` (CIO +
+  `ContentNegotiation` + `HttpTimeout`).
+- `CitizenSummaryPromptBuilder` (puro) construye el prompt: metadatos de la
+  publicación, contexto delimitado como **datos, no instrucciones** y esquema JSON;
+  la variante de empleo/beca pide el **plazo**.
+- `SummaryOutputParser` (puro) quita las *fences* de Markdown y parsea el JSON
+  (`SummaryGenerationException` si está vacío o es inválido).
+- `CitizenSummaryGenerator` compone `HybridSearch` → prompt → proveedor → parser →
+  **inyecta la fuente oficial** desde `Publicacion.urlOficial` → valida el contrato
+  con `CitizenSummaryValidator` y devuelve `CitizenSummaryResult.Valid`/`Invalid`
+  (un resumen inválido **no** se publica).
+
+La **clave** vive solo en el servidor y es **fail-fast** si falta:
+
+- `OPENCODE_API_KEY` — clave de OpenCode (**obligatoria**; nunca se versiona).
+- `OPENCODE_BASE_URL` (por defecto `https://opencode.ai/zen/go/v1`).
+- `OPENCODE_MODEL` (por defecto `deepseek-v4.1-flash`).
+- `OPENCODE_TEMPERATURE` (por defecto `0.0`).
+
+El gate cubre config, proveedor (`MockEngine`), parser, prompt y generador con
+**dobles deterministas**, sin red ni BD. La prueba contra el endpoint **real** es
+**opt-in**, no requiere PostgreSQL ni el modelo E5 y queda fuera del gate y de la
+CI (con `OPENCODE_LIVE_TEST=1` pero sin clave, falla en claro):
+
+```sh
+OPENCODE_LIVE_TEST=1 OPENCODE_API_KEY=<clave> \
+  ./gradlew :backend:test --tests '*CitizenSummaryGeneratorLiveTest'
+```
+
+Decisión durable en el ADR 0015 (harness privado).
+
 ## Ingesta diaria (job programado)
 
 El paquete `es.aviferdev.datopublico.backend.ingesta.job` programa la ingesta

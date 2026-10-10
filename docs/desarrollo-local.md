@@ -369,6 +369,57 @@ docker compose down -v
 
 Decisión durable en el ADR 0012 (harness privado).
 
+## Evaluación de recuperación (`:backend:evaluateRetrieval`)
+
+El paquete `es.aviferdev.datopublico.backend.rag.evaluation` (FT00018) mide la
+calidad de la recuperación sobre un **golden set versionado**
+(`backend/src/main/resources/rag/eval/golden-set.json`): un corpus modesto con
+encabezados `Artículo N` explícitos (para que el `order` del chunker sea
+determinista) y consultas con su `filter` y sus fragmentos esperados.
+
+- `RetrievalMetrics` es **puro**: `precisionAtK`, `recallAtK` y `reciprocalRank`
+  (MRR) con sus casos límite.
+- `RetrievalGoldenSetLoader` parsea y **valida** el dataset (fail-fast con
+  `IllegalArgumentException`: `k >= 1`, corpus/consultas no vacíos, ids únicos y
+  cada fragmento relevante existente en el corpus).
+- `RetrievalEvaluator` recupera una vez por consulta con un `Retriever`
+  inyectable y agrega las medias sin `NaN`.
+- La CLI `RetrievalEvaluationMain` indexa el corpus del propio dataset con el
+  modelo E5 real (`FragmentIndexer`, idempotente), evalúa cada consulta con
+  `HybridSearch` y registra el resultado (log JSON
+  `event=retrieval.evaluation.completed` con `precision`/`recall`/`mrr` + resumen
+  por consulta en stdout). **No** se cablea en el arranque.
+
+El gate cubre las métricas, el dataset y el evaluador **sin red, BD ni modelo**
+(`RetrievalMetricsTest`, `RetrievalGoldenSetTest`, `RetrievalEvaluatorTest`). La
+ejecución real es **opt-in** y queda fuera de `build`/`test`/`init.sh` y de la CI:
+
+```sh
+backend/tools/download-embedding-model.sh
+cp .env.example .env && docker compose up -d
+./gradlew :backend:flywayMigrate
+# La CLI lee el entorno del proceso (no la .env): exporta la conexión.
+set -a; . ./.env; set +a   # o exporta POSTGRES_* a mano
+DB_LIVE_TEST=1 EMBEDDING_LIVE_TEST=1 ./gradlew :backend:evaluateRetrieval
+DB_LIVE_TEST=1 EMBEDDING_LIVE_TEST=1 ./gradlew :backend:test --tests '*RetrievalEvaluationLiveTest'
+docker compose down -v
+```
+
+Variables de entorno (opcionales; la CLI hereda el entorno del proceso):
+
+- `POSTGRES_*`: conexión a la base. La CLI (`RetrievalEvaluationMain`) usa
+  `DatabaseConfig.fromEnv()`, es decir el **entorno del proceso**: `POSTGRES_PASSWORD`
+  debe estar **exportada** (la CLI no lee la `.env` de la raíz, a diferencia de
+  Flyway y de los tests opt-in). Carga la `.env` con `set -a; . ./.env; set +a` o
+  exporta las variables a mano.
+- `RETRIEVAL_EVAL_DATASET`: fichero alternativo del golden set (por defecto, el
+  recurso versionado).
+- `RETRIEVAL_EVAL_K`: override de la ventana `k` (entero `>= 1`).
+- `EMBEDDING_MODEL_PATH`/`EMBEDDING_TOKENIZER_PATH`: rutas del modelo (o el
+  directorio por defecto `backend/models/multilingual-e5-small/`).
+
+Decisión durable en el ADR 0013 (harness privado).
+
 ## Ingesta diaria (job programado)
 
 El paquete `es.aviferdev.datopublico.backend.ingesta.job` programa la ingesta

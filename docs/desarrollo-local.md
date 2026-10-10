@@ -147,6 +147,35 @@ quedan en `docs/adr/0007` (en el harness privado). No hay endpoint ni UI: la
 clasificación se prueba con los **fixtures reales** de las ocho secciones en el
 gate.
 
+## Destacados del día (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.relevance` puntúa la lista de
+publicaciones de un día y marca un **subconjunto** como destacado, explicando
+**por qué** (`Highlight.score` + `Highlight.reasons`). Es un ranker **puro** (sin
+IA, red, BD, reloj ni estado) y **determinista**: la salida no depende del orden
+de entrada (orden por `score` descendente y, a igual puntuación, por `id`
+ascendente, con tope) y un día sin señales devuelve lista vacía.
+
+Señales objetivas y pesos (semilla determinista documentada):
+
+- **Sección I** (normas): +2.
+- **Rango normativo**: ley orgánica / ley / real decreto-ley / real decreto
+  legislativo +4; real decreto +3; orden / orden ministerial / instrucción +2;
+  resolución / acuerdo / circular +1; desconocido o ausente +0.
+- **Categoría curada** (FT00012) de empleo público, becas/subvenciones o premios:
+  +2.
+- **Plazo de solicitud** fiable (`Publicacion.plazo`): +2.
+- **Organismo emisor** en la lista curada de referencia (Jefatura del Estado,
+  Presidencia del Gobierno, Cortes Generales, Consejo de Ministros, Presidencia):
+  +1 (peso **modesto**; **nunca** decide por sí solo).
+
+Es destacada la publicación con `score >= 4`, con un tope de 12 destacados por
+día (constantes documentadas en `HighlightRanker`). **No se persiste**: se calcula
+*on-the-fly*; el feed (FT00026) llamará a `PublicationRepository.listByDate(fecha)`
+y pasará la lista a `HighlightRanker.rank(...)`. Decisión durable en el ADR 0008
+(harness privado). No hay endpoint ni UI: se prueba solo en el gate, sin red ni
+BD.
+
 ## Arranque de la base de datos
 
 ```sh

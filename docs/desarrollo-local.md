@@ -142,10 +142,10 @@ sin base de datos):
 ## Persistencia (repositorios JDBC)
 
 La capa de datos de `:backend` vive en
-`es.aviferdev.datopublico.backend.persistencia` (repositorios **JDBC** +
+`es.aviferdev.datopublico.backend.persistence` (repositorios **JDBC** +
 entidades `...Entity`) con la configuración de conexión
-(`infra/ConfiguracionBd`, derivada de `POSTGRES_*`) y el pool **HikariCP**
-(`infra/BaseDatos`, tamaño ≤5). **No** se cablea en el arranque del servidor: la
+(`infra/DatabaseConfig`, derivada de `POSTGRES_*`) y el pool **HikariCP**
+(`infra/Database`, tamaño ≤5). **No** se cablea en el arranque del servidor: la
 crea y la cierra quien la consume (job o test).
 
 La migración `V2__persistencia_publicaciones.sql` crea las tablas `publicacion`,
@@ -164,7 +164,7 @@ fuera de `build`/`test`/`init.sh` y de la CI:
 cp .env.example .env
 docker compose up -d
 ./gradlew :backend:flywayMigrate
-DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*PublicacionPersistenciaLiveTest'
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*PublicationPersistenceLiveTest'
 docker compose down -v
 ```
 

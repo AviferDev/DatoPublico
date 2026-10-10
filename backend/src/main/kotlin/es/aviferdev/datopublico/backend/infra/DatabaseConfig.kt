@@ -11,11 +11,11 @@ package es.aviferdev.datopublico.backend.infra
  *
  * Es pura y testeable sin base de datos.
  */
-data class ConfiguracionBd(
+data class DatabaseConfig(
     /** URL JDBC completa (`jdbc:postgresql://host:port/db`). */
     val url: String,
     /** Usuario de la base de datos. */
-    val usuario: String,
+    val user: String,
     /** Contraseña de la base de datos (obligatoria). */
     val password: String,
 ) {
@@ -24,7 +24,7 @@ data class ConfiguracionBd(
      * un log o en una traza de error.
      */
     override fun toString(): String =
-        "ConfiguracionBd(url=$url, usuario=$usuario, password=***)"
+        "DatabaseConfig(url=$url, user=$user, password=***)"
 
     companion object {
         /** Host por defecto del PostgreSQL local. */
@@ -49,25 +49,25 @@ data class ConfiguracionBd(
          *   entre 1 y 65535.
          * @throws IllegalStateException si falta `POSTGRES_PASSWORD` (fail-fast).
          */
-        fun fromEnv(env: Map<String, String> = System.getenv()): ConfiguracionBd {
-            val host = primerValor(env, "POSTGRES_HOST") ?: DEFAULT_HOST
-            val port = parsePort(primerValor(env, "POSTGRES_PORT"))
-            val db = primerValor(env, "POSTGRES_DB") ?: DEFAULT_DB
-            val usuario = primerValor(env, "POSTGRES_USER") ?: DEFAULT_USER
-            val password = primerValor(env, "POSTGRES_PASSWORD")
+        fun fromEnv(env: Map<String, String> = System.getenv()): DatabaseConfig {
+            val host = firstNonBlank(env, "POSTGRES_HOST") ?: DEFAULT_HOST
+            val port = parsePort(firstNonBlank(env, "POSTGRES_PORT"))
+            val db = firstNonBlank(env, "POSTGRES_DB") ?: DEFAULT_DB
+            val user = firstNonBlank(env, "POSTGRES_USER") ?: DEFAULT_USER
+            val password = firstNonBlank(env, "POSTGRES_PASSWORD")
                 ?: error(
                     "Contraseña de base de datos no definida: define POSTGRES_PASSWORD " +
                         "en .env (o expórtala)"
                 )
-            return ConfiguracionBd(
+            return DatabaseConfig(
                 url = "jdbc:postgresql://$host:$port/$db",
-                usuario = usuario,
+                user = user,
                 password = password,
             )
         }
 
-        private fun primerValor(env: Map<String, String>, clave: String): String? =
-            env[clave]?.takeIf { it.isNotBlank() }
+        private fun firstNonBlank(env: Map<String, String>, key: String): String? =
+            env[key]?.takeIf { it.isNotBlank() }
 
         private fun parsePort(raw: String?): String {
             val port = raw?.toIntOrNull()

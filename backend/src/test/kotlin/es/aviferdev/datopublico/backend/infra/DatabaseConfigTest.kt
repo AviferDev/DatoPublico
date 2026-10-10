@@ -11,20 +11,20 @@ import kotlin.test.assertTrue
  * Verifican la derivación de `POSTGRES_*`, los valores por defecto no sensibles
  * y el fail-fast ante una contraseña ausente. No abren ninguna conexión.
  */
-class ConfiguracionBdTest {
+class DatabaseConfigTest {
 
     @Test
-    fun `deriva la url de POSTGRES con defaults no sensibles`() {
-        val config = ConfiguracionBd.fromEnv(mapOf("POSTGRES_PASSWORD" to "secreta"))
+    fun `derives the url from POSTGRES with non sensitive defaults`() {
+        val config = DatabaseConfig.fromEnv(mapOf("POSTGRES_PASSWORD" to "secreta"))
 
         assertEquals("jdbc:postgresql://localhost:5432/datopublico", config.url)
-        assertEquals("datopublico", config.usuario)
+        assertEquals("datopublico", config.user)
         assertEquals("secreta", config.password)
     }
 
     @Test
-    fun `usa los overrides de POSTGRES`() {
-        val config = ConfiguracionBd.fromEnv(
+    fun `uses the POSTGRES overrides`() {
+        val config = DatabaseConfig.fromEnv(
             mapOf(
                 "POSTGRES_HOST" to "db.local",
                 "POSTGRES_PORT" to "5544",
@@ -35,12 +35,12 @@ class ConfiguracionBdTest {
         )
 
         assertEquals("jdbc:postgresql://db.local:5544/otra", config.url)
-        assertEquals("usuario", config.usuario)
+        assertEquals("usuario", config.user)
     }
 
     @Test
-    fun `ignora los valores en blanco y usa los defaults`() {
-        val config = ConfiguracionBd.fromEnv(
+    fun `ignores blank values and uses the defaults`() {
+        val config = DatabaseConfig.fromEnv(
             mapOf(
                 "POSTGRES_HOST" to "  ",
                 "POSTGRES_PORT" to "",
@@ -51,29 +51,29 @@ class ConfiguracionBdTest {
         )
 
         assertEquals("jdbc:postgresql://localhost:5432/datopublico", config.url)
-        assertEquals("datopublico", config.usuario)
+        assertEquals("datopublico", config.user)
     }
 
     @Test
-    fun `falla sin POSTGRES_PASSWORD`() {
+    fun `fails without POSTGRES_PASSWORD`() {
         val error = assertFailsWith<IllegalStateException> {
-            ConfiguracionBd.fromEnv(emptyMap())
+            DatabaseConfig.fromEnv(emptyMap())
         }
 
         assertTrue(error.message?.contains("POSTGRES_PASSWORD") == true)
     }
 
     @Test
-    fun `falla con una contrasena en blanco`() {
+    fun `fails with a blank password`() {
         assertFailsWith<IllegalStateException> {
-            ConfiguracionBd.fromEnv(mapOf("POSTGRES_PASSWORD" to "   "))
+            DatabaseConfig.fromEnv(mapOf("POSTGRES_PASSWORD" to "   "))
         }
     }
 
     @Test
-    fun `falla con un puerto no numerico`() {
+    fun `fails with a non numeric port`() {
         val error = assertFailsWith<IllegalArgumentException> {
-            ConfiguracionBd.fromEnv(
+            DatabaseConfig.fromEnv(
                 mapOf("POSTGRES_PORT" to "no-es-un-puerto", "POSTGRES_PASSWORD" to "secreta")
             )
         }
@@ -82,20 +82,20 @@ class ConfiguracionBdTest {
     }
 
     @Test
-    fun `falla con un puerto fuera de rango`() {
+    fun `fails with an out of range port`() {
         assertFailsWith<IllegalArgumentException> {
-            ConfiguracionBd.fromEnv(mapOf("POSTGRES_PORT" to "0", "POSTGRES_PASSWORD" to "secreta"))
+            DatabaseConfig.fromEnv(mapOf("POSTGRES_PORT" to "0", "POSTGRES_PASSWORD" to "secreta"))
         }
         assertFailsWith<IllegalArgumentException> {
-            ConfiguracionBd.fromEnv(
+            DatabaseConfig.fromEnv(
                 mapOf("POSTGRES_PORT" to "70000", "POSTGRES_PASSWORD" to "secreta")
             )
         }
     }
 
     @Test
-    fun `toString no filtra la contrasena`() {
-        val config = ConfiguracionBd.fromEnv(mapOf("POSTGRES_PASSWORD" to "muy-secreta"))
+    fun `toString does not leak the password`() {
+        val config = DatabaseConfig.fromEnv(mapOf("POSTGRES_PASSWORD" to "muy-secreta"))
 
         assertTrue(config.toString().contains("password=***"))
         assertTrue(!config.toString().contains("muy-secreta"))

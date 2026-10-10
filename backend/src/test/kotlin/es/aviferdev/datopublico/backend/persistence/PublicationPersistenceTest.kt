@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.persistencia
+package es.aviferdev.datopublico.backend.persistence
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.model.CategoriaDto
@@ -15,36 +15,36 @@ import kotlin.test.assertNull
  * epígrafe y plazo) y el caso con opcionales nulos (parser de FT00007 antes de
  * FT00012). No abren ninguna conexión.
  */
-class PublicacionPersistenciaTest {
+class PublicationPersistenceTest {
 
     @Test
-    fun `mapea ida y vuelta una publicacion completa`() {
-        val publicacion = publicacionCompleta()
+    fun `maps a full publication round trip`() {
+        val publication = fullPublication()
 
-        val recuperada = publicacion.aPublicacionEntity().aPublicacion()
+        val retrieved = publication.toPublicationEntity().toDomain()
 
-        assertEquals(publicacion, recuperada)
+        assertEquals(publication, retrieved)
     }
 
     @Test
-    fun `guarda seccion y categoria por el nombre del enum`() {
-        val entidad = publicacionCompleta().aPublicacionEntity()
+    fun `stores section and category by enum name`() {
+        val entity = fullPublication().toPublicationEntity()
 
-        assertEquals("II_A", entidad.seccion)
-        assertEquals("BECAS_SUBVENCIONES_Y_AYUDAS", entidad.categoria)
+        assertEquals("II_A", entity.section)
+        assertEquals("BECAS_SUBVENCIONES_Y_AYUDAS", entity.category)
     }
 
     @Test
-    fun `mapea el plazo en sus dos columnas`() {
-        val entidad = publicacionCompleta().aPublicacionEntity()
+    fun `maps the deadline into its two columns`() {
+        val entity = fullPublication().toPublicationEntity()
 
-        assertEquals("2026-11-30", entidad.plazoFechaLimite)
-        assertEquals("Diez días hábiles", entidad.plazoDescripcion)
+        assertEquals("2026-11-30", entity.deadlineDate)
+        assertEquals("Diez días hábiles", entity.deadlineDescription)
     }
 
     @Test
-    fun `conserva los nulos del parser antes de FT00012`() {
-        val publicacion = Publicacion(
+    fun `keeps the nulls from the parser before FT00012`() {
+        val publication = Publicacion(
             id = "BOE-A-2024-87",
             titulo = "Resolución de 21 de diciembre de 2023",
             fechaPublicacion = "2024-01-02",
@@ -58,30 +58,30 @@ class PublicacionPersistenciaTest {
             rango = null,
         )
 
-        val entidad = publicacion.aPublicacionEntity()
-        val recuperada = entidad.aPublicacion()
+        val entity = publication.toPublicationEntity()
+        val retrieved = entity.toDomain()
 
-        assertNull(entidad.categoria)
-        assertNull(entidad.plazoFechaLimite)
-        assertNull(entidad.plazoDescripcion)
-        assertNull(recuperada.organismo)
-        assertNull(recuperada.epigrafe)
-        assertNull(recuperada.texto)
-        assertNull(recuperada.categoria)
-        assertNull(recuperada.plazo)
-        assertEquals(publicacion, recuperada)
+        assertNull(entity.category)
+        assertNull(entity.deadlineDate)
+        assertNull(entity.deadlineDescription)
+        assertNull(retrieved.organismo)
+        assertNull(retrieved.epigrafe)
+        assertNull(retrieved.texto)
+        assertNull(retrieved.categoria)
+        assertNull(retrieved.plazo)
+        assertEquals(publication, retrieved)
     }
 
     @Test
-    fun `un plazo sin descripcion se conserva`() {
-        val publicacion = publicacionCompleta().copy(
+    fun `keeps a deadline without description`() {
+        val publication = fullPublication().copy(
             plazo = PlazoDto(fechaLimite = "2026-12-15"),
         )
 
-        assertEquals(publicacion.plazo, publicacion.aPublicacionEntity().aPublicacion().plazo)
+        assertEquals(publication.plazo, publication.toPublicationEntity().toDomain().plazo)
     }
 
-    private fun publicacionCompleta(): Publicacion = Publicacion(
+    private fun fullPublication(): Publicacion = Publicacion(
         id = "BOE-A-2026-20979",
         titulo = "Resolución de 8 de octubre de 2026",
         fechaPublicacion = "2026-10-09",

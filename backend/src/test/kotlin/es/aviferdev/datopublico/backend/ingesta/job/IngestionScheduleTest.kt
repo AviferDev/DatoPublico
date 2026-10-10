@@ -1,5 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.job
 
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -47,6 +48,23 @@ class IngestionScheduleTest {
         )
 
         assertEquals(at(9, 30), unordered.nextRun(at(9, 0)))
+    }
+
+    @Test
+    fun `enumerates the windows of a date sorted`() {
+        val unordered = IngestionSchedule(
+            times = listOf(LocalTime.of(18, 0), LocalTime.of(9, 30)),
+            zone = zone,
+        )
+
+        val windows = unordered.runsOn(LocalDate.of(2026, 10, 9))
+
+        assertEquals(listOf(at(9, 30), at(18, 0)), windows)
+    }
+
+    @Test
+    fun `exposes its zone`() {
+        assertEquals(zone, schedule.zone)
     }
 
     /** Instante de referencia del 9 de octubre de 2026 en la zona del horario. */

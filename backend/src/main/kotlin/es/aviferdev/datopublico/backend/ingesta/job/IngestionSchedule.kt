@@ -1,5 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.job
 
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -15,11 +16,23 @@ import java.time.ZonedDateTime
  */
 class IngestionSchedule(
     private val times: List<LocalTime>,
-    private val zone: ZoneId,
+    val zone: ZoneId,
 ) {
     init {
         require(times.isNotEmpty()) { "El horario de ingesta necesita al menos una hora." }
     }
+
+    /**
+     * Devuelve las ventanas de disparo de [date] en [zone], **ordenadas** de
+     * menor a mayor hora.
+     *
+     * Es **puro y sin E/S**: lo usan el detector de ventanas perdidas y los tests
+     * para enumerar los instantes de un día.
+     *
+     * @param date día local cuyas ventanas se quieren.
+     */
+    fun runsOn(date: LocalDate): List<ZonedDateTime> =
+        times.sorted().map { time -> date.atTime(time).atZone(zone) }
 
     /**
      * Devuelve el siguiente instante **estrictamente posterior** a [now] que cae

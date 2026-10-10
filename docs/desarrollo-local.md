@@ -182,9 +182,10 @@ sin esperar en real.
 
 Solo se arranca **si la configuración de BD resuelve** (`POSTGRES_PASSWORD`
 presente). Sin BD, el servidor arranca igual y el job se omite; con BD, el log
-muestra `Ingesta programada: horas=[09:30, 18:00] zona=Europe/Madrid`. El job
-**asume el esquema aplicado** (`./gradlew :backend:flywayMigrate`) y se cierra
-(pool y clientes HTTP) al parar el servidor.
+muestra `Ingesta programada: horas=[09:30, 18:00] zona=Europe/Madrid
+gracia=30min`. El job **asume el esquema aplicado**
+(`./gradlew :backend:flywayMigrate`) y se cierra (pool y clientes HTTP) al parar
+el servidor.
 
 Variables de entorno (todas opcionales; un valor inválido aborta el arranque):
 
@@ -192,6 +193,31 @@ Variables de entorno (todas opcionales; un valor inválido aborta el arranque):
 - `INGESTA_TIMEZONE` (por defecto `Europe/Madrid`).
 - `INGESTA_PRIMARY_TIME` (por defecto `09:30`).
 - `INGESTA_SECONDARY_TIME` (por defecto `18:00`).
+- `INGESTA_GRACE_MINUTES` (por defecto `30`): margen entero de minutos > 0 que se
+  espera tras una ventana antes de considerarla perdida.
+
+### Observabilidad y alertas
+
+Cada ejecución del job deja una línea JSON **estructurada** en stdout (los campos
+van de primer nivel, no dentro de `message`) con una clave `event` estable:
+
+- `event=ingestion.run.completed` (nivel `INFO`) con `ingestion_date`,
+  `total_entries`, `publications_saved` y `publications_failed`.
+- `event=ingestion.run.failed` (nivel `ERROR`) con el motivo en `error`.
+
+Un **vigilante interno** (`IngestionWatchdog`, cada 5 min, en el mismo scope que
+el scheduler) alerta si una de las ventanas del día pasa sin ejecutarse: emite
+`event=ingestion.missed` (nivel `ERROR`) con `ingestion_date`, `window` (hora de
+la ventana) y `grace_minutes`. Una ventana solo se alerta **una vez**, y no se
+reclaman las anteriores al arranque del proceso (recuperarlas es del backfill,
+FT00011). Para depurar, filtra stdout por `"event"`:
+
+```sh
+./gradlew :backend:run | grep -E '"event":"ingestion\.(run|missed)'
+```
+
+No hay alertas externas (email, push, webhooks) ni telemetría: el canal es el log
+`ERROR` estructurado y un monitor de logs debe vigilar esas claves.
 
 La verificación del *upsert* real (dos ejecuciones de la misma fecha sin
 duplicar, con `actualizado_en` refrescado) es **opt-in** y queda fuera de

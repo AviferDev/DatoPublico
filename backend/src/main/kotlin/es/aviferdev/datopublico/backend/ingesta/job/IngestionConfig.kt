@@ -1,5 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.job
 
+import java.time.Duration
 import java.time.LocalTime
 import java.time.ZoneId
 
@@ -17,12 +18,15 @@ import java.time.ZoneId
  * @property zone zona IANA del horario (`INGESTA_TIMEZONE`).
  * @property primaryTime hora de la primera pasada (`INGESTA_PRIMARY_TIME`).
  * @property secondaryTime hora de la segunda pasada (`INGESTA_SECONDARY_TIME`).
+ * @property grace margen (`INGESTA_GRACE_MINUTES`, por defecto 30) que se espera
+ *   tras una ventana antes de considerarla perdida y alertar.
  */
 data class IngestionConfig(
     val enabled: Boolean,
     val zone: ZoneId,
     val primaryTime: LocalTime,
     val secondaryTime: LocalTime,
+    val grace: Duration,
 ) {
     /** Horas de disparo diarias, en el orden configurado (primera y segunda). */
     val times: List<LocalTime> get() = listOf(primaryTime, secondaryTime)
@@ -36,6 +40,9 @@ data class IngestionConfig(
 
         /** Segunda pasada por defecto (correcciones de la tarde). */
         const val DEFAULT_SECONDARY_TIME: String = "18:00"
+
+        /** Margen por defecto tras una ventana antes de alertar (minutos). */
+        const val DEFAULT_GRACE_MINUTES: Int = 30
 
         /**
          * Construye la configuración desde un mapa de entorno (`System.getenv()`
@@ -57,6 +64,7 @@ data class IngestionConfig(
                 raw = firstNonBlank(env, SECONDARY_TIME_KEY),
                 default = DEFAULT_SECONDARY_TIME,
             ),
+            grace = parseGrace(firstNonBlank(env, GRACE_KEY)),
         )
 
         private fun firstNonBlank(env: Map<String, String>, key: String): String? =
@@ -90,9 +98,24 @@ data class IngestionConfig(
             }
         }
 
+        /** `INGESTA_GRACE_MINUTES`: entero de minutos > 0 (fail-fast si no lo es). */
+        private fun parseGrace(raw: String?): Duration {
+            val value = raw ?: DEFAULT_GRACE_MINUTES.toString()
+            val minutes = value.toIntOrNull()
+            return when {
+                minutes == null || minutes <= 0 -> throw IllegalArgumentException(
+                    "Valor inválido de $GRACE_KEY: '$value'. " +
+                        "Usa un número entero de minutos mayor que 0."
+                )
+
+                else -> Duration.ofMinutes(minutes.toLong())
+            }
+        }
+
         private const val ENABLED_KEY = "INGESTA_ENABLED"
         private const val TIMEZONE_KEY = "INGESTA_TIMEZONE"
         private const val PRIMARY_TIME_KEY = "INGESTA_PRIMARY_TIME"
         private const val SECONDARY_TIME_KEY = "INGESTA_SECONDARY_TIME"
+        private const val GRACE_KEY = "INGESTA_GRACE_MINUTES"
     }
 }

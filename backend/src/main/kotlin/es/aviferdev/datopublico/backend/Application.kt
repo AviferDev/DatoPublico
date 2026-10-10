@@ -5,8 +5,10 @@ import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionConfig
 import es.aviferdev.datopublico.backend.ingesta.job.DailyIngestionJob
+import es.aviferdev.datopublico.backend.ingesta.job.IngestionRunState
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionSchedule
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionScheduler
+import es.aviferdev.datopublico.backend.ingesta.job.IngestionWatchdog
 import es.aviferdev.datopublico.backend.ingesta.publicacion.BoePublicacionHttpParser
 import es.aviferdev.datopublico.backend.ingesta.publicacion.BoeTextoHttpClient
 import es.aviferdev.datopublico.backend.ingesta.publicacion.boeTextoHttpClient
@@ -84,8 +86,8 @@ private fun Application.startIngestion(config: IngestionConfig) {
 }
 
 /**
- * Construye los recursos de la ingesta (pool JDBC, clientes HTTP, job y
- * scheduler) y lanza el bucle. Si algo falla, cierra lo ya creado y propaga.
+ * Construye los recursos de la ingesta (pool JDBC, clientes HTTP, job, scheduler
+ * y vigilante) y lanza sus bucles. Si algo falla, cierra lo ya creado y propaga.
  */
 private fun Application.createIngestionRuntime(config: IngestionConfig): IngestionRuntime {
     val dataSource = Database.createDataSource(DatabaseConfig.fromEnv())
@@ -93,17 +95,31 @@ private fun Application.createIngestionRuntime(config: IngestionConfig): Ingesti
     val textHttp = boeTextoHttpClient()
     return try {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val schedule = IngestionSchedule(config.times, config.zone)
+        val runState = IngestionRunState()
         val scheduler = IngestionScheduler(
-            schedule = IngestionSchedule(config.times, config.zone),
+            schedule = schedule,
             job = DailyIngestionJob(
                 summaryClient = BoeSumarioHttpClient(summaryHttp),
                 publicationParser = BoePublicacionHttpParser(BoeTextoHttpClient(textHttp)),
                 repository = PublicationRepositoryJdbc(dataSource),
             ),
             zone = config.zone,
+            runState = runState,
+        )
+        val watchdog = IngestionWatchdog(
+            schedule = schedule,
+            runState = runState,
+            grace = config.grace,
         )
         scheduler.start(scope)
-        log.info("Ingesta programada: horas={} zona={}", config.times, config.zone)
+        watchdog.start(scope)
+        log.info(
+            "Ingesta programada: horas={} zona={} gracia={}min",
+            config.times,
+            config.zone,
+            config.grace.toMinutes(),
+        )
         IngestionRuntime(scope, dataSource, listOf(summaryHttp, textHttp))
     } catch (error: Exception) {
         summaryHttp.close()

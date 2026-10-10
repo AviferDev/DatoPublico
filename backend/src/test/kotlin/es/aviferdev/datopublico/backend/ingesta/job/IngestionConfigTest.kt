@@ -1,5 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.job
 
+import java.time.Duration
 import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.test.Test
@@ -22,6 +23,7 @@ class IngestionConfigTest {
         assertEquals(ZoneId.of(IngestionConfig.DEFAULT_TIMEZONE), config.zone)
         assertEquals(LocalTime.of(9, 30), config.primaryTime)
         assertEquals(LocalTime.of(18, 0), config.secondaryTime)
+        assertEquals(Duration.ofMinutes(30), config.grace)
         assertEquals(listOf(LocalTime.of(9, 30), LocalTime.of(18, 0)), config.times)
     }
 
@@ -33,6 +35,7 @@ class IngestionConfigTest {
                 "INGESTA_TIMEZONE" to "Atlantic/Canary",
                 "INGESTA_PRIMARY_TIME" to "08:00",
                 "INGESTA_SECONDARY_TIME" to "20:15",
+                "INGESTA_GRACE_MINUTES" to "45",
             )
         )
 
@@ -40,6 +43,7 @@ class IngestionConfigTest {
         assertEquals(ZoneId.of("Atlantic/Canary"), config.zone)
         assertEquals(LocalTime.of(8, 0), config.primaryTime)
         assertEquals(LocalTime.of(20, 15), config.secondaryTime)
+        assertEquals(Duration.ofMinutes(45), config.grace)
     }
 
     @Test
@@ -55,12 +59,14 @@ class IngestionConfigTest {
                 "INGESTA_TIMEZONE" to "  ",
                 "INGESTA_PRIMARY_TIME" to "",
                 "INGESTA_SECONDARY_TIME" to " ",
+                "INGESTA_GRACE_MINUTES" to "  ",
             )
         )
 
         assertEquals(ZoneId.of(IngestionConfig.DEFAULT_TIMEZONE), config.zone)
         assertEquals(LocalTime.of(9, 30), config.primaryTime)
         assertEquals(LocalTime.of(18, 0), config.secondaryTime)
+        assertEquals(Duration.ofMinutes(30), config.grace)
     }
 
     @Test
@@ -86,6 +92,16 @@ class IngestionConfigTest {
     fun `fails with an invalid boolean`() {
         assertFailsWith<IllegalArgumentException> {
             IngestionConfig.fromEnv(mapOf("INGESTA_ENABLED" to "quizas"))
+        }
+    }
+
+    @Test
+    fun `fails with an invalid grace`() {
+        listOf("0", "-5", "media hora").forEach { raw ->
+            val error = assertFailsWith<IllegalArgumentException> {
+                IngestionConfig.fromEnv(mapOf("INGESTA_GRACE_MINUTES" to raw))
+            }
+            assertTrue(error.message!!.contains("INGESTA_GRACE_MINUTES"), error.message!!)
         }
     }
 }

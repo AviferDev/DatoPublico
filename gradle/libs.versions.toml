@@ -3,8 +3,10 @@
 # FT00001 activó Kotlin multiplatform/JVM y `kotlin("test")`; FT00002 activó la
 # serialización; FT00003 activó Flyway y el driver PostgreSQL; FT00004 activa el
 # servidor Ktor (Netty) y el logging JSON; FT00005 activa Compose Multiplatform y
-# AGP en `:composeApp`. Las versiones restantes (coroutines) quedan predeclaradas
-# para que las features siguientes las activen sin tocar la raíz del build.
+# AGP en `:composeApp`; FT00006 activa el motor de cliente Ktor (CIO) y su doble
+# de test (`ktor-client-mock`). Las versiones restantes (coroutines) quedan
+# predeclaradas para que las features siguientes las activen sin tocar la raíz del
+# build.
 
 [versions]
 kotlin = "2.1.20"
@@ -38,7 +40,10 @@ flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+# Doble de test del cliente Ktor: simula respuestas HTTP sin abrir sockets.
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }

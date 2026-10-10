@@ -1,5 +1,6 @@
 package es.aviferdev.datopublico.backend.persistence
 
+import es.aviferdev.datopublico.backend.rag.Fragment
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import javax.sql.DataSource
@@ -7,8 +8,8 @@ import javax.sql.DataSource
 /**
  * Persistencia **mínima** de fragmentos de una publicación (tabla `fragmento`).
  *
- * El modelo de dominio y el comportamiento real del chunking llegan con FT00014;
- * aquí solo se guardan y se leen por publicación. La columna de embedding y su
+ * El modelo de dominio y el chunking por artículo ya existen (FT00014); aquí solo
+ * se guardan y se leen por publicación. La columna de embedding y su
  * índice HNSW son de FT00016 y **no** están en esta tabla todavía.
  */
 interface FragmentRepository {
@@ -43,6 +44,24 @@ internal fun ResultSet.toFragmentEntity(): FragmentEntity = FragmentEntity(
     order = getInt("orden"),
     reference = getString("referencia"),
     content = getString("contenido"),
+)
+
+/**
+ * Mapea el [Fragment] de dominio (capa RAG, FT00014) a su entidad de
+ * persistencia [FragmentEntity].
+ *
+ * Extensión **pura**: solo cierra el encaje de tipos (la capa de datos depende del
+ * dominio, dirección correcta); **no** abre conexión ni invoca el repositorio. El
+ * `id` queda `null` hasta que [FragmentRepository.save] inserte la fila.
+ *
+ * @return entidad lista para persistir, con `id = null`.
+ */
+fun Fragment.toEntity(): FragmentEntity = FragmentEntity(
+    id = null,
+    publicationId = publicationId,
+    order = order,
+    reference = reference,
+    content = content,
 )
 
 /**

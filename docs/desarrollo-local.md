@@ -176,6 +176,37 @@ y pasará la lista a `HighlightRanker.rank(...)`. Decisión durable en el ADR 00
 (harness privado). No hay endpoint ni UI: se prueba solo en el gate, sin red ni
 BD.
 
+## Fragmentación por artículo o sección (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.rag` (modelo de dominio `Fragment`) y
+su subpaquete `rag.chunking` (chunker puro `ArticleChunker`) dividen el texto de
+una `Publicacion` en **fragmentos** listos para vectorizar (FT00015) y persistir
+(FT00016+), sin red ni base de datos:
+
+- **Por artículo/disposición** conservando la **referencia**: se detectan los
+  encabezados `Artículo …`/`Disposición …` anclados a **inicio de línea** (el
+  texto ya llega normalizado por el parser) y cada uno inicia un bloque con su
+  encabezado y su cuerpo. Las líneas previas al primer encabezado forman el bloque
+  **introductorio**.
+- **Variante por sección**: las secciones sin artículos (II.A, II.B, IV, V.A, V.B y
+  V.C) agrupan sus párrafos en fragmentos consecutivos con `reference` de sección
+  (`"Sección " + seccion.name`, p. ej. `Sección II_B`).
+- **Cobertura sin solapamiento** y `order` contiguo `0..n-1`: la concatenación de
+  los fragmentos reproduce las líneas del texto de origen en orden, sin repetir ni
+  omitir. Un párrafo que supere el presupuesto se parte por palabras conservando
+  la misma `reference`.
+- **Presupuesto del modelo E5 (≤512 tokens)**: la estimación es **provisional**
+  (`ceil(caracteres / 3)`) porque el tokenizador real llega con FT00015; es
+  conservadora y **inyectable** por el constructor de `ArticleChunker`
+  (`maxTokens`, `charsPerToken`), que FT00015 recalibrará sin cambiar la firma.
+
+El chunker es **puro y determinista** (sin IA, red, BD, reloj ni estado) y **no**
+se cablea en el arranque. El encaje con la persistencia es la extensión pura
+`Fragment.toEntity()` (`id = null`, sin abrir conexión), en `persistence/`.
+`ArticleChunkerTest` cubre los escenarios con los **fixtures reales** de las ocho
+secciones, en el gate y sin red ni BD. Decisión durable en el ADR 0009 (harness
+privado).
+
 ## Arranque de la base de datos
 
 ```sh

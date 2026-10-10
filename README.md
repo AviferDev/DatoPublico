@@ -50,6 +50,11 @@ El proyecto está **en desarrollo**. La primera versión pública será la
 **1.0.0**. La hoja de ruta, funcionalidad por funcionalidad, está en
 [`ROADMAP.md`](ROADMAP.md).
 
+## Desarrollo local
+
+Para levantar la base de datos y aplicar las migraciones, consulta
+[`docs/desarrollo-local.md`](docs/desarrollo-local.md).
+
 ## Contribuir
 
 Es un proyecto pequeño y en construcción. Si quieres proponer algo, abre una

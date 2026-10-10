@@ -1,20 +1,5 @@
-# Entorno local de base de datos de DatoPublico (FT00003).
-#
-# Levanta PostgreSQL 17 con la extensión pgvector. Los valores de conexión se
-# resuelven del entorno (`.env`, ignorado por git). `POSTGRES_PASSWORD` es
-# **obligatorio**: no hay valor por defecto (fail-fast) para no versionar ni
-# reutilizar credenciales implícitas. `POSTGRES_DB`/`POSTGRES_USER` sí tienen
-# default de desarrollo (no son secretos). Los secretos reales de producción
-# llegan en FT00041.
-#
-# El puerto se publica **solo en loopback** (`127.0.0.1`), nunca en `0.0.0.0`.
-#
-# Las migraciones **no** las aplica este compose, sino Flyway desde Gradle:
-#   ./gradlew :backend:flywayMigrate
 services:
   postgres:
-    # Imagen oficial de pgvector, etiqueta fijada a PostgreSQL 17 (multi-arq,
-    # funciona en Apple Silicon/Colima).
     image: pgvector/pgvector:pg17
     container_name: datopublico-postgres
     environment:
@@ -22,7 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-datopublico}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en .env}
     ports:
-      # Loopback únicamente: no expone el puerto a la red local.
+      # Solo loopback.
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -34,5 +19,4 @@ services:
       start_period: 10s
 
 volumes:
-  # Persistencia del cluster: sobrevive a `docker compose down` (no a `down -v`).
   pgdata:

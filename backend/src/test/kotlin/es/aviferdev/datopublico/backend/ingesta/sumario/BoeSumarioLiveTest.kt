@@ -20,26 +20,24 @@ import kotlinx.coroutines.test.runTest
 class BoeSumarioLiveTest {
 
     @Test
-    fun `la API real devuelve 200 y entradas no vacias de las secciones del corpus`() = runTest {
+    fun `la API real devuelve 200 y entradas de todas las secciones del BOE`() = runTest {
         if (System.getenv("BOE_LIVE_TEST") != "1") {
             println("BoeSumarioLiveTest omitido: exporta BOE_LIVE_TEST=1 para el test real.")
         } else {
             val httpClient = boeSumarioHttpClient()
             try {
-                val entradas = BoeSumarioHttpClient(httpClient).obtenerSumario(FECHA_LABORABLE)
+                val entradas = BoeSumarioHttpClient(httpClient).obtenerSumario(FECHA_CON_TODAS_LAS_SECCIONES)
 
-                assertTrue(entradas.isNotEmpty(), "La API real no devolvió entradas para $FECHA_LABORABLE")
+                assertTrue(
+                    entradas.isNotEmpty(),
+                    "La API real no devolvió entradas para $FECHA_CON_TODAS_LAS_SECCIONES",
+                )
                 assertEquals(
-                    setOf(
-                        SeccionBoeDto.I,
-                        SeccionBoeDto.II_A,
-                        SeccionBoeDto.II_B,
-                        SeccionBoeDto.III,
-                        SeccionBoeDto.V_B,
-                    ),
+                    SeccionBoeDto.entries.toSet(),
                     entradas.map { it.seccion }.toSet(),
                 )
                 assertTrue(entradas.all { it.identificador.isNotBlank() && it.urlOficial.isNotBlank() })
+                assertTrue(entradas.all { it.urlPdf != null })
             } finally {
                 httpClient.close()
             }
@@ -47,6 +45,7 @@ class BoeSumarioLiveTest {
     }
 
     private companion object {
-        val FECHA_LABORABLE: LocalDate = LocalDate.of(2026, 10, 9)
+        /** 2024-01-09 es un día laborable con las ocho secciones del sumario. */
+        val FECHA_CON_TODAS_LAS_SECCIONES: LocalDate = LocalDate.of(2024, 1, 9)
     }
 }

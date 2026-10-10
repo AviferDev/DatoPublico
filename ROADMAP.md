@@ -9,7 +9,7 @@ producción.
 | Versión | Qué llega |
 | --- | --- |
 | `0.1.0` | Cimientos del proyecto (sin funciones visibles para el usuario). |
-| `0.2.0` | El sistema lee, clasifica y guarda las publicaciones del BOE (Secciones I, II.A, II.B, III y V.B). |
+| `0.2.0` | El sistema lee, clasifica y guarda las publicaciones del BOE (todo el sumario: Secciones I, II.A, II.B, III, IV, V.A, V.B y V.C). |
 | `0.3.0` | Se pueden buscar publicaciones por su contenido. |
 | `0.4.0` | Cada publicación obtiene un resumen en lenguaje claro con enlace a la fuente oficial, y se calculan los destacados del día. |
 | `0.5.0` | El contenido se ofrece de forma pública: feed diario, detalle, búsqueda y chat. |

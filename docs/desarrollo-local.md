@@ -75,8 +75,9 @@ variables. Sin telemetría ni destino externo.
 El paquete `es.aviferdev.datopublico.backend.ingesta.sumario` encapsula la API de
 datos abiertos del BOE
 (`GET https://www.boe.es/datosabiertos/api/boe/sumario/{YYYYMMDD}` con
-`Accept: application/json`). Devuelve las entradas de las Secciones I, II.A,
-II.B, III y V.B (excluye IV y V.A) y **no** se cablea en el arranque del backend.
+`Accept: application/json`). Devuelve las entradas de **todo el sumario** (secciones
+I, II.A, II.B, III, IV, V.A, V.B y V.C) con la URL html, xml y pdf de cada entrada,
+y **no** se cablea en el arranque del backend.
 
 Los tests con `MockEngine` (sin red) corren en el gate. La prueba contra la API
 real es **opt-in** y queda fuera de `build`/`test`/`init.sh` y de la CI:

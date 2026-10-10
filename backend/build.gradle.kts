@@ -128,3 +128,12 @@ tasks.withType<org.flywaydb.gradle.task.AbstractFlywayTask>().configureEach {
         password = flywayPasswordOrFail()
     }
 }
+
+// Backfill one-shot del histórico (FT00011): tarea explícita, nunca enganchada a
+// `build`/`check` (la CI corre sin red ni BD). Hereda el entorno del proceso.
+tasks.register<JavaExec>("backfill") {
+    group = "application"
+    description = "Carga por lotes el histórico del BOE (one-shot, reanudable)."
+    mainClass.set("es.aviferdev.datopublico.backend.ingesta.backfill.BackfillMainKt")
+    classpath = sourceSets["main"].runtimeClasspath
+}

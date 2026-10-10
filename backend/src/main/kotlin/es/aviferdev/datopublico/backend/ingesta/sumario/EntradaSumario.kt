@@ -13,6 +13,9 @@ import es.aviferdev.datopublico.model.SeccionBoeDto
  * coherente con `PublicacionDto`. [organismo] y [epigrafe] son opcionales porque
  * la estructura varía entre secciones; [control] falta en las entradas que el BOE
  * publica directamente bajo un departamento (sin epígrafe).
+ *
+ * [urlOficial] es el enlace HTML (`txt.php?id=…`) o, si no existe, la URL del PDF;
+ * [urlXml] y [urlPdf] son opcionales según la sección.
  */
 data class EntradaSumario(
     val identificador: String,
@@ -24,4 +27,5 @@ data class EntradaSumario(
     val epigrafe: String?,
     val urlOficial: String,
     val urlXml: String?,
+    val urlPdf: String?,
 )

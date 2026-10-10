@@ -23,15 +23,15 @@ import kotlinx.coroutines.test.runTest
 
 /**
  * Cliente del sumario con [MockEngine] (sin red): cubre los escenarios 1–5 del
- * spec — URL y cabecera, filtrado de secciones, `item` objeto/array, `404` y
- * errores tipados.
+ * spec — URL y cabecera, inclusión de todas las secciones, `item` objeto/array,
+ * `404` y errores tipados.
  */
 class BoeSumarioClientTest {
 
     private val fecha = LocalDate.of(2026, 10, 9)
 
     @Test
-    fun `pide GET YYYYMMDD con Accept application json y filtra las secciones`() = runTest {
+    fun `pide GET YYYYMMDD con Accept application json e incluye todas las secciones`() = runTest {
         var capturada: HttpRequestData? = null
         val client = clientCon(MockEngine { request ->
             capturada = request
@@ -52,12 +52,19 @@ class BoeSumarioClientTest {
             request.url.toString(),
         )
         assertEquals("application/json", request.headers[HttpHeaders.Accept])
-        assertEquals(205, entradas.size)
+        assertEquals(237, entradas.size)
         assertEquals(
-            setOf(SeccionBoeDto.I, SeccionBoeDto.II_A, SeccionBoeDto.II_B, SeccionBoeDto.III, SeccionBoeDto.V_B),
+            setOf(
+                SeccionBoeDto.I,
+                SeccionBoeDto.II_A,
+                SeccionBoeDto.II_B,
+                SeccionBoeDto.III,
+                SeccionBoeDto.V_A,
+                SeccionBoeDto.V_B,
+            ),
             entradas.map { it.seccion }.toSet(),
         )
-        assertTrue(entradas.none { it.identificador == "BOE-B-2026-32742" }) // Sección V.A (32 en la fuente)
+        assertTrue(entradas.any { it.identificador == "BOE-B-2026-32742" }) // Sección V.A (32 en la fuente)
     }
 
     @Test
@@ -72,6 +79,7 @@ class BoeSumarioClientTest {
             epigrafe = "Epi",
             urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",
             urlXml = "https://www.boe.es/diario_boe/xml.php?id=BOE-A-1",
+            urlPdf = "https://www.boe.es/boe/dias/2026/10/09/pdfs/BOE-A-1.pdf",
         )
 
         val conObjeto = clientCon(engineDeTexto(SUMARIO_ITEM_OBJETO)).let {
@@ -145,7 +153,8 @@ class BoeSumarioClientTest {
              "epigrafe":{"nombre":"Epi",
               "item":{"identificador":"BOE-A-1","control":"2026/1","titulo":"T",
                "url_html":"https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",
-               "url_xml":"https://www.boe.es/diario_boe/xml.php?id=BOE-A-1"}}}}}}}}
+               "url_xml":"https://www.boe.es/diario_boe/xml.php?id=BOE-A-1",
+               "url_pdf":{"texto":"https://www.boe.es/boe/dias/2026/10/09/pdfs/BOE-A-1.pdf"}}}}}}}}}
         """
 
         const val SUMARIO_ITEM_ARRAY = """
@@ -157,7 +166,8 @@ class BoeSumarioClientTest {
              "epigrafe":[{"nombre":"Epi",
               "item":[{"identificador":"BOE-A-1","control":"2026/1","titulo":"T",
                "url_html":"https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",
-               "url_xml":"https://www.boe.es/diario_boe/xml.php?id=BOE-A-1"}]}]}]}]}]}}}
+               "url_xml":"https://www.boe.es/diario_boe/xml.php?id=BOE-A-1",
+               "url_pdf":{"texto":"https://www.boe.es/boe/dias/2026/10/09/pdfs/BOE-A-1.pdf"}}]}]}]}]}]}}}
         """
     }
 }

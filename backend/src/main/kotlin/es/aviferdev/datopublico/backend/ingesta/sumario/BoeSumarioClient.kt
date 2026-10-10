@@ -6,15 +6,16 @@ import java.time.LocalDate
 /**
  * Cliente del sumario diario del BOE (API de datos abiertos, solo lectura).
  *
- * Devuelve las entradas de las secciones del corpus (I, II.A, II.B, III y V.B)
- * para una fecha. No persiste, no clasifica ni descarga el texto completo.
+ * Devuelve las entradas de **todo el sumario** (secciones I, II.A, II.B, III, IV,
+ * V.A, V.B y V.C) para una fecha. No persiste, no clasifica ni descarga el texto
+ * completo.
  */
 interface BoeSumarioClient {
     /**
      * Obtiene las entradas del sumario del BOE publicadas en [fecha].
      *
-     * @return lista de entradas de las secciones I/II.A/II.B/III/V.B; **vacía** si
-     *   ese día no hay publicación (`HTTP 404`).
+     * @return lista de entradas de todas las secciones del BOE; **vacía** si ese
+     *   día no hay publicación (`HTTP 404`).
      * @throws BoeSumarioException si la fuente falla (red) o responde con un
      *   estado distinto de `200`/`404`, o con un cuerpo ilegible.
      */
@@ -25,9 +26,8 @@ interface BoeSumarioClient {
 class BoeSumarioException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /**
- * Traduce el sobre de wire del BOE al modelo interno, descartando las secciones
- * excluidas (IV y V.A) y aplanando la jerarquía
- * sección → departamento → epígrafe → entrada.
+ * Traduce el sobre de wire del BOE al modelo interno, aplanando la jerarquía
+ * sección → departamento → (epígrafe →) entrada. No se descarta ninguna sección.
  */
 internal fun BoeSumarioResponseDto.toEntradasSumario(fecha: LocalDate): List<EntradaSumario> {
     val fechaIso = fecha.toString()
@@ -51,6 +51,9 @@ private fun BoeDepartamentoDto.entradas(
             add(it.toEntrada(fechaIso, seccion, organismo = nombre, epigrafe = epigrafeDto.nombre))
         }
     }
+    texto?.item.orEmpty().forEach {
+        add(it.toEntrada(fechaIso, seccion, organismo = nombre, epigrafe = null))
+    }
 }
 
 private fun BoeSumarioItemDto.toEntrada(
@@ -66,16 +69,20 @@ private fun BoeSumarioItemDto.toEntrada(
     seccion = seccion,
     organismo = organismo,
     epigrafe = epigrafe,
-    urlOficial = urlHtml.orEmpty(),
+    urlOficial = urlHtml ?: urlPdf?.texto.orEmpty(),
     urlXml = urlXml,
+    urlPdf = urlPdf?.texto,
 )
 
-/** Mapea el código de sección del BOE a la sección del corpus; `null` si se excluye. */
+/** Mapea el código de sección del BOE a la sección del contrato; `null` si es ajeno. */
 private fun seccionBoeDe(codigo: String?): SeccionBoeDto? = when (codigo) {
     "1" -> SeccionBoeDto.I
     "2A" -> SeccionBoeDto.II_A
     "2B" -> SeccionBoeDto.II_B
     "3" -> SeccionBoeDto.III
+    "4" -> SeccionBoeDto.IV
+    "5A" -> SeccionBoeDto.V_A
     "5B" -> SeccionBoeDto.V_B
-    else -> null // "4" (IV) y "5A" (V.A) quedan excluidas; el resto no es corpus.
+    "5C" -> SeccionBoeDto.V_C
+    else -> null // un código ajeno al sumario del BOE no es corpus.
 }

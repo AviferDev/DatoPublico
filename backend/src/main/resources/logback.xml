@@ -1,0 +1,12 @@
+<configuration>
+    <!-- Una línea JSON por evento, solo a stdout: sin telemetría ni destino externo. -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"app":"datopublico-backend","env":"${APP_ENV:-local}"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="${LOG_LEVEL:-INFO}">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

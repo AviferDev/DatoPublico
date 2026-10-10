@@ -323,6 +323,52 @@ docker compose down -v
 
 Decisión durable en el ADR 0011 (harness privado).
 
+## Recuperación híbrida e indexado (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.rag.retrieval` (FT00017) recupera
+fragmentos combinando **filtros SQL por metadatos** con la **similitud vectorial**:
+
+- `SearchFilter` es el filtro interno (fechas ISO-8601 `publishedFrom`/`publishedTo`
+  inclusivas, `category`, `section` y `organization`; todos opcionales).
+- `SearchFilterSql` traduce el filtro a una cláusula ` AND …` parametrizada y a sus
+  parámetros (orden documentado; las fechas se enlazan como texto con *cast*
+  `?::date`; una fecha no ISO falla con `IllegalArgumentException`).
+- `HybridSearch.search(query, filter, limit)` vectoriza la consulta con
+  `EmbeddingProvider.embedQuery` (prefijo `query: `) y llama a
+  `FragmentRepository.findNearest(vector, filter, limit)` (con `JOIN publicacion` y
+  orden por distancia coseno ascendente, excluyendo fragmentos sin embedding).
+
+El paquete `rag.indexing` cierra el aplazamiento de FT00016 con un **indexado
+mínimo**: `FragmentIndexer.index(publicacion)` fragmenta (`ArticleChunker`),
+persiste cada fragmento (`save`) y guarda su embedding de *pasaje*
+(`embedPassage` + `saveEmbedding`). Es **idempotente** por el *upsert* de
+`(publicacion_id, orden)`. **No** indexa el corpus completo, no hace *batching* y
+**no** se cablea en el arranque: es una librería.
+
+El gate cubre la traducción SQL, el servicio y el indexado **sin** red ni BD
+(`SearchFilterSqlTest`, `HybridSearchTest`, `FragmentIndexerTest`). Las pruebas
+reales son **opt-in** y quedan fuera de `build`/`test`/`init.sh` y de la CI. La
+primera (filtros sobre PostgreSQL con vectores sintéticos) solo necesita la base
+de datos:
+
+```sh
+cp .env.example .env
+docker compose up -d
+./gradlew :backend:flywayMigrate
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*HybridSearchLiveTest'
+```
+
+La segunda es el extremo a extremo con el **modelo E5 real** y PostgreSQL (indexa
+la publicación y recupera el fragmento relevante primero, aplicando el filtro):
+
+```sh
+backend/tools/download-embedding-model.sh
+DB_LIVE_TEST=1 EMBEDDING_LIVE_TEST=1 ./gradlew :backend:test --tests '*FragmentIndexerLiveTest'
+docker compose down -v
+```
+
+Decisión durable en el ADR 0012 (harness privado).
+
 ## Ingesta diaria (job programado)
 
 El paquete `es.aviferdev.datopublico.backend.ingesta.job` programa la ingesta

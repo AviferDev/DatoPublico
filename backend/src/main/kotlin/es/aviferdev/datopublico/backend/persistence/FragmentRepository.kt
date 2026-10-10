@@ -1,6 +1,8 @@
 package es.aviferdev.datopublico.backend.persistence
 
 import es.aviferdev.datopublico.backend.rag.Fragment
+import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
+import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilterSql
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import javax.sql.DataSource
@@ -11,8 +13,10 @@ import javax.sql.DataSource
  * El modelo de dominio y el chunking por artículo ya existen (FT00014); aquí se
  * guardan, se leen por publicación y, desde FT00016, se **almacenan** sus
  * embeddings (columna `embedding vector(384)` con índice HNSW coseno) y se
- * consultan por **similitud** (los `k` vecinos más cercanos). Sin filtros de
- * metadatos: la recuperación híbrida es de FT00017.
+ * consultan por **similitud** (los `k` vecinos más cercanos). Desde FT00017 la
+ * consulta por similitud acepta además un [SearchFilter] de **metadatos**
+ * (fecha/categoría/sección/organismo) combinado con la distancia: es la
+ * recuperación híbrida.
  */
 interface FragmentRepository {
     /**
@@ -40,8 +44,11 @@ interface FragmentRepository {
 
     /**
      * Devuelve los [limit] fragmentos más cercanos a [queryEmbedding] por
-     * **distancia coseno** (menor = más parecido), excluyendo los que no tienen
-     * embedding (`embedding IS NOT NULL`).
+     * **distancia coseno** (menor = más parecido), sin filtros de metadatos.
+     *
+     * Equivale a `findNearest(queryEmbedding, SearchFilter(), limit)`: conserva el
+     * contrato de FT00016 (todos los fragmentos con embedding, ordenados por
+     * distancia).
      *
      * @param queryEmbedding vector de consulta normalizado de
      *   [PgVector.DIMENSIONS] dimensiones.
@@ -51,6 +58,41 @@ interface FragmentRepository {
      *   esperada o `limit < 1` (fail-fast **antes** de tocar la base de datos).
      */
     fun findNearest(queryEmbedding: FloatArray, limit: Int): List<FragmentMatch>
+
+    /**
+     * Devuelve los [limit] fragmentos más cercanos a [queryEmbedding] por
+     * **distancia coseno** que cumplen [filter] (fecha/categoría/sección/
+     * organismo), excluyendo los que no tienen embedding
+     * (`embedding IS NOT NULL`).
+     *
+     * El filtro se traduce con [SearchFilterSql] a una cláusula parametrizada
+     * sobre un `JOIN publicacion`; un filtro vacío ([SearchFilter]) coincide con
+     * el `findNearest(queryEmbedding, limit)` de FT00016.
+     *
+     * @param queryEmbedding vector de consulta normalizado de
+     *   [PgVector.DIMENSIONS] dimensiones.
+     * @param filter filtro de metadatos (todos los campos opcionales).
+     * @param limit número de vecinos a devolver (`>= 1`).
+     * @return coincidencias ordenadas por distancia ascendente.
+     * @throws IllegalArgumentException si [queryEmbedding] no tiene la dimensión
+     *   esperada, `limit < 1` o una fecha de [filter] no es ISO-8601 (fail-fast
+     *   **antes** de tocar la base de datos).
+     */
+    fun findNearest(queryEmbedding: FloatArray, filter: SearchFilter, limit: Int): List<FragmentMatch>
+
+    /**
+     * Devuelve el embedding almacenado del fragmento `(publicationId, order)`, o
+     * `null` si no existe el fragmento o no tiene embedding.
+     *
+     * Lee la columna como texto (`embedding::text`) y la interpreta con
+     * [PgVector.parse]; cierra el uso de producción de [PgVector.parse] y permite
+     * verificar el *round-trip* real del vector.
+     *
+     * @param publicationId identificador de la publicación del fragmento.
+     * @param order posición del fragmento dentro de la publicación.
+     * @return vector de [PgVector.DIMENSIONS] dimensiones, o `null`.
+     */
+    fun findEmbedding(publicationId: String, order: Int): FloatArray?
 }
 
 /** Fragmento recuperado por similitud, con su distancia coseno (menor = mejor). */
@@ -131,15 +173,28 @@ class FragmentRepositoryJdbc(private val dataSource: DataSource) : FragmentRepos
         return updated.isNotEmpty()
     }
 
-    override fun findNearest(queryEmbedding: FloatArray, limit: Int): List<FragmentMatch> {
+    override fun findNearest(queryEmbedding: FloatArray, limit: Int): List<FragmentMatch> =
+        findNearest(queryEmbedding, SearchFilter(), limit)
+
+    override fun findNearest(queryEmbedding: FloatArray, filter: SearchFilter, limit: Int): List<FragmentMatch> {
         require(limit >= 1) { "El límite de vecinos debe ser >= 1, pero es $limit." }
         val literal = PgVector.toLiteral(queryEmbedding)
+        val filterClause = SearchFilterSql.whereClause(filter)
+        val parameters = SearchFilterSql.parameters(filter)
+        val sql = FIND_NEAREST_TEMPLATE.replace(FILTER_PLACEHOLDER, filterClause)
         return dataSource.queryRows(
-            FIND_NEAREST,
-            { statement -> statement.bindNearest(literal, limit) },
+            sql,
+            { statement -> statement.bindFilteredNearest(literal, parameters, limit) },
             { rows -> rows.toFragmentMatch() },
         )
     }
+
+    override fun findEmbedding(publicationId: String, order: Int): FloatArray? =
+        dataSource.queryRows(
+            FIND_EMBEDDING,
+            { statement -> statement.bindFragmentKey(publicationId, order) },
+            { rows -> rows.getString("embedding") },
+        ).firstOrNull()?.let { literal -> PgVector.parse(literal) }
 
     /** Asigna los parámetros de la sentencia de *upsert* de fragmento. */
     private fun PreparedStatement.bindParameters(fragment: FragmentEntity) {
@@ -156,11 +211,18 @@ class FragmentRepositoryJdbc(private val dataSource: DataSource) : FragmentRepos
         setInt(3, order)
     }
 
-    /** Asigna el literal de consulta (dos veces: `distance` y `ORDER BY`) y el límite. */
-    private fun PreparedStatement.bindNearest(literal: String, limit: Int) {
+    /** Asigna el literal de consulta (en `distance`), los parámetros del filtro y el límite. */
+    private fun PreparedStatement.bindFilteredNearest(literal: String, parameters: List<String>, limit: Int) {
         setString(1, literal)
-        setString(2, literal)
-        setInt(3, limit)
+        parameters.forEachIndexed { index, value -> setString(index + 2, value) }
+        setString(parameters.size + 2, literal)
+        setInt(parameters.size + 3, limit)
+    }
+
+    /** Asigna la clave `(publicacion_id, orden)` de la lectura del embedding. */
+    private fun PreparedStatement.bindFragmentKey(publicationId: String, order: Int) {
+        setString(1, publicationId)
+        setInt(2, order)
     }
 
     private companion object {
@@ -186,13 +248,23 @@ class FragmentRepositoryJdbc(private val dataSource: DataSource) : FragmentRepos
             RETURNING id
         """
 
-        const val FIND_NEAREST = """
-            SELECT id, publicacion_id, orden, referencia, contenido,
-                   embedding <=> ?::vector AS distance
-            FROM fragmento
-            WHERE embedding IS NOT NULL
-            ORDER BY embedding <=> ?::vector
+        /** Marcador que [FragmentRepositoryJdbc.findNearest] sustituye por la cláusula del filtro. */
+        const val FILTER_PLACEHOLDER = "{filterClause}"
+
+        const val FIND_NEAREST_TEMPLATE = """
+            SELECT f.id, f.publicacion_id, f.orden, f.referencia, f.contenido,
+                   f.embedding <=> ?::vector AS distance
+            FROM fragmento f
+            JOIN publicacion p ON p.id = f.publicacion_id
+            WHERE f.embedding IS NOT NULL $FILTER_PLACEHOLDER
+            ORDER BY f.embedding <=> ?::vector
             LIMIT ?
+        """
+
+        const val FIND_EMBEDDING = """
+            SELECT embedding::text AS embedding
+            FROM fragmento
+            WHERE publicacion_id = ? AND orden = ?
         """
     }
 }

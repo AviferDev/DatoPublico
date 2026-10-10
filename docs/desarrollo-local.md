@@ -207,6 +207,43 @@ se cablea en el arranque. El encaje con la persistencia es la extensión pura
 secciones, en el gate y sin red ni BD. Decisión durable en el ADR 0009 (harness
 privado).
 
+## Embeddings locales (ONNX) (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.rag.embeddings` vectoriza texto con
+`intfloat/multilingual-e5-small` **int8** vía **ONNX Runtime en CPU**, detrás de la
+interfaz `EmbeddingProvider`. Aplica los prefijos obligatorios `query: ` (consulta)
+y `passage: ` (fragmento), hace *mean pooling* con la máscara de atención,
+**normaliza** los vectores (L2) y devuelve **384 dimensiones**; el tokenizador
+XLM-R (DJL) expone `countTokens` (≤512 tokens). Es una **librería**: **no** se
+cablea en el arranque ni en el job.
+
+El modelo (`model.onnx`, ~118 MB) y el `tokenizer.json` **no** se versionan. Se
+descargan una sola vez (con red, fuera del gate) a `backend/models/` (ignorado por
+git):
+
+```sh
+backend/tools/download-embedding-model.sh
+```
+
+El proveedor los carga por **ruta absoluta** con **fail-fast** (si faltan, lanza
+`EmbeddingException` con un mensaje claro; sin descarga silenciosa):
+
+- `EMBEDDING_MODEL_PATH` — ruta del `.onnx` int8.
+- `EMBEDDING_TOKENIZER_PATH` — ruta del `tokenizer.json`.
+- `EMBEDDING_MAX_TOKENS` (opcional, por defecto `512`).
+
+El gate (`./gradlew build`/`test`/`.harness/init.sh`) **no** descarga ni carga el
+modelo: cubre el contrato y la aritmética con dobles deterministas. La prueba
+contra el **modelo real** es **opt-in** y queda fuera del gate y de la CI:
+
+```sh
+EMBEDDING_MODEL_PATH="$PWD/backend/models/multilingual-e5-small/model.onnx" \
+EMBEDDING_TOKENIZER_PATH="$PWD/backend/models/multilingual-e5-small/tokenizer.json" \
+EMBEDDING_LIVE_TEST=1 ./gradlew :backend:test --tests '*E5EmbeddingLiveTest'
+```
+
+Decisión durable en el ADR 0010 (harness privado).
+
 ## Arranque de la base de datos
 
 ```sh

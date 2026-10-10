@@ -5,9 +5,10 @@
 # servidor Ktor (Netty) y el logging JSON; FT00005 activa Compose Multiplatform y
 # AGP en `:composeApp`; FT00006 activa el motor de cliente Ktor (CIO) y su doble
 # de test (`ktor-client-mock`); FT00008 activa la persistencia JDBC (driver
-# PostgreSQL y pool HikariCP) para los repositorios de `:backend`. Las versiones
-# restantes (coroutines) quedan predeclaradas para que las features siguientes las
-# activen sin tocar la raíz del build.
+# PostgreSQL y pool HikariCP) para los repositorios de `:backend`; FT00015 activa
+# los embeddings locales (ONNX Runtime en CPU) y el tokenizador XLM-R de DJL. Las
+# versiones restantes (coroutines) quedan predeclaradas para que las features
+# siguientes las activen sin tocar la raíz del build.
 
 [versions]
 kotlin = "2.1.20"
@@ -20,6 +21,11 @@ kotlinxCoroutines = "1.10.1"
 flyway = "11.20.3"
 postgresql = "42.7.14"
 hikari = "6.3.3"
+# Embeddings locales (FT00015): runtime ONNX en CPU + tokenizador XLM-R de DJL
+# (que empaqueta las librerías nativas `libtokenizers`). No descargan artefactos
+# de modelo: el `.onnx` y el `tokenizer.json` se aprovisionan fuera del gate.
+onnxruntime = "1.20.0"
+djl = "0.33.0"
 logback = "1.5.12"
 logstashLogback = "8.0"
 androidMinSdk = "26"
@@ -51,6 +57,13 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 # Doble de test del cliente Ktor: simula respuestas HTTP sin abrir sockets.
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+
+# Embeddings locales (FT00015): runtime ONNX (CPU) y tokenizador XLM-R de DJL.
+# `djl-api` trae las interfaces comunes (`NativeResource`, `NDManager`) que usa el
+# tokenizador; `djl-tokenizers` incluye los nativos `libtokenizers` por plataforma.
+onnxruntime = { module = "com.microsoft.onnxruntime:onnxruntime", version.ref = "onnxruntime" }
+djl-tokenizers = { module = "ai.djl.huggingface:tokenizers", version.ref = "djl" }
+djl-api = { module = "ai.djl:api", version.ref = "djl" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }

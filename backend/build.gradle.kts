@@ -53,6 +53,14 @@ dependencies {
     implementation(libs.postgresql)
     implementation(libs.hikaricp)
 
+    // Embeddings locales (FT00015): sesión ONNX Runtime en CPU y tokenizador
+    // XLM-R de DJL. El modelo (`model.onnx` int8) y el `tokenizer.json` NO van en
+    // el classpath: se aprovisionan en `backend/models/` fuera del gate (ver
+    // backend/tools/download-embedding-model.sh).
+    implementation(libs.onnxruntime)
+    implementation(libs.djl.tokenizers)
+    implementation(libs.djl.api)
+
     testImplementation(kotlin("test"))
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.client.mock)

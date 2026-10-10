@@ -93,6 +93,35 @@ Nota (macOS con el JBR de Android Studio): su `cacerts` no incluye la raíz
 o ejecuta con un JDK cuyo truststore la incluya. `curl` sí valida el certificado
 porque usa el llavero del sistema; el gate no se ve afectado.
 
+## Parser del texto oficial del BOE (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.ingesta.publicacion` convierte cada
+entrada del sumario en una `Publicacion` con su **texto completo** y metadatos,
+descargados del **XML estructurado**
+(`GET https://www.boe.es/diario_boe/xml.php?id=<identificador>` con
+`Accept: application/xml`, cuerpo UTF-8). El XML es la **fuente de verdad** del
+texto y los metadatos, no el HTML (`txt.php`) ni el PDF. Tampoco se cablea en el
+arranque del backend.
+
+Los tests del parser usan **fixtures XML reales** (uno por sección) y doblan la
+red con `MockEngine`. Para (re)capturar un fixture:
+
+```sh
+curl -s 'https://www.boe.es/diario_boe/xml.php?id=BOE-A-2024-87' \
+  -o backend/src/test/resources/boe/texto-IIA-2024-87.xml
+```
+
+La prueba contra el BOE real es **opt-in** y queda fuera del gate:
+
+```sh
+BOE_LIVE_TEST=1 ./gradlew :backend:test --tests '*BoePublicacionLiveTest'
+```
+
+Nota (macOS con el JBR de Android Studio): como con el sumario, el test opt-in
+falla con `SunCertPathBuilderException` si el truststore del JVM no incluye la
+raíz **FNMT-RCM** (misma limitación documentada arriba); `curl` sí valida porque
+usa el llavero del sistema. El gate no se ve afectado.
+
 ## Arranque de la base de datos
 
 ```sh

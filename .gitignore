@@ -12,6 +12,10 @@
 # Estado local del backfill one-shot (progreso, no versionado).
 .backfill-state.txt
 
+# Modelo y tokenizador de embeddings locales (FT00015): se aprovisionan fuera del
+# gate con `backend/tools/download-embedding-model.sh`; nunca se versionan.
+backend/models/
+
 # Gradle
 .gradle/
 build/

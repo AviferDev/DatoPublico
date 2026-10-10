@@ -13,29 +13,29 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 /**
- * Test de gate del [IngestaScheduler] con **tiempo virtual** (escenario 5): el
+ * Test de gate del [IngestionScheduler] con **tiempo virtual** (escenario 5): el
  * reloj y la espera son inyectables, así que no se espera en real. Se comprueba
  * que dispara una vez por ventana y que un fallo del job no mata el bucle.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class IngestaSchedulerTest {
+class IngestionSchedulerTest {
 
     private val zone: ZoneId = ZoneId.of("Europe/Madrid")
 
     @Test
-    fun `dispara una vez por ventana y sobrevive a un fallo del job`() = runTest {
-        val ejecuciones = mutableListOf<LocalDate>()
-        val job = object : IngestaJob {
-            override suspend fun ejecutar(fecha: LocalDate): IngestaResult {
-                ejecuciones += fecha
-                if (ejecuciones.size == 1) {
+    fun `fires once per window and survives a job failure`() = runTest {
+        val executions = mutableListOf<LocalDate>()
+        val job = object : IngestionJob {
+            override suspend fun run(date: LocalDate): IngestionResult {
+                executions += date
+                if (executions.size == 1) {
                     throw IllegalStateException("fallo simulado del job")
                 }
-                return IngestaResult(fecha, totalEntradas = 0, guardadas = 0, fallidas = 0)
+                return IngestionResult(date, totalEntries = 0, saved = 0, failed = 0)
             }
         }
-        val scheduler = IngestaScheduler(
-            schedule = IngestaSchedule(
+        val scheduler = IngestionScheduler(
+            schedule = IngestionSchedule(
                 times = listOf(LocalTime.of(9, 30), LocalTime.of(18, 0)),
                 zone = zone,
             ),
@@ -45,16 +45,16 @@ class IngestaSchedulerTest {
             delay = { millis -> delay(millis) },
         )
 
-        val bucle = scheduler.iniciar(this)
+        val loop = scheduler.start(this)
         runCurrent()
-        advanceTimeBy(DESFASE_VENTANA_MS)
+        advanceTimeBy(WINDOW_OFFSET_MS)
         runCurrent()
-        advanceTimeBy(DESFASE_VENTANA_MS)
+        advanceTimeBy(WINDOW_OFFSET_MS)
         runCurrent()
-        bucle.cancel()
+        loop.cancel()
 
-        assertEquals(2, ejecuciones.size, "una ejecución por ventana")
-        assertEquals(ejecuciones[0], ejecuciones[1])
+        assertEquals(2, executions.size, "una ejecución por ventana")
+        assertEquals(executions[0], executions[1])
     }
 
     private companion object {
@@ -63,6 +63,6 @@ class IngestaSchedulerTest {
          * reloj virtual arranca en el epoch, así que la primera ventana cae en la
          * mañana del 1 de enero de 1970 en `Europe/Madrid`.
          */
-        const val DESFASE_VENTANA_MS = 30_600_000L
+        const val WINDOW_OFFSET_MS = 30_600_000L
     }
 }

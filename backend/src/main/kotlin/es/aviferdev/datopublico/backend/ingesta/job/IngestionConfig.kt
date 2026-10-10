@@ -18,7 +18,7 @@ import java.time.ZoneId
  * @property primaryTime hora de la primera pasada (`INGESTA_PRIMARY_TIME`).
  * @property secondaryTime hora de la segunda pasada (`INGESTA_SECONDARY_TIME`).
  */
-data class IngestaConfig(
+data class IngestionConfig(
     val enabled: Boolean,
     val zone: ZoneId,
     val primaryTime: LocalTime,
@@ -44,7 +44,7 @@ data class IngestaConfig(
          * @throws IllegalArgumentException si un valor tiene formato inválido
          *   (fail-fast con mensaje claro).
          */
-        fun fromEnv(env: Map<String, String> = System.getenv()): IngestaConfig = IngestaConfig(
+        fun fromEnv(env: Map<String, String> = System.getenv()): IngestionConfig = IngestionConfig(
             enabled = parseEnabled(firstNonBlank(env, ENABLED_KEY)),
             zone = parseZone(firstNonBlank(env, TIMEZONE_KEY)),
             primaryTime = parseTime(

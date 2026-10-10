@@ -32,52 +32,52 @@ import kotlinx.coroutines.test.runTest
  * `POSTGRES_*`:
  *
  * ```
- * DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*IngestaJobLiveTest'
+ * DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*IngestionJobLiveTest'
  * ```
  */
-class IngestaJobLiveTest {
+class IngestionJobLiveTest {
 
     @Test
-    fun `ejecutar dos veces la misma fecha no duplica y refresca actualizado_en`() = runTest {
+    fun `running twice for the same date does not duplicate and refreshes updated_at`() = runTest {
         if (System.getenv("DB_LIVE_TEST") != "1") {
-            println("IngestaJobLiveTest omitido: exporta DB_LIVE_TEST=1 para el test real.")
+            println("IngestionJobLiveTest omitido: exporta DB_LIVE_TEST=1 para el test real.")
         } else {
             val dataSource = Database.createDataSource(DatabaseConfig.fromEnv(environment()))
             try {
-                dataSource.limpiar()
-                val job = IngestaJobDiario(
-                    sumarioClient = sumarioDePrueba(),
-                    publicacionParser = parserDePrueba(),
-                    repositorio = PublicationRepositoryJdbc(dataSource),
+                dataSource.clean()
+                val job = DailyIngestionJob(
+                    summaryClient = testSummary(),
+                    publicationParser = testParser(),
+                    repository = PublicationRepositoryJdbc(dataSource),
                 )
 
-                val primera = job.ejecutar(FECHA)
-                val antes = dataSource.actualizadoEn(ID_1)
+                val first = job.run(DATE)
+                val before = dataSource.updatedAt(ID_1)
                 Thread.sleep(10)
-                val segunda = job.ejecutar(FECHA)
+                val second = job.run(DATE)
 
-                assertEquals(2, primera.guardadas, "la primera pasada guarda las dos entradas")
-                assertEquals(2, segunda.guardadas, "la segunda pasada reaplica el upsert")
-                assertEquals(2L, dataSource.contar(), "una fila por id, sin duplicados")
+                assertEquals(2, first.saved, "la primera pasada guarda las dos entradas")
+                assertEquals(2, second.saved, "la segunda pasada reaplica el upsert")
+                assertEquals(2L, dataSource.count(), "una fila por id, sin duplicados")
                 assertTrue(
-                    dataSource.actualizadoEn(ID_1).isAfter(antes),
+                    dataSource.updatedAt(ID_1).isAfter(before),
                     "actualizado_en debe avanzar en la segunda pasada",
                 )
             } finally {
-                dataSource.limpiar()
+                dataSource.clean()
                 (dataSource as AutoCloseable).close()
             }
         }
     }
 
     /** Sumario de prueba con dos entradas de la sección I. */
-    private fun sumarioDePrueba(): BoeSumarioClient = object : BoeSumarioClient {
+    private fun testSummary(): BoeSumarioClient = object : BoeSumarioClient {
         override suspend fun obtenerSumario(fecha: LocalDate): List<EntradaSumario> =
-            listOf(entrada(ID_1), entrada(ID_2))
+            listOf(entry(ID_1), entry(ID_2))
     }
 
     /** Parser de prueba: proyecta cada entrada a una [Publicacion] sin red. */
-    private fun parserDePrueba(): BoePublicacionParser = object : BoePublicacionParser {
+    private fun testParser(): BoePublicacionParser = object : BoePublicacionParser {
         override suspend fun parsear(entrada: EntradaSumario): Publicacion = Publicacion(
             id = entrada.identificador,
             titulo = entrada.titulo,
@@ -93,11 +93,11 @@ class IngestaJobLiveTest {
         )
     }
 
-    private fun entrada(id: String): EntradaSumario = EntradaSumario(
+    private fun entry(id: String): EntradaSumario = EntradaSumario(
         identificador = id,
         control = null,
         titulo = "Publicación de prueba $id",
-        fechaPublicacion = FECHA.toString(),
+        fechaPublicacion = DATE.toString(),
         seccion = SeccionBoeDto.I,
         organismo = "MINISTERIO DE PRUEBA",
         epigrafe = null,
@@ -125,20 +125,20 @@ class IngestaJobLiveTest {
         return environment
     }
 
-    private fun DataSource.limpiar() {
+    private fun DataSource.clean() {
         executeUpdate("DELETE FROM publicacion WHERE id LIKE ?") { statement ->
-            statement.setString(1, PATRON)
+            statement.setString(1, PATTERN)
         }
     }
 
-    private fun DataSource.contar(): Long =
+    private fun DataSource.count(): Long =
         queryRows(
             "SELECT count(*) AS total FROM publicacion WHERE id LIKE ?",
-            { statement -> statement.setString(1, PATRON) },
+            { statement -> statement.setString(1, PATTERN) },
             { rows -> rows.getLong("total") },
         ).first()
 
-    private fun DataSource.actualizadoEn(id: String): Instant =
+    private fun DataSource.updatedAt(id: String): Instant =
         queryRows(
             "SELECT actualizado_en FROM publicacion WHERE id = ?",
             { statement -> statement.setString(1, id) },
@@ -146,8 +146,8 @@ class IngestaJobLiveTest {
         ).first()
 
     private companion object {
-        val FECHA: LocalDate = LocalDate.of(2026, 10, 9)
-        const val PATRON = "FT00009-LIVE-%"
+        val DATE: LocalDate = LocalDate.of(2026, 10, 9)
+        const val PATTERN = "FT00009-LIVE-%"
         const val ID_1 = "FT00009-LIVE-1"
         const val ID_2 = "FT00009-LIVE-2"
     }

@@ -13,7 +13,7 @@ import java.time.ZonedDateTime
  * @property times horas de disparo diarias; debe haber al menos una.
  * @property zone zona en la que se interpretan [times].
  */
-class IngestaSchedule(
+class IngestionSchedule(
     private val times: List<LocalTime>,
     private val zone: ZoneId,
 ) {

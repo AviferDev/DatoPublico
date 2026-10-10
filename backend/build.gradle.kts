@@ -145,3 +145,13 @@ tasks.register<JavaExec>("backfill") {
     mainClass.set("es.aviferdev.datopublico.backend.ingesta.backfill.BackfillMainKt")
     classpath = sourceSets["main"].runtimeClasspath
 }
+
+// Evaluación de recuperación (FT00018): tarea explícita one-shot, nunca enganchada
+// a `build`/`check` (la CI corre sin red, BD ni modelo). Hereda el entorno del
+// proceso; el modelo E5 y el PostgreSQL de `docker-compose` son opt-in.
+tasks.register<JavaExec>("evaluateRetrieval") {
+    group = "application"
+    description = "Evalúa la recuperación con el golden set versionado (one-shot, opt-in)."
+    mainClass.set("es.aviferdev.datopublico.backend.rag.evaluation.RetrievalEvaluationMainKt")
+    classpath = sourceSets["main"].runtimeClasspath
+}

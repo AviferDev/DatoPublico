@@ -1,0 +1,97 @@
+{
+  "version": "1.0.0",
+  "k": 3,
+  "corpus": [
+    {
+      "id": "EVAL-1",
+      "title": "Convocatoria de ayudas para prácticas formativas",
+      "date": "2026-10-09",
+      "section": "III",
+      "category": "becas_subvenciones_y_ayudas",
+      "organization": "Ministerio de Universidades",
+      "text": "Artículo 1\nConvocatoria de ayudas económicas para la realización de prácticas formativas en empresas dirigida a estudiantes universitarios matriculados en máster.\nArtículo 2\nEl plazo de presentación de solicitudes será de veinte días hábiles a contar desde el día siguiente al de la publicación de este extracto."
+    },
+    {
+      "id": "EVAL-2",
+      "title": "Real Decreto sobre tráfico y seguridad vial",
+      "date": "2026-10-05",
+      "section": "I",
+      "category": "normas_y_legislacion",
+      "organization": "Ministerio del Interior",
+      "text": "Artículo 1\nReal Decreto por el que se modifica el régimen de infracciones y sanciones en materia de tráfico, circulación de vehículos a motor y seguridad vial.\nArtículo 2\nLas infracciones muy graves prescribirán a los tres años desde su comisión."
+    },
+    {
+      "id": "EVAL-3",
+      "title": "Convocatoria de proceso selectivo de gestión procesal",
+      "date": "2026-09-28",
+      "section": "II.B",
+      "category": "oposiciones_y_empleo_publico",
+      "organization": "Ministerio de Justicia",
+      "text": "Artículo 1\nConvocatoria de proceso selectivo para el ingreso en el Cuerpo de Gestión Procesal y Administrativa por el sistema general de acceso libre.\nArtículo 2\nEl plazo de presentación de instancias será de veinte días hábiles desde la publicación de la convocatoria en el Boletín Oficial del Estado."
+    },
+    {
+      "id": "EVAL-4",
+      "title": "Extracto de bases de subvenciones para investigación",
+      "date": "2026-10-02",
+      "section": "V.B",
+      "category": "otras_disposiciones_y_anuncios",
+      "organization": "Universidad de Alicante",
+      "text": "Artículo 1\nExtracto de las bases reguladoras de las subvenciones para la financiación de proyectos de investigación científica y desarrollo tecnológico."
+    }
+  ],
+  "queries": [
+    {
+      "id": "q-practicas-formativas",
+      "query": "ayudas económicas para prácticas formativas de estudiantes universitarios",
+      "filter": {
+        "section": "III",
+        "category": "becas_subvenciones_y_ayudas"
+      },
+      "relevant": [
+        { "publicationId": "EVAL-1", "order": 0 }
+      ]
+    },
+    {
+      "id": "q-trafico-sanciones",
+      "query": "régimen de infracciones y sanciones en materia de tráfico y seguridad vial",
+      "filter": {
+        "section": "I",
+        "category": "normas_y_legislacion"
+      },
+      "relevant": [
+        { "publicationId": "EVAL-2", "order": 0 }
+      ]
+    },
+    {
+      "id": "q-proceso-selectivo",
+      "query": "proceso selectivo de ingreso en el Cuerpo de Gestión Procesal y Administrativa",
+      "filter": {
+        "section": "II.B",
+        "category": "oposiciones_y_empleo_publico"
+      },
+      "relevant": [
+        { "publicationId": "EVAL-3", "order": 0 }
+      ]
+    },
+    {
+      "id": "q-plazo-instancias",
+      "query": "plazo de presentación de instancias de la convocatoria",
+      "filter": {
+        "category": "oposiciones_y_empleo_publico"
+      },
+      "relevant": [
+        { "publicationId": "EVAL-3", "order": 1 }
+      ]
+    },
+    {
+      "id": "q-subvenciones-investigacion",
+      "query": "subvenciones para la financiación de proyectos de investigación científica",
+      "filter": {
+        "section": "V.B"
+      },
+      "relevant": [
+        { "publicationId": "EVAL-4", "order": 0 }
+      ]
+    }
+  ]
+}

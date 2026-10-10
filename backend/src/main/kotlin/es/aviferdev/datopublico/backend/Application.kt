@@ -3,10 +3,10 @@ package es.aviferdev.datopublico.backend
 import es.aviferdev.datopublico.backend.infra.AppConfig
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
-import es.aviferdev.datopublico.backend.ingesta.job.IngestaConfig
-import es.aviferdev.datopublico.backend.ingesta.job.IngestaJobDiario
-import es.aviferdev.datopublico.backend.ingesta.job.IngestaSchedule
-import es.aviferdev.datopublico.backend.ingesta.job.IngestaScheduler
+import es.aviferdev.datopublico.backend.ingesta.job.IngestionConfig
+import es.aviferdev.datopublico.backend.ingesta.job.DailyIngestionJob
+import es.aviferdev.datopublico.backend.ingesta.job.IngestionSchedule
+import es.aviferdev.datopublico.backend.ingesta.job.IngestionScheduler
 import es.aviferdev.datopublico.backend.ingesta.publicacion.BoePublicacionHttpParser
 import es.aviferdev.datopublico.backend.ingesta.publicacion.BoeTextoHttpClient
 import es.aviferdev.datopublico.backend.ingesta.publicacion.boeTextoHttpClient
@@ -51,7 +51,7 @@ fun Application.module() {
     configureSerialization()
     configureMonitoring()
     configureRouting()
-    configureIngesta()
+    configureIngestion()
 }
 
 /**
@@ -62,19 +62,19 @@ fun Application.module() {
  * se registra y el servidor sigue arrancando; al parar la aplicación se cancela el
  * bucle y se cierran el pool y los clientes HTTP.
  */
-private fun Application.configureIngesta() {
-    val config = IngestaConfig.fromEnv()
+private fun Application.configureIngestion() {
+    val config = IngestionConfig.fromEnv()
     if (config.enabled) {
-        startIngesta(config)
+        startIngestion(config)
     } else {
         log.info("Ingesta deshabilitada (INGESTA_ENABLED=false)")
     }
 }
 
 /** Arranca la ingesta y programa su cierre; un fallo no impide el arranque. */
-private fun Application.startIngesta(config: IngestaConfig) {
+private fun Application.startIngestion(config: IngestionConfig) {
     try {
-        val runtime = crearIngestaRuntime(config)
+        val runtime = createIngestionRuntime(config)
         monitor.subscribe(ApplicationStopped) { runtime.close() }
     } catch (cancellation: CancellationException) {
         throw cancellation
@@ -87,27 +87,27 @@ private fun Application.startIngesta(config: IngestaConfig) {
  * Construye los recursos de la ingesta (pool JDBC, clientes HTTP, job y
  * scheduler) y lanza el bucle. Si algo falla, cierra lo ya creado y propaga.
  */
-private fun Application.crearIngestaRuntime(config: IngestaConfig): IngestaRuntime {
+private fun Application.createIngestionRuntime(config: IngestionConfig): IngestionRuntime {
     val dataSource = Database.createDataSource(DatabaseConfig.fromEnv())
-    val sumarioHttp = boeSumarioHttpClient()
-    val textoHttp = boeTextoHttpClient()
+    val summaryHttp = boeSumarioHttpClient()
+    val textHttp = boeTextoHttpClient()
     return try {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        val scheduler = IngestaScheduler(
-            schedule = IngestaSchedule(config.times, config.zone),
-            job = IngestaJobDiario(
-                sumarioClient = BoeSumarioHttpClient(sumarioHttp),
-                publicacionParser = BoePublicacionHttpParser(BoeTextoHttpClient(textoHttp)),
-                repositorio = PublicationRepositoryJdbc(dataSource),
+        val scheduler = IngestionScheduler(
+            schedule = IngestionSchedule(config.times, config.zone),
+            job = DailyIngestionJob(
+                summaryClient = BoeSumarioHttpClient(summaryHttp),
+                publicationParser = BoePublicacionHttpParser(BoeTextoHttpClient(textHttp)),
+                repository = PublicationRepositoryJdbc(dataSource),
             ),
             zone = config.zone,
         )
-        scheduler.iniciar(scope)
+        scheduler.start(scope)
         log.info("Ingesta programada: horas={} zona={}", config.times, config.zone)
-        IngestaRuntime(scope, dataSource, listOf(sumarioHttp, textoHttp))
+        IngestionRuntime(scope, dataSource, listOf(summaryHttp, textHttp))
     } catch (error: Exception) {
-        sumarioHttp.close()
-        textoHttp.close()
+        summaryHttp.close()
+        textHttp.close()
         (dataSource as? AutoCloseable)?.close()
         throw error
     }
@@ -117,7 +117,7 @@ private fun Application.crearIngestaRuntime(config: IngestaConfig): IngestaRunti
  * Recursos vivos de la ingesta: el bucle del scheduler, el pool JDBC y los
  * clientes HTTP. [close] los libera en `ApplicationStopped`.
  */
-private class IngestaRuntime(
+private class IngestionRuntime(
     private val scope: CoroutineScope,
     private val dataSource: DataSource,
     private val httpClients: List<HttpClient>,

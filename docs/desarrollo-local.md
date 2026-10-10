@@ -201,7 +201,7 @@ duplicar, con `actualizado_en` refrescado) es **opt-in** y queda fuera de
 cp .env.example .env
 docker compose up -d
 ./gradlew :backend:flywayMigrate
-DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*IngestaJobLiveTest'
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*IngestionJobLiveTest'
 docker compose down -v
 ```
 

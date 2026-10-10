@@ -271,10 +271,11 @@ entidades `...Entity`) con la configuración de conexión
 crea y la cierra quien la consume (job o test).
 
 La migración `V2__persistencia_publicaciones.sql` crea las tablas `publicacion`,
-`fragmento`, `resumen` y `cola_revision`; el embedding `vector(384)` de `fragmento`
-y su índice HNSW llegan con FT00016, y los valores de `categoria`/`plazo` los
-produce la ingesta desde FT00012 (columnas nullable). El driver PostgreSQL y
-HikariCP están en el classpath de producción de `:backend`.
+`fragmento`, `resumen` y `cola_revision`; la `V3__fragmento_embedding.sql` añade
+la columna `embedding vector(384)` (nullable) y su índice HNSW coseno (FT00016),
+y los valores de `categoria`/`plazo` los produce la ingesta desde FT00012 (columnas
+nullable). El driver PostgreSQL y HikariCP están en el classpath de producción de
+`:backend`.
 
 Los tests del gate cubren la configuración de conexión, el mapeo
 dominio↔entidad y el contrato SQL de la migración **sin** base de datos. La
@@ -292,6 +293,35 @@ docker compose down -v
 
 El test opt-in lee `POSTGRES_*` del entorno y, si faltan, de la `.env` de la raíz
 (no hace falta exportarlas).
+
+## Indexado vectorial (pgvector) (`:backend`)
+
+La migración `V3__fragmento_embedding.sql` (FT00016) añade a `fragmento` la
+columna `embedding vector(384)` **nullable** y su índice **HNSW** con distancia
+coseno (`vector_cosine_ops`, `m = 16`, `ef_construction = 64`). La conversión
+entre `FloatArray` y el literal `[v1,v2,…]` de pgvector vive en el objeto **puro**
+`es.aviferdev.datopublico.backend.persistence.PgVector` (dimensión 384, fail-fast,
+formato independiente del *locale*) y `FragmentRepository` gana `saveEmbedding`
+(actualiza el vector de un fragmento existente) y `findNearest` (los `k` fragmentos
+más cercanos por distancia coseno, excluyendo los que no tienen embedding). El
+vector se enlaza como **texto con *cast* `?::vector`**, sin ORM ni `PGobject`. No
+hay filtros de metadatos (recuperación híbrida → FT00017) ni wiring en el arranque:
+es una librería.
+
+El gate cubre la conversión pura y el contrato SQL de la migración **sin** base de
+datos (`PgVectorTest`, `FragmentEmbeddingMigrationSqlTest`). La prueba real
+(similitud, exclusión de nulos e índice HNSW usado) es **opt-in** y queda fuera de
+`build`/`test`/`init.sh` y de la CI:
+
+```sh
+cp .env.example .env
+docker compose up -d
+./gradlew :backend:flywayMigrate
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*FragmentEmbeddingPersistenceLiveTest'
+docker compose down -v
+```
+
+Decisión durable en el ADR 0011 (harness privado).
 
 ## Ingesta diaria (job programado)
 

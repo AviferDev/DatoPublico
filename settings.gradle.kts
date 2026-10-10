@@ -58,4 +58,11 @@ dependencyResolutionManagement {
 
 rootProject.name = "datopublico"
 
-include(":shared", ":backend", ":composeApp")
+// `:shared` y `:backend` son SDK-free. `:composeApp` aplica AGP (exige el Android
+// SDK) y se incluye salvo con `-PskipClient`, que deja el gate estándar sin SDK
+// (lo usan `init.sh` por defecto y, en el futuro, la imagen del backend).
+include(":shared", ":backend")
+
+if (!providers.gradleProperty("skipClient").isPresent) {
+    include(":composeApp")
+}

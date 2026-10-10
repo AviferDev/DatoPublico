@@ -1,0 +1,62 @@
+# Configuración de detekt para DatoPublico.
+#
+# Se carga junto con la configuración por defecto de detekt
+# (`buildUponDefaultConfig = true`), así que aquí solo van los ajustes que difieren
+# del default. Cualquier ruleset/regla no citada mantiene su valor por defecto.
+#
+# Criterio: mantener el ruleset por defecto y desactivar/ajustar únicamente lo que
+# choca con convenciones ya decididas del proyecto (Compose, modelado de errores,
+# un solo `return`). La deuda conocida que no se corrige ahora se registra en el
+# baseline de cada módulo (`config/detekt/<módulo>-baseline.xml`).
+
+build:
+  maxIssues: 0
+
+complexity:
+  # Los composables de Compose reciben legítimamente muchos parámetros (estado y
+  # callbacks); el umbral se sube a 12 para no marcarlos. Las funciones de
+  # backend/dominio siguen muy por debajo.
+  LongParameterList:
+    functionThreshold: 12
+    constructorThreshold: 12
+  # Los ficheros de UI agrupan varios composables pequeños y sus @Preview, y los
+  # ViewModels UDF exponen un handler pequeño por evento; se permite algo más de
+  # margen que el default en ambos casos.
+  TooManyFunctions:
+    thresholdInFiles: 15
+    thresholdInClasses: 15
+
+exceptions:
+  # La arquitectura modela los fallos: en las fronteras (plugins HTTP, acceso,
+  # clientes) se captura `Exception` y se traduce a un resultado/estado gestionado.
+  # Eso hace que estas reglas marquen un patrón deliberado.
+  SwallowedException:
+    active: false
+  TooGenericExceptionCaught:
+    active: false
+
+naming:
+  # Excepción de la convención camelCase: las funciones `@Composable` de Compose
+  # van en PascalCase. Se excluyen los directorios de UI/design y los entrypoints;
+  # el resto del cliente y backend/shared conservan la regla.
+  FunctionNaming:
+    excludes:
+      - '**/design/**'
+      - '**/ui/**'
+      - '**/App.kt'
+      - '**/MainViewController.kt'
+
+style:
+  # Los colores del tema y los literales numéricos de configuración/UI (hex,
+  # tamaños, timeouts) son idiomáticos aquí; el ruido no compensa.
+  MagicNumber:
+    active: false
+  # Las funciones `@Preview` son privadas y no se invocan desde el código: se
+  # ignoran por nombre para no reportarlas como código muerto.
+  UnusedPrivateMember:
+    allowedNames: '.*Preview'
+  # Regla MUST «un solo return por función»: como máximo un punto de salida.
+  # Se mantiene el default `excludeReturnFromLambda: true`, que exime los
+  # `return@label` locales de lambda.
+  ReturnCount:
+    max: 1

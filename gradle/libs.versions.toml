@@ -23,6 +23,8 @@ logstashLogback = "8.0"
 androidMinSdk = "26"
 androidTargetSdk = "35"
 androidCompileSdk = "35"
+detekt = "1.23.8"
+cpd = "3.5"
 
 [libraries]
 # Entry point del cliente Android (Compose desde `activity`); `:composeApp` lo usa
@@ -66,3 +68,7 @@ ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 # Tareas Flyway explícitas (`flywayMigrate`/`flywayInfo`); nunca se enganchan a
 # `build`/`check` (la CI corre sin base de datos).
 flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }
+# Gate de calidad: análisis estático (detekt) por módulo y detección de duplicación
+# token-based (CPD de PMD, un `:cpdCheck` global). Se aplican desde la raíz.
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+cpd = { id = "de.aaschmid.cpd", version.ref = "cpd" }

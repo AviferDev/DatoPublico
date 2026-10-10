@@ -1,12 +1,50 @@
 # Desarrollo local
 
-Guía mínima para trabajar con el backend, la base de datos y las migraciones en
-local.
+Guía mínima para trabajar en local con el cliente Compose Multiplatform, el
+backend y la base de datos.
 
 ## Requisitos
 
-- **JDK 21** (por ejemplo el JBR de Android Studio) y **Docker** (Desktop o
-  Colima) con Docker Compose.
+- **JDK 21** (por ejemplo el JBR de Android Studio).
+- **SDK de Android** para el cliente Android: exporta `ANDROID_HOME` o crea
+  `local.properties` (ignorado por git) con
+  `sdk.dir=/ruta/al/Android/sdk`.
+- **Xcode** (solo en macOS) para enlazar el framework de iOS.
+- **Docker** (Desktop o Colima) con Docker Compose para la base de datos.
+
+## Cliente Compose Multiplatform (`:composeApp`)
+
+La UI compartida vive en `commonMain` (`App()`); cada plataforma aporta **solo**
+su entrypoint (`MainActivity` en Android, `main()` en Wasm,
+`MainViewController()` en iOS). El target `jvm()` se conserva **solo** para
+tests/dev.
+
+```sh
+# Android (APK de debug)
+./gradlew :composeApp:assembleDebug
+# → composeApp/build/outputs/apk/debug/composeApp-debug.apk
+
+# Web (Wasm): distribución estática
+./gradlew :composeApp:wasmJsBrowserDistribution
+# → composeApp/build/dist/wasmJs/productionExecutable/ (index.html + *.wasm);
+#   sirve ese directorio con un servidor estático y ábrelo en el navegador.
+
+# iOS (solo macOS)
+./gradlew :composeApp:compileKotlinIosSimulatorArm64
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+# → composeApp/build/bin/iosSimulatorArm64/debugFramework/ComposeApp.framework
+```
+
+Notas:
+
+- El toolchain de Kotlin/JS-Wasm (Node, Yarn y Binaryen) se descarga a la caché
+  de Gradle. Sus repositorios Ivy se declaran en `settings.gradle.kts`, que usa
+  `PREFER_SETTINGS` porque el plugin los registra a nivel de proyecto.
+- Los tests de Wasm en navegador (Karma/Chrome) quedan **fuera** del gate: el
+  `SmokeTest` corre en `jvmTest`, en los tests unitarios de Android y en
+  `iosSimulatorArm64Test`. No hace falta Chrome instalado.
+- El gate (`./gradlew build`, `./gradlew test`, `.harness/init.sh`) no requiere
+  Xcode ni navegador: en hosts no-Apple los targets iOS se ignoran.
 
 ## Arranque del backend
 

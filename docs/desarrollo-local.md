@@ -231,6 +231,53 @@ DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*IngestionJobLiveTest'
 docker compose down -v
 ```
 
+## Backfill del histórico (`:backend:backfill`)
+
+Carga por lotes el histórico del **último año** de **todo el sumario del BOE**
+(secciones I, II.A, II.B, III, IV, V.A, V.B y V.C) reutilizando el job diario
+(descarga del sumario → parseo del XML → *upsert* por `id`). Es **one-shot**
+(no se cablea en el arranque del servidor ni se programa), **idempotente** (el
+*upsert* no duplica) y **reanudable** (guarda su progreso en un checkpoint local).
+
+```sh
+cp .env.example .env          # define POSTGRES_PASSWORD local
+docker compose up -d
+./gradlew :backend:flywayMigrate
+./gradlew :backend:backfill   # rango por defecto: del último año a hoy
+```
+
+La herramienta escribe **JSON estructurado** en stdout con una clave `event`
+estable (`backfill.run.started`, `backfill.batch.completed`,
+`backfill.run.completed`, `backfill.date.failed`); el resumen final aparece en
+`backfill.run.completed` con `completed`, `failed`, `skipped` y `saved`.
+
+Variables de entorno (todas opcionales; un valor inválido aborta con un mensaje
+claro):
+
+- `BACKFILL_FROM` (ISO `YYYY-MM-DD`; por defecto `BACKFILL_TO` menos **1 año**).
+- `BACKFILL_TO` (ISO; por defecto **hoy** en `INGESTA_TIMEZONE`, `Europe/Madrid`).
+- `BACKFILL_BATCH_DAYS` (por defecto `7`): días por lote de baja carga.
+- `BACKFILL_DELAY_MS` (por defecto `500`): pausa entre fechas del lote.
+- `BACKFILL_STATE_FILE` (por defecto `.backfill-state.txt`, ignorado por git).
+
+El **checkpoint** es un fichero de texto local con una línea de rango
+(`range=<from>..<to>`) y una fecha ISO por línea, ordenadas; se escribe de forma
+**atómica**. Si falta, el backfill empieza de cero; si su rango no coincide con el
+configurado, también. Un **formato inválido** falla en claro (fail-fast) para no
+reanudar un backfill equivocado. Una fecha se marca **completada** solo si no hubo
+error y no quedaron entradas fallidas; las fallidas se reintentan al relanzar. El
+*upsert* hace seguro rehacer.
+
+Notas de baja carga (máquina única de 8 GB): ejecútalo en horario de baja carga y
+ajusta lotes/pausa por entorno. Asume el **esquema migrado**
+(`:backend:flywayMigrate`). La verificación real es **opt-in** y queda fuera del
+gate:
+
+```sh
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*BackfillLiveTest'
+docker compose down -v
+```
+
 ## Variables de entorno
 
 - `POSTGRES_*` es la **fuente única de verdad**: la usa `docker-compose` y de ella

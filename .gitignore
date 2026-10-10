@@ -9,6 +9,9 @@
 # ...pero la plantilla documentada sí se versiona.
 !.env.example
 
+# Estado local del backfill one-shot (progreso, no versionado).
+.backfill-state.txt
+
 # Gradle
 .gradle/
 build/

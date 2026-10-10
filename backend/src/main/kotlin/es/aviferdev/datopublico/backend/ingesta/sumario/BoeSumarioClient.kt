@@ -36,10 +36,10 @@ internal fun BoeSumarioResponseDto.toEntradasSumario(fecha: LocalDate): List<Ent
     }
 }
 
-private fun BoeSeccionDto.entradas(fechaIso: String): List<EntradaSumario> {
-    val seccionInterna = seccionBoeDe(codigo) ?: return emptyList()
-    return departamento.flatMap { it.entradas(fechaIso, seccionInterna) }
-}
+private fun BoeSeccionDto.entradas(fechaIso: String): List<EntradaSumario> =
+    seccionBoeDe(codigo)?.let { seccionInterna ->
+        departamento.flatMap { it.entradas(fechaIso, seccionInterna) }
+    }.orEmpty()
 
 private fun BoeDepartamentoDto.entradas(
     fechaIso: String,

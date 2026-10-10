@@ -36,13 +36,12 @@ data class AppConfig(
             keys.firstNotNullOfOrNull { key -> env[key]?.takeIf { it.isNotBlank() } }
 
         private fun parsePort(raw: String?): Int {
-            if (raw == null) return DEFAULT_PORT
-            val port = raw.toIntOrNull()
-            require(port != null && port in MIN_PORT..MAX_PORT) {
+            val port = raw?.toIntOrNull()
+            require(raw == null || (port != null && port in MIN_PORT..MAX_PORT)) {
                 "Puerto inválido: '$raw'. Define SERVER_PORT (o PORT) como un " +
                     "entero entre $MIN_PORT y $MAX_PORT."
             }
-            return port
+            return port ?: DEFAULT_PORT
         }
     }
 }

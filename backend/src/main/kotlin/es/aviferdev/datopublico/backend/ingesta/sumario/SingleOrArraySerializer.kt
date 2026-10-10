@@ -25,9 +25,8 @@ fun <T> singleOrArraySerializer(elementSerializer: KSerializer<T>): KSerializer<
     return object : KSerializer<List<T>> {
         override val descriptor: SerialDescriptor = listSerializer.descriptor
 
-        override fun deserialize(decoder: Decoder): List<T> {
-            if (decoder !is JsonDecoder) return decoder.decodeSerializableValue(listSerializer)
-            return when (val json = decoder.decodeJsonElement()) {
+        override fun deserialize(decoder: Decoder): List<T> = when (decoder) {
+            is JsonDecoder -> when (val json = decoder.decodeJsonElement()) {
                 is JsonArray -> json.map { decoder.json.decodeFromJsonElement(elementSerializer, it) }
                 is JsonObject -> listOf(decoder.json.decodeFromJsonElement(elementSerializer, json))
                 is JsonNull -> emptyList()
@@ -35,6 +34,7 @@ fun <T> singleOrArraySerializer(elementSerializer: KSerializer<T>): KSerializer<
                     "Se esperaba un objeto o un array JSON, pero llegó: $json"
                 )
             }
+            else -> decoder.decodeSerializableValue(listSerializer)
         }
 
         override fun serialize(encoder: Encoder, value: List<T>) {

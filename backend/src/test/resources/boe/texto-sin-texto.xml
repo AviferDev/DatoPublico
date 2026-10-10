@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fixture SINTÉTICO (NO capturado del BOE): reproduce una publicación con
+  metadatos mínimos y <texto> vacío, para el escenario 3 del spec (publicación
+  sin texto completo disponible → texto = null sin excepción).
+-->
+<documento fecha_actualizacion="20240102000000">
+  <metadatos>
+    <identificador>BOE-SINTETICO-1</identificador>
+    <departamento codigo="0000">ORGANISMO SINTÉTICO</departamento>
+    <titulo>Publicación sin texto completo disponible</titulo>
+    <diario codigo="BOE">Boletín Oficial del Estado</diario>
+    <fecha_publicacion>20240102</fecha_publicacion>
+    <diario_numero>2</diario_numero>
+    <seccion>5</seccion>
+    <subseccion>B</subseccion>
+    <numero_anuncio>A000000000</numero_anuncio>
+    <pagina_inicial>1</pagina_inicial>
+    <pagina_final>1</pagina_final>
+    <url_pdf>https://www.boe.es/boe/dias/2024/01/02/pdfs/BOE-SINTETICO-1.pdf</url_pdf>
+  </metadatos>
+  <analisis/>
+  <texto/>
+</documento>

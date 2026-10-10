@@ -3,6 +3,7 @@ package es.aviferdev.datopublico.backend.ingesta.publicacion
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.HttpResponse
@@ -60,11 +61,27 @@ class BoeTextoHttpClient(
 }
 
 /**
- * Crea el [HttpClient] por defecto del texto del BOE: motor **CIO** y
- * `expectSuccess = false` para tratar a mano el `404` y el resto de estados.
+ * Crea el [HttpClient] por defecto del texto del BOE: motor **CIO**,
+ * `expectSuccess = false` para tratar a mano el `404` y el resto de estados, y
+ * **timeouts explícitos** (la descarga forma parte de la ventana del job y no
+ * debe colgarse indefinidamente).
  *
  * No fija base URL: la URL del XML (`xml.php`) es absoluta en el sumario.
  */
 fun boeTextoHttpClient(): HttpClient = HttpClient(CIO) {
     expectSuccess = false
+    install(HttpTimeout) {
+        requestTimeoutMillis = HTTP_REQUEST_TIMEOUT_MS
+        socketTimeoutMillis = HTTP_SOCKET_TIMEOUT_MS
+        connectTimeoutMillis = HTTP_CONNECT_TIMEOUT_MS
+    }
 }
+
+/** Tiempo máximo por petición del texto XML (ms). */
+private const val HTTP_REQUEST_TIMEOUT_MS = 30_000L
+
+/** Tiempo máximo de inactividad del socket del texto XML (ms). */
+private const val HTTP_SOCKET_TIMEOUT_MS = 30_000L
+
+/** Tiempo máximo para establecer la conexión con el BOE (ms). */
+private const val HTTP_CONNECT_TIMEOUT_MS = 10_000L

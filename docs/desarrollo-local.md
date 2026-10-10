@@ -171,6 +171,40 @@ docker compose down -v
 El test opt-in lee `POSTGRES_*` del entorno y, si faltan, de la `.env` de la raíz
 (no hace falta exportarlas).
 
+## Ingesta diaria (job programado)
+
+El paquete `es.aviferdev.datopublico.backend.ingesta.job` programa la ingesta
+completa (**descarga del sumario → parseo del texto XML → persistencia**) a las
+**09:30** con una **segunda pasada a las 18:00** (`Europe/Madrid` por defecto).
+Es un **scheduler interno por corrutina** (sin cron externo; ADR 0004), con el
+reloj y la espera inyectables, así que el disparo se prueba con tiempo virtual,
+sin esperar en real.
+
+Solo se arranca **si la configuración de BD resuelve** (`POSTGRES_PASSWORD`
+presente). Sin BD, el servidor arranca igual y el job se omite; con BD, el log
+muestra `Ingesta programada: horas=[09:30, 18:00] zona=Europe/Madrid`. El job
+**asume el esquema aplicado** (`./gradlew :backend:flywayMigrate`) y se cierra
+(pool y clientes HTTP) al parar el servidor.
+
+Variables de entorno (todas opcionales; un valor inválido aborta el arranque):
+
+- `INGESTA_ENABLED` (por defecto `true`): si es `false`, no se programa el job.
+- `INGESTA_TIMEZONE` (por defecto `Europe/Madrid`).
+- `INGESTA_PRIMARY_TIME` (por defecto `09:30`).
+- `INGESTA_SECONDARY_TIME` (por defecto `18:00`).
+
+La verificación del *upsert* real (dos ejecuciones de la misma fecha sin
+duplicar, con `actualizado_en` refrescado) es **opt-in** y queda fuera de
+`build`/`test`/`init.sh` y de la CI:
+
+```sh
+cp .env.example .env
+docker compose up -d
+./gradlew :backend:flywayMigrate
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*IngestaJobLiveTest'
+docker compose down -v
+```
+
 ## Variables de entorno
 
 - `POSTGRES_*` es la **fuente única de verdad**: la usa `docker-compose` y de ella

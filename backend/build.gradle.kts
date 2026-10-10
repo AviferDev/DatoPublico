@@ -30,6 +30,10 @@ val flywayConfiguration = configurations.create("flyway")
 dependencies {
     implementation(project(":shared"))
 
+    // Corrutinas explícitas (job/scheduler de FT00009); ya llegan transitivas por
+    // Ktor, pero el backend las usa directamente.
+    implementation(libs.kotlinx.coroutines.core)
+
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.content.negotiation)

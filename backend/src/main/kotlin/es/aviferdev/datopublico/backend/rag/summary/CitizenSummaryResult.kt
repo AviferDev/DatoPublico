@@ -1,5 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.summary
 
+import es.aviferdev.datopublico.backend.rag.generation.TokenUsage
 import es.aviferdev.datopublico.model.ResumenDto
 import es.aviferdev.datopublico.validation.CitizenSummaryViolation
 
@@ -17,15 +18,22 @@ sealed interface CitizenSummaryResult {
      * Resumen que cumple el contrato (FT00019) y es publicable.
      *
      * @property summary resumen con la fuente oficial ya inyectada.
+     * @property usage consumo de tokens del proveedor, si lo aportó (FT00021);
+     *   `null` cuando el proveedor no devolvió bloque `usage`.
      */
-    data class Valid(val summary: ResumenDto) : CitizenSummaryResult
+    data class Valid(val summary: ResumenDto, val usage: TokenUsage? = null) : CitizenSummaryResult
 
     /**
      * Resumen que **no** cumple el contrato y no debe publicarse.
      *
      * @property violations violaciones detectadas por `CitizenSummaryValidator`.
+     * @property usage consumo de tokens del proveedor, si lo aportó (FT00021); se
+     *   registra aunque el resumen sea inválido (se gastaron tokens).
      */
-    data class Invalid(val violations: List<CitizenSummaryViolation>) : CitizenSummaryResult
+    data class Invalid(
+        val violations: List<CitizenSummaryViolation>,
+        val usage: TokenUsage? = null,
+    ) : CitizenSummaryResult
 }
 
 /**

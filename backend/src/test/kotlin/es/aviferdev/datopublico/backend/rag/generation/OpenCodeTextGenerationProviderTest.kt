@@ -17,6 +17,7 @@ import java.io.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonArray
@@ -68,6 +69,41 @@ class OpenCodeTextGenerationProviderTest {
         assertEquals("user", messages[1].jsonObject.getValue("role").jsonPrimitive.content)
         assertEquals("usuario", messages[1].jsonObject.getValue("content").jsonPrimitive.content)
         assertEquals("resumen generado", response.text)
+    }
+
+    @Test
+    fun `parses the token usage when the response includes it`() = runTest {
+        val provider = providerCon(
+            MockEngine {
+                respond(
+                    content = RESPONSE_WITH_USAGE,
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                )
+            }
+        )
+
+        val response = provider.generate(request)
+
+        assertEquals(TokenUsage(11, 22, 33), response.usage)
+    }
+
+    @Test
+    fun `leaves the usage null when the response omits it`() = runTest {
+        val provider = providerCon(
+            MockEngine {
+                respond(
+                    content = RESPONSE_OK,
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                )
+            }
+        )
+
+        val response = provider.generate(request)
+
+        assertEquals("resumen generado", response.text)
+        assertNull(response.usage)
     }
 
     @Test
@@ -129,5 +165,9 @@ class OpenCodeTextGenerationProviderTest {
     private companion object {
         const val RESPONSE_OK =
             """{"choices":[{"message":{"role":"assistant","content":"resumen generado"}}]}"""
+
+        const val RESPONSE_WITH_USAGE =
+            """{"choices":[{"message":{"role":"assistant","content":"resumen generado"}}],""" +
+                """"usage":{"prompt_tokens":11,"completion_tokens":22,"total_tokens":33}}"""
     }
 }

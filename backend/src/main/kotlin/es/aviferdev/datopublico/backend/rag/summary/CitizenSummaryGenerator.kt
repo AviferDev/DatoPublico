@@ -3,6 +3,7 @@ package es.aviferdev.datopublico.backend.rag.summary
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.rag.generation.TextGenerationProvider
+import es.aviferdev.datopublico.backend.rag.generation.TokenUsage
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
 import es.aviferdev.datopublico.model.CategoriaDto
@@ -57,7 +58,7 @@ class CitizenSummaryGenerator(
         val request = promptBuilder.build(publication, retrieve(publication, limit))
         val response = textGenerationProvider.generate(request)
         val summary = parser.parse(response.text).toResumenDto(publication.urlOficial)
-        return resultOf(summary, CitizenSummaryValidator.validate(summary, category))
+        return resultOf(summary, CitizenSummaryValidator.validate(summary, category), response.usage)
     }
 
     /** Categoría obligatoria de la publicación (fail-fast si falta). */
@@ -79,16 +80,23 @@ class CitizenSummaryGenerator(
         return hybridSearch.search(publication.titulo, filter, limit).map { match -> match.fragment }
     }
 
-    /** Traduce la validación del contrato a un resultado publicable o inválido. */
-    private fun resultOf(summary: ResumenDto, validation: CitizenSummaryValidation): CitizenSummaryResult =
+    /**
+     * Traduce la validación del contrato a un resultado publicable o inválido,
+     * propagando el uso de tokens ([usage]) que aporte el proveedor (FT00021).
+     */
+    private fun resultOf(
+        summary: ResumenDto,
+        validation: CitizenSummaryValidation,
+        usage: TokenUsage?,
+    ): CitizenSummaryResult =
         if (validation.isValid) {
-            CitizenSummaryResult.Valid(summary)
+            CitizenSummaryResult.Valid(summary, usage)
         } else {
-            CitizenSummaryResult.Invalid(validation.violations)
+            CitizenSummaryResult.Invalid(validation.violations, usage)
         }
 
-    private companion object {
-        /** Número de fragmentos de contexto por defecto. */
+    companion object {
+        /** Número de fragmentos de contexto por defecto (lo reutiliza la caché). */
         const val DEFAULT_LIMIT = 5
     }
 }

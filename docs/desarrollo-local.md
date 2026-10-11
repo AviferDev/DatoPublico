@@ -272,10 +272,11 @@ crea y la cierra quien la consume (job o test).
 
 La migración `V2__persistencia_publicaciones.sql` crea las tablas `publicacion`,
 `fragmento`, `resumen` y `cola_revision`; la `V3__fragmento_embedding.sql` añade
-la columna `embedding vector(384)` (nullable) y su índice HNSW coseno (FT00016),
-y los valores de `categoria`/`plazo` los produce la ingesta desde FT00012 (columnas
-nullable). El driver PostgreSQL y HikariCP están en el classpath de producción de
-`:backend`.
+la columna `embedding vector(384)` (nullable) y su índice HNSW coseno (FT00016);
+la `V4__resumen_cache_uso.sql` crea `resumen_cache` y `generacion_uso` (FT00021,
+caché y uso de tokens); y los valores de `categoria`/`plazo` los produce la ingesta
+desde FT00012 (columnas nullable). El driver PostgreSQL y HikariCP están en el
+classpath de producción de `:backend`.
 
 Los tests del gate cubren la configuración de conexión, el mapeo
 dominio↔entidad y el contrato SQL de la migración **sin** base de datos. La
@@ -459,6 +460,54 @@ OPENCODE_LIVE_TEST=1 OPENCODE_API_KEY=<clave> \
 ```
 
 Decisión durable en el ADR 0015 (harness privado).
+
+## Cacheo del resumen y control de coste (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.rag.summary` añade (FT00021) el
+**cacheo del resumen ciudadano** y el **registro del consumo de tokens**, como
+**librería sin wiring**:
+
+- `SummaryCacheKey.of(publicationId, model, promptVersion)` es la clave **pura y
+  determinista** (`"$publicationId|$model|$promptVersion"`): incluye **modelo** y
+  **versión del prompt** para que cambiar cualquiera de los dos **invalide** la
+  caché (nunca sirve un resumen obsoleto). Falla con `IllegalArgumentException` si
+  algún componente está en blanco.
+- `CitizenSummaryPromptBuilder.PROMPT_VERSION` (`"v1"`) es la versión del prompt,
+  **manual**: **súbela** al cambiar el prompt de forma incompatible.
+- `CachedCitizenSummaryGenerator` **envuelve** a `CitizenSummaryGenerator` (no
+  reescribe su pipeline): consulta la caché **antes** del proveedor. En un
+  **acierto** devuelve el resumen cacheado **sin llamar** a OpenCode y registra un
+  uso con `cache_hit = true` y 0 tokens; en un **fallo** genera, registra el uso
+  real y **cachea solo si el resumen es `Valid`**.
+- El **modelo** se inyecta por constructor (en producción, de `OpenCodeConfig`); la
+  caché **no** lo lee de la config.
+- `GenerationResponse` expone `usage: TokenUsage?` (opcional: sin bloque `usage` es
+  `null`, no un error) y `CitizenSummaryResult` propaga el uso de forma compatible.
+
+La persistencia son dos repositorios JDBC en `persistence/`
+(`SummaryCacheRepository` con codec JSON puro del `ResumenDto` y
+`GenerationUsageRepository` con `totalTokens()`). La migración
+`V4__resumen_cache_uso.sql` crea `resumen_cache` (caché del resumen por
+`cache_key`, **tabla propia y separada** de `resumen`, con FK en cascada a
+`publicacion` y *upsert* idempotente) y `generacion_uso` (log de tokens, **sin**
+FK). Se registran **tokens**, no tarifas.
+
+El gate cubre la clave, el servicio con caché, el uso del proveedor y el contrato
+SQL de `V4` con **dobles deterministas**, sin red ni BD. La prueba real es
+**opt-in** (solo PostgreSQL, sin OpenCode ni modelo E5) y queda fuera de
+`build`/`test`/`init.sh` y de la CI:
+
+```sh
+cp .env.example .env
+docker compose up -d
+./gradlew :backend:flywayMigrate
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*SummaryCachePersistenceLiveTest'
+docker compose down -v
+```
+
+Esperado: `find` devuelve el mismo `ResumenDto`; el *upsert* de la caché es
+idempotente por `cache_key`; `totalTokens()` cuadra con los registros. Decisión
+durable en el ADR 0016 (harness privado).
 
 ## Ingesta diaria (job programado)
 

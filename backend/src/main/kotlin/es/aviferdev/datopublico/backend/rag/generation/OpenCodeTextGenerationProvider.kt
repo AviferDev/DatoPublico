@@ -66,7 +66,7 @@ class OpenCodeTextGenerationProvider internal constructor(
             )
         }
         val body = decodeBody(response)
-        return GenerationResponse(body.firstContent())
+        return GenerationResponse(body.firstContent(), body.usage?.toTokenUsage())
     }
 
     /** Lee el cuerpo como DTO de respuesta; un cuerpo ilegible es error tipado. */
@@ -103,6 +103,13 @@ private fun ChatCompletionResponseDto.firstContent(): String {
     return content?.takeIf { it.isNotBlank() }
         ?: throw TextGenerationException("El proveedor de generación OpenCode no devolvió contenido.")
 }
+
+/** Traduce el bloque `usage` de wire al valor interno [TokenUsage]. */
+private fun ChatUsageDto.toTokenUsage(): TokenUsage = TokenUsage(
+    promptTokens = promptTokens,
+    completionTokens = completionTokens,
+    totalTokens = totalTokens,
+)
 
 /**
  * Crea el [HttpClient] por defecto del proveedor OpenCode: motor **CIO**,
@@ -147,6 +154,20 @@ private data class ChatChoiceDto(
 @Serializable
 private data class ChatCompletionResponseDto(
     @SerialName("choices") val choices: List<ChatChoiceDto>,
+    @SerialName("usage") val usage: ChatUsageDto? = null,
+)
+
+/**
+ * Bloque `usage` de la respuesta OpenAI-compatible (control de coste).
+ *
+ * Se parsea con `@SerialName` explícito de las claves de wire; los campos llevan
+ * default `0` para tolerar respuestas parciales sin fallar el parseo.
+ */
+@Serializable
+private data class ChatUsageDto(
+    @SerialName("prompt_tokens") val promptTokens: Int = 0,
+    @SerialName("completion_tokens") val completionTokens: Int = 0,
+    @SerialName("total_tokens") val totalTokens: Int = 0,
 )
 
 /** Tiempo máximo por petición de generación (ms). */

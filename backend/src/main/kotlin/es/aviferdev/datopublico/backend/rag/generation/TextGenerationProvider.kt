@@ -47,8 +47,29 @@ data class GenerationRequest(
  *
  * @property text texto plano devuelto por el modelo; su estructura la interpreta
  *   el parser del consumidor (p. ej. `SummaryOutputParser`).
+ * @property usage consumo de tokens de la generación, si el proveedor lo aporta;
+ *   `null` cuando la respuesta no trae bloque `usage` (no es un error). Lo
+ *   consume el control de coste (FT00021).
  */
-data class GenerationResponse(val text: String)
+data class GenerationResponse(val text: String, val usage: TokenUsage? = null)
+
+/**
+ * Consumo de **tokens** de una generación (valor interno, sin sufijo: no es un
+ * DTO de transporte ni `@Serializable`).
+ *
+ * Los tres valores vienen del bloque `usage` del proveedor (OpenAI-compatible:
+ * `prompt_tokens`/`completion_tokens`/`total_tokens`). Se registran tal cual, sin
+ * inventar consumo cuando el proveedor no lo aporta.
+ *
+ * @property promptTokens tokens de entrada (prompt).
+ * @property completionTokens tokens de salida (completion).
+ * @property totalTokens tokens totales del intercambio.
+ */
+data class TokenUsage(
+    val promptTokens: Int,
+    val completionTokens: Int,
+    val totalTokens: Int,
+)
 
 /**
  * Error de frontera del proveedor de generación de texto.

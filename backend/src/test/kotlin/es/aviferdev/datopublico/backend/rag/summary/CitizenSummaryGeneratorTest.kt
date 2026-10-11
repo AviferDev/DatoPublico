@@ -8,6 +8,7 @@ import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
 import es.aviferdev.datopublico.backend.rag.generation.GenerationRequest
 import es.aviferdev.datopublico.backend.rag.generation.GenerationResponse
 import es.aviferdev.datopublico.backend.rag.generation.TextGenerationProvider
+import es.aviferdev.datopublico.backend.rag.generation.TokenUsage
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
 import es.aviferdev.datopublico.model.CategoriaDto
@@ -83,6 +84,31 @@ class CitizenSummaryGeneratorTest {
     }
 
     @Test
+    fun `propagates the provider token usage into a valid result`() = runTest {
+        val usage = TokenUsage(promptTokens = 10, completionTokens = 20, totalTokens = 30)
+        val provider = FakeTextGenerationProvider(VALID_EMPLOYMENT_JSON, usage)
+        val generator = generatorCon(provider, publication(CategoriaDto.NORMAS_Y_LEGISLACION))
+
+        val result = generator.generate(publication(CategoriaDto.NORMAS_Y_LEGISLACION))
+
+        val valid = assertIs<CitizenSummaryResult.Valid>(result)
+        assertEquals(usage, valid.usage)
+    }
+
+    @Test
+    fun `propagates the provider token usage into an invalid result`() = runTest {
+        val usage = TokenUsage(promptTokens = 7, completionTokens = 8, totalTokens = 15)
+        val provider = FakeTextGenerationProvider(JSON_WITHOUT_DEADLINE, usage)
+        val publication = publication(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS)
+        val generator = generatorCon(provider, publication)
+
+        val result = generator.generate(publication)
+
+        val invalid = assertIs<CitizenSummaryResult.Invalid>(result)
+        assertEquals(usage, invalid.usage)
+    }
+
+    @Test
     fun `a publication without category fails fast before invoking the provider`() = runTest {
         val provider = FakeTextGenerationProvider(VALID_EMPLOYMENT_JSON)
         val publication = publication(CategoriaDto.NORMAS_Y_LEGISLACION).copy(categoria = null)
@@ -129,15 +155,18 @@ class CitizenSummaryGeneratorTest {
         categoria = categoria,
     )
 
-    /** Doble de [TextGenerationProvider]: devuelve [responseText] y registra la petición. */
-    private class FakeTextGenerationProvider(private val responseText: String) : TextGenerationProvider {
+    /** Doble de [TextGenerationProvider]: devuelve [responseText]/[usage] y registra la petición. */
+    private class FakeTextGenerationProvider(
+        private val responseText: String,
+        private val usage: TokenUsage? = null,
+    ) : TextGenerationProvider {
         var lastRequest: GenerationRequest? = null
         var calls: Int = 0
 
         override suspend fun generate(request: GenerationRequest): GenerationResponse {
             lastRequest = request
             calls += 1
-            return GenerationResponse(responseText)
+            return GenerationResponse(responseText, usage)
         }
     }
 

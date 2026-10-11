@@ -155,3 +155,14 @@ tasks.register<JavaExec>("evaluateRetrieval") {
     mainClass.set("es.aviferdev.datopublico.backend.rag.evaluation.RetrievalEvaluationMainKt")
     classpath = sourceSets["main"].runtimeClasspath
 }
+
+// Evaluación de la calidad de los resúmenes ciudadanos (FT00024): tarea explícita
+// one-shot, nunca enganchada a `build`/`check` (la CI corre sin red, BD, modelo ni
+// OpenCode). Hereda el entorno del proceso; el PostgreSQL de `docker-compose`, el
+// modelo E5 y la clave de OpenCode son opt-in.
+tasks.register<JavaExec>("evaluateSummary") {
+    group = "application"
+    description = "Evalúa la calidad de los resúmenes con el golden set versionado (one-shot, opt-in)."
+    mainClass.set("es.aviferdev.datopublico.backend.rag.evaluation.SummaryEvaluationMainKt")
+    classpath = sourceSets["main"].runtimeClasspath
+}

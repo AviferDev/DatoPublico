@@ -1,0 +1,83 @@
+{
+  "version": "1.0.0",
+  "entries": [
+    {
+      "id": "EVAL-S1",
+      "title": "Convocatoria de ayudas económicas para prácticas formativas",
+      "date": "2026-10-09",
+      "section": "III",
+      "category": "becas_subvenciones_y_ayudas",
+      "organization": "Ministerio de Universidades",
+      "text": "Artículo 1\nSe convocan 2.000 ayudas económicas para la realización de prácticas formativas en empresas y administraciones públicas, dirigidas a estudiantes universitarios matriculados en titulaciones oficiales de máster.\nArtículo 2\nLa duración de las prácticas será de 6 meses y el plazo de presentación de solicitudes será de veinte días hábiles desde el día siguiente al de la publicación de este extracto.",
+      "reference": {
+        "queCambia": "Se convocan 2.000 ayudas económicas para realizar prácticas formativas en empresas y administraciones públicas durante 6 meses.",
+        "aQuienAfecta": "Estudiantes universitarios matriculados en titulaciones oficiales de máster.",
+        "cifrasClave": ["2.000 ayudas", "6 meses"],
+        "plazo": {
+          "fechaLimite": "2026-11-05",
+          "descripcion": "Veinte días hábiles desde el día siguiente a la publicación."
+        }
+      }
+    },
+    {
+      "id": "EVAL-S2",
+      "title": "Real Decreto por el que se modifica el régimen de infracciones de tráfico",
+      "date": "2026-10-05",
+      "section": "I",
+      "category": "normas_y_legislacion",
+      "organization": "Ministerio del Interior",
+      "text": "Artículo 1\nSe modifica el régimen de infracciones y sanciones en materia de tráfico, circulación de vehículos a motor y seguridad vial.\nArtículo 2\nLas infracciones muy graves prescribirán a los 3 años desde su comisión y las graves, a los 2 años.",
+      "reference": {
+        "queCambia": "Se modifica el régimen de infracciones y sanciones en materia de tráfico, circulación de vehículos a motor y seguridad vial.",
+        "aQuienAfecta": "Conductores y titulares de vehículos a motor afectados por el régimen sancionador de tráfico.",
+        "cifrasClave": ["3 años", "2 años"]
+      }
+    },
+    {
+      "id": "EVAL-S3",
+      "title": "Convocatoria de proceso selectivo para el Cuerpo de Gestión Procesal",
+      "date": "2026-09-28",
+      "section": "II.B",
+      "category": "oposiciones_y_empleo_publico",
+      "organization": "Ministerio de Justicia",
+      "text": "Artículo 1\nSe convoca proceso selectivo para el ingreso en el Cuerpo de Gestión Procesal y Administrativa por el sistema general de acceso libre, con un total de 120 plazas.\nArtículo 2\nEl plazo de presentación de instancias será de veinte días hábiles contados desde la publicación de esta convocatoria en el Boletín Oficial del Estado.",
+      "reference": {
+        "queCambia": "Se convoca un proceso selectivo de 120 plazas para ingresar en el Cuerpo de Gestión Procesal y Administrativa por acceso libre.",
+        "aQuienAfecta": "Personas que quieran opositar al Cuerpo de Gestión Procesal y Administrativa de la Administración de Justicia.",
+        "cifrasClave": ["120 plazas", "veinte días hábiles"],
+        "plazo": {
+          "fechaLimite": "2026-10-26",
+          "descripcion": "Veinte días hábiles desde la publicación de la convocatoria."
+        }
+      }
+    },
+    {
+      "id": "EVAL-S4",
+      "title": "Nombramiento de subdirector general de recursos humanos",
+      "date": "2026-09-30",
+      "section": "II.A",
+      "category": "nombramientos_y_ceses",
+      "organization": "Ministerio de Hacienda",
+      "text": "Artículo 1\nSe nombra subdirector general de recursos humanos del Ministerio de Hacienda a la persona propuesta por el órgano competente.\nArtículo 2\nEl cese del anterior titular se produce con efectos desde el día de la publicación de este nombramiento.",
+      "reference": {
+        "queCambia": "Se nombra a un nuevo subdirector general de recursos humanos del Ministerio de Hacienda y cesa el titular anterior.",
+        "aQuienAfecta": "Personal y unidades del Ministerio de Hacienda y candidatos interesados en el puesto directivo.",
+        "cifrasClave": []
+      }
+    },
+    {
+      "id": "EVAL-S5",
+      "title": "Extracto de bases de subvenciones para proyectos de investigación",
+      "date": "2026-10-02",
+      "section": "V.B",
+      "category": "otras_disposiciones_y_anuncios",
+      "organization": "Universidad de Alicante",
+      "text": "Artículo 1\nSe publican las bases reguladoras de las subvenciones para la financiación de proyectos de investigación científica y desarrollo tecnológico, dotadas con 500.000 euros.\nArtículo 2\nLas solicitudes se presentarán por vía electrónica en el plazo de quince días hábiles.",
+      "reference": {
+        "queCambia": "Se publican las bases de las subvenciones para financiar proyectos de investigación científica y desarrollo tecnológico, con 500.000 euros de dotación.",
+        "aQuienAfecta": "Grupos de investigación y entidades que presenten proyectos de investigación científica y desarrollo tecnológico.",
+        "cifrasClave": ["500.000 euros", "quince días hábiles"]
+      }
+    }
+  ]
+}

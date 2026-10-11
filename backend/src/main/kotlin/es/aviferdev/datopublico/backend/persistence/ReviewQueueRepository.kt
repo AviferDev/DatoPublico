@@ -5,22 +5,33 @@ import java.sql.ResultSet
 import javax.sql.DataSource
 
 /**
- * Persistencia **mínima** de la cola de revisión (tabla `cola_revision`).
+ * Persistencia de la cola de revisión (tabla `cola_revision`).
  *
- * La lógica de guardrails, confianza y colocación en la cola llega con
- * FT00022/FT00023; aquí solo se guardan entradas ligadas a un resumen y se leen
- * por su resumen. El borrado de un resumen (o de su publicación) arrastra sus
+ * La colocación en la cola la decide FT00023 (el servicio de disposición); aquí
+ * se guardan entradas ligadas a un resumen, se leen por su resumen y se listan
+ * las **pendientes** (consumidor FT00026+). Desde FT00023 la escritura es un
+ * *upsert* **idempotente** por resumen **pendiente** (índice único parcial de
+ * `V5`): reencolar un resumen ya pendiente **actualiza** su `motivo` en vez de
+ * duplicar la fila. El borrado de un resumen (o de su publicación) arrastra sus
  * entradas por `ON DELETE CASCADE`.
  */
 interface ReviewQueueRepository {
     /**
-     * Inserta una entrada de revisión ligada a un resumen y la devuelve con su
-     * `id`.
+     * Inserta una entrada `pendiente` ligada a un resumen y la devuelve con su
+     * `id`; si ya existe una entrada pendiente para el mismo resumen, actualiza su
+     * `motivo` (idempotente) y devuelve la existente.
+     *
+     * @param entry entrada a persistir; `summaryId` debe referenciar un resumen
+     *   existente.
+     * @return la entrada persistida con su `id`.
      */
     fun save(entry: ReviewQueueEntity): ReviewQueueEntity
 
     /** Lista las entradas de revisión de [summaryId]. */
     fun listBySummary(summaryId: Long): List<ReviewQueueEntity>
+
+    /** Lista las entradas **pendientes** (`estado = 'pendiente'`), ordenadas por `id`. */
+    fun listPending(): List<ReviewQueueEntity>
 }
 
 /**
@@ -54,7 +65,7 @@ class ReviewQueueRepositoryJdbc(private val dataSource: DataSource) : ReviewQueu
 
     override fun save(entry: ReviewQueueEntity): ReviewQueueEntity {
         val id = dataSource.queryRows(
-            INSERT,
+            UPSERT,
             { statement -> statement.bindParameters(entry) },
             { rows -> rows.getLong("id") },
         ).first()
@@ -68,7 +79,14 @@ class ReviewQueueRepositoryJdbc(private val dataSource: DataSource) : ReviewQueu
             { rows -> rows.toReviewQueueEntity() },
         )
 
-    /** Asigna los parámetros de la sentencia de inserción de la cola. */
+    override fun listPending(): List<ReviewQueueEntity> =
+        dataSource.queryRows(
+            LIST_PENDING,
+            { _ -> },
+            { rows -> rows.toReviewQueueEntity() },
+        )
+
+    /** Asigna los parámetros de la sentencia de *upsert* de la cola. */
     private fun PreparedStatement.bindParameters(entry: ReviewQueueEntity) {
         setLong(1, entry.summaryId)
         setString(2, entry.reason)
@@ -76,9 +94,11 @@ class ReviewQueueRepositoryJdbc(private val dataSource: DataSource) : ReviewQueu
     }
 
     private companion object {
-        const val INSERT = """
+        const val UPSERT = """
             INSERT INTO cola_revision (resumen_id, motivo, estado)
             VALUES (?, ?, ?)
+            ON CONFLICT (resumen_id) WHERE estado = 'pendiente'
+            DO UPDATE SET motivo = EXCLUDED.motivo
             RETURNING id
         """
 
@@ -86,6 +106,13 @@ class ReviewQueueRepositoryJdbc(private val dataSource: DataSource) : ReviewQueu
             SELECT id, resumen_id, motivo, estado
             FROM cola_revision
             WHERE resumen_id = ?
+            ORDER BY id
+        """
+
+        const val LIST_PENDING = """
+            SELECT id, resumen_id, motivo, estado
+            FROM cola_revision
+            WHERE estado = 'pendiente'
             ORDER BY id
         """
     }

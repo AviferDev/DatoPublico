@@ -519,6 +519,51 @@ OPENCODE_LIVE_TEST=1 OPENCODE_API_KEY=<clave> \
 
 Decisión durable en el ADR 0015 (harness privado).
 
+## Chat RAG (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.rag.chat` (FT00025) genera la
+**respuesta del chat RAG**: dada una pregunta o una afirmación, recupera los
+fragmentos, construye el prompt, invoca el **proveedor de texto** (OpenCode en
+producción; un doble en los tests), parsea una salida estructurada
+(**estado + respuesta + citas**) y devuelve un resultado tipado con los tres
+estados del dominio. Es una **librería sin wiring**: no se cablea en el arranque
+(el endpoint, el rate limiting y la UI son FT00031/FT00037).
+
+- `ChatStatus` (`ANSWERED`/`REFUTED`/`UNFOUNDED`) y `ChatResult`
+  (`Answered`/`Refuted`/`Unfounded`) modelan los tres estados del dominio;
+  `ChatCitation` lleva la fuente oficial y `ChatGenerationException` es el error
+  tipado.
+- `ChatPromptBuilder` (puro) construye el prompt con la consulta y el contexto
+  **numerado** `[0]`, `[1]`… delimitado como **datos, no instrucciones**; el
+  esquema pide `estado`, `respuesta` y `citas` (índices de fragmento).
+- `ChatOutputParser` (puro) quita las *fences* de Markdown, parsea el JSON
+  (`ChatGenerationException` si está vacío o es inválido) y traduce el token de
+  estado con **fail-fast** si es desconocido.
+- `ChatGroundingChecker` (puro) reutiliza `SummaryTextNormalizer` y
+  `SummaryGroundingChecker.MIN_CLAIM_SUPPORT` (= 0.6): una respuesta está
+  sustentada si **todas** sus oraciones lo están (todas sus cifras en el contexto y
+  ≥ 0.6 de sus términos de contenido).
+- `CitationResolver` es el `fun interface` que **inyecta** la fuente oficial desde
+  la publicación (en producción, `PublicationRepository.findById`); el modelo solo
+  aporta **índices** de fragmento, **nunca** URLs.
+- `RagChatService.answer(query, filter, limit)`: recupera con `HybridSearch`; con
+  **contexto vacío** declara `sin_fundamento` **sin invocar** al proveedor; una
+  respuesta `respondida`/`refutada` no sustentada por el grounding **degrada** a
+  `sin_fundamento`; y exige **al menos una cita resoluble** (índice fuera de rango
+  o estado desconocido ⇒ `ChatGenerationException`).
+
+El gate cubre prompt, parser, grounding y servicio con **dobles deterministas**,
+sin red ni BD. La prueba contra el endpoint **real** es **opt-in**, no requiere
+PostgreSQL ni el modelo E5 y queda fuera del gate y de la CI (con
+`OPENCODE_LIVE_TEST=1` pero sin clave, falla en claro):
+
+```sh
+OPENCODE_LIVE_TEST=1 OPENCODE_API_KEY=<clave> \
+  ./gradlew :backend:test --tests '*RagChatServiceLiveTest'
+```
+
+Decisión durable en el ADR 0020 (harness privado).
+
 ## Cacheo del resumen y control de coste (`:backend`)
 
 El paquete `es.aviferdev.datopublico.backend.rag.summary` añade (FT00021) el

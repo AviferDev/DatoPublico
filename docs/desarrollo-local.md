@@ -549,6 +549,52 @@ BOE, si el truststore del JVM no incluye la raíz **FNMT-RCM**, el test falla co
 `SunCertPathBuilderException`; `curl` sí valida porque usa el llavero del sistema.
 El gate no se ve afectado. Decisión durable en el ADR 0017 (harness privado).
 
+## Cola de revisión y disposición del resumen (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.rag.review` (FT00023) **dispone** el
+resumen ciudadano **después** de los guardrails (FT00022): persiste su **estado** y
+su **confianza** (`groundingScore`) en `resumen` y, si la decisión es
+`NEEDS_REVIEW`, lo encola en `cola_revision` **sin publicarlo**. Es una **librería
+sin wiring**: compone repositorios inyectados y **no** se cablea en el arranque.
+
+- `SummaryState` es el enum de los **siete** estados del resumen
+  (`pendiente`, `generado`, `validado_por_guardrails`, `publicado`,
+  `en_cola_revision`, `revisado`, `descartado`); el token persistido coincide con
+  `resumen.estado`/`cola_revision.estado`, así que no requiere migración de datos.
+- `SummaryReviewOutcome` es el resultado tipado (`Published`/`Queued`/`Discarded`)
+  con los `id` persistidos.
+- `ReviewReasonFormatter.of(result)` construye el `motivo` de la cola (nombres de
+  las violaciones de contenido, o `LOW_GROUNDING`); es diagnóstico interno, no
+  texto de UI.
+- `SummaryDispositionService.dispose(publication, summary, guardrail)` **consume**
+  la `GuardrailDecision` de FT00022 (sin umbral nuevo): `PUBLISHABLE` publica
+  (`estado = publicado`), `NEEDS_REVIEW` encola (`en_cola_revision` + entrada
+  `pendiente`) y `DISCARDED` queda `descartado`. La `confianza` persistida es el
+  `groundingScore` y el resumen publicado lleva `aviso_ia = true` (el aviso
+  **visible** es FT00033).
+- El **encolado es idempotente**: la migración `V5__cola_revision_pendiente_unique.sql`
+  crea un **índice único parcial** (`resumen_id WHERE estado = 'pendiente'`) y el
+  `ReviewQueueRepository` hace *upsert* (`ON CONFLICT … DO UPDATE SET motivo`)
+  más `listPending()`. Reencolar un resumen ya pendiente **actualiza** el motivo sin
+  duplicar la fila.
+
+El gate cubre los estados, el motivo, el servicio con **dobles deterministas** y el
+contrato SQL de `V5`, **sin red ni BD**. La prueba real (publicar + encolar +
+reencolado idempotente) es **opt-in** y queda fuera de `build`/`test`/`init.sh` y
+de la CI (solo PostgreSQL, sin OpenCode ni modelo E5):
+
+```sh
+cp .env.example .env
+docker compose up -d
+./gradlew :backend:flywayMigrate
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*ReviewQueuePersistenceLiveTest'
+docker compose down -v
+```
+
+Esperado: el publicado se lee `publicado` con su `confianza`; el encolado aparece
+en `listPending()`; reencolarlo no duplica la fila pendiente. Decisión durable en
+el ADR 0018 (harness privado).
+
 ## Ingesta diaria (job programado)
 
 El paquete `es.aviferdev.datopublico.backend.ingesta.job` programa la ingesta

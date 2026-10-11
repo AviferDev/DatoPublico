@@ -421,6 +421,64 @@ Variables de entorno (opcionales; la CLI hereda el entorno del proceso):
 
 Decisión durable en el ADR 0013 (harness privado).
 
+## Evaluación de resúmenes (`:backend:evaluateSummary`)
+
+El paquete `es.aviferdev.datopublico.backend.rag.evaluation` (FT00024) mide la
+calidad de los **resúmenes ciudadanos** sobre un **golden set versionado**
+(`backend/src/main/resources/rag/eval/summary-golden-set.json`): un corpus modesto
+de publicaciones (con encabezados `Artículo N` para que el `order` del chunker sea
+determinista e ids con prefijo `EVAL-S`) y, en cada entrada, su **resumen de
+referencia** (`queCambia`, `aQuienAfecta`, `cifrasClave` y `plazo`).
+
+- `SummaryQualityMetrics` es **puro**: `tokenF1` (F1 léxico por campo con el
+  multiconjunto de términos de `SummaryTextNormalizer`) y `figuresRecall` (fracción
+  de cifras de la referencia presentes en el resumen), con sus casos límite.
+- `SummaryGoldenSetLoader` parsea y **valida** el dataset (fail-fast con
+  `IllegalArgumentException`: versión y entradas no vacías, ids únicos, categoría,
+  título y texto presentes y referencia con «¿Qué cambia?» y «¿A quién afecta?»).
+- `SummaryQualityEvaluator` genera **una vez por entrada** con un `SummaryGenerator`
+  inyectable, calcula el F1 de cada campo y el *recall* de cifras, deriva el acierto
+  (`hit`), agrega las medias sin `NaN` y cuenta los resúmenes inválidos como fallo.
+- La CLI `SummaryEvaluationMain` indexa el corpus del propio dataset con el modelo
+  E5 real (`FragmentIndexer`, idempotente), genera y evalúa cada publicación con
+  `CitizenSummaryGenerator` (OpenCode) y registra el resultado (log JSON
+  `event=summary.evaluation.completed` con `what_changes_f1`/`who_is_affected_f1`/
+  `figures_recall`/`hit_rate`/`invalid` + resumen por entrada en stdout). **No** se
+  cablea en el arranque.
+
+El gate cubre las métricas, el dataset y el evaluador **sin red, BD, modelo ni
+OpenCode** (`SummaryQualityMetricsTest`, `SummaryGoldenSetTest`,
+`SummaryQualityEvaluatorTest`). La ejecución real es **opt-in** y queda fuera de
+`build`/`test`/`init.sh` y de la CI:
+
+```sh
+backend/tools/download-embedding-model.sh
+cp .env.example .env && docker compose up -d
+./gradlew :backend:flywayMigrate
+# La CLI lee el entorno del proceso (no la .env): exporta la conexión.
+set -a; . ./.env; set +a   # o exporta POSTGRES_* a mano
+OPENCODE_API_KEY=<clave> OPENCODE_LIVE_TEST=1 DB_LIVE_TEST=1 EMBEDDING_LIVE_TEST=1 \
+  ./gradlew :backend:evaluateSummary
+OPENCODE_API_KEY=<clave> OPENCODE_LIVE_TEST=1 DB_LIVE_TEST=1 EMBEDDING_LIVE_TEST=1 \
+  ./gradlew :backend:test --tests '*SummaryEvaluationLiveTest'
+docker compose down -v
+```
+
+Variables de entorno (opcionales; la CLI hereda el entorno del proceso):
+
+- `POSTGRES_*`: conexión a la base. La CLI (`SummaryEvaluationMain`) usa
+  `DatabaseConfig.fromEnv()`, es decir el **entorno del proceso**: `POSTGRES_PASSWORD`
+  debe estar **exportada** (la CLI no lee la `.env` de la raíz, a diferencia de
+  Flyway y de los tests opt-in).
+- `OPENCODE_API_KEY` (obligatoria, fail-fast) y `OPENCODE_BASE_URL`/`OPENCODE_MODEL`/
+  `OPENCODE_TEMPERATURE` (opcionales): configuración del proveedor de generación.
+- `SUMMARY_EVAL_DATASET`: fichero alternativo del golden set (por defecto, el
+  recurso versionado).
+- `EMBEDDING_MODEL_PATH`/`EMBEDDING_TOKENIZER_PATH`: rutas del modelo (o el
+  directorio por defecto `backend/models/multilingual-e5-small/`).
+
+Decisión durable en el ADR 0019 (harness privado).
+
 ## Generación del resumen ciudadano (`:backend`)
 
 Los paquetes `es.aviferdev.datopublico.backend.rag.generation` y

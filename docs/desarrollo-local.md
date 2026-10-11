@@ -509,6 +509,46 @@ Esperado: `find` devuelve el mismo `ResumenDto`; el *upsert* de la caché es
 idempotente por `cache_key`; `totalTokens()` cuadra con los registros. Decisión
 durable en el ADR 0016 (harness privado).
 
+## Guardrails anti-alucinación y trazabilidad (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.rag.guardrails` (FT00022) verifica,
+**después** de generar el resumen y **antes** de publicarlo, que la **fuente
+oficial** es válida y que las **afirmaciones** están sustentadas por el contexto
+recuperado. Es una **librería sin wiring**: no se cablea en el arranque y **no**
+persiste nada (ni `resumen` ni `cola_revision`).
+
+- `SummaryGuardrail.evaluate(publication, summary, context)` combina la validación
+  de **contrato** (`CitizenSummaryValidator`, FT00019), la de **fuente**
+  (`OfficialSourceValidator`: `https://`, host del BOE e **igualdad** con
+  `Publicacion.urlOficial`) y el **grounding** léxico
+  (`SummaryTextNormalizer` + `SummaryGroundingChecker`). Devuelve un
+  `SummaryGuardrailResult` con `GuardrailDecision` (`PUBLISHABLE`/`NEEDS_REVIEW`/
+  `DISCARDED`), `isPublishable`, las violaciones de contrato y de contenido y una
+  **puntuación de grounding** `[0,1]`.
+- **Grounding**: una afirmación está sustentada si **todas** sus cifras están en el
+  contexto y ≥ `MIN_CLAIM_SUPPORT` (= 0.6) de sus términos de contenido (sin
+  acentos, sin palabras vacías) aparecen en el contexto; `score` = sustentadas /
+  total. Umbrales `DISCARD_THRESHOLD` (= 0.5) y `REVIEW_THRESHOLD` (= 0.8). Es
+  **conservador**: un falso negativo lleva a revisión o descarte, nunca a publicar.
+- **Alcanzabilidad**: puerto `suspend` `SourceReachability`; `HttpSourceReachability`
+  lo implementa con un `HttpClient` inyectado (2xx/3xx ⇒ alcanzable; fallo de red ⇒
+  no alcanzable). El guardrail lo recibe **opcional**: sin puerto solo se valida la
+  **estructura** de la fuente.
+
+El gate cubre el normalizador, el validador de fuente, el grounding, el evaluador
+con **dobles deterministas** y `HttpSourceReachability` con `MockEngine`, **sin red
+ni BD**. La alcanzabilidad real es **opt-in** y queda fuera de
+`build`/`test`/`init.sh` y de la CI:
+
+```sh
+BOE_LIVE_TEST=1 ./gradlew :backend:test --tests '*SummaryGuardrailLiveTest'
+```
+
+Nota (macOS con el JBR de Android Studio): como en el resto de pruebas opt-in del
+BOE, si el truststore del JVM no incluye la raíz **FNMT-RCM**, el test falla con
+`SunCertPathBuilderException`; `curl` sí valida porque usa el llavero del sistema.
+El gate no se ve afectado. Decisión durable en el ADR 0017 (harness privado).
+
 ## Ingesta diaria (job programado)
 
 El paquete `es.aviferdev.datopublico.backend.ingesta.job` programa la ingesta

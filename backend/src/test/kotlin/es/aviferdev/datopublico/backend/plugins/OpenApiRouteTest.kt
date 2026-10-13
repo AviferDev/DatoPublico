@@ -19,7 +19,8 @@ import kotlinx.serialization.json.jsonPrimitive
  * Tests de gate de la ruta `GET /openapi.json` (FT00029) con `testApplication`
  * (sin red, BD, modelo ni OpenCode): sirve `200` `application/json` con un
  * documento OpenAPI 3.1 válido y parseable, declara `info.version` y describe los
- * **cuatro** endpoints de dominio bajo `/v1` más `/health`; sin dependencias,
+ * **cuatro** endpoints de dominio bajo `/v1` más `/health`, además del **esquema de
+ * error tipado** (`ApiErrorDto`/`ApiErrorCodeDto`, FT00030); sin dependencias,
  * `/openapi.json` y `/health` siguen operativos y las rutas de dominio responden
  * `404`.
  */
@@ -40,7 +41,7 @@ class OpenApiRouteTest {
         assertEquals("3.1.0", document.getValue("openapi").jsonPrimitive.content)
         val info = document.getValue("info").jsonObject
         assertEquals("DatoPublico API", info.getValue("title").jsonPrimitive.content)
-        assertEquals("0.5.0", info.getValue("version").jsonPrimitive.content)
+        assertEquals("0.5.1", info.getValue("version").jsonPrimitive.content)
     }
 
     @Test
@@ -50,13 +51,29 @@ class OpenApiRouteTest {
             configureRouting()
         }
 
-        val paths = documentOf(client.get("/openapi.json").bodyAsText()).getValue("paths").jsonObject
+        val document = documentOf(client.get("/openapi.json").bodyAsText())
+        val paths = document.getValue("paths").jsonObject
 
         assertTrue(paths.containsKey("/v1/feed"))
         assertTrue(paths.containsKey("/v1/publicacion/{id}"))
         assertTrue(paths.containsKey("/v1/buscar"))
         assertTrue(paths.containsKey("/v1/chat"))
         assertTrue(paths.containsKey("/health"))
+    }
+
+    @Test
+    fun `openapi json documents the typed error schema`() = testApplication {
+        application {
+            configureSerialization()
+            configureRouting()
+        }
+
+        val schemas = documentOf(client.get("/openapi.json").bodyAsText())
+            .getValue("components").jsonObject
+            .getValue("schemas").jsonObject
+
+        assertTrue(schemas.containsKey("ApiErrorDto"))
+        assertTrue(schemas.containsKey("ApiErrorCodeDto"))
     }
 
     @Test

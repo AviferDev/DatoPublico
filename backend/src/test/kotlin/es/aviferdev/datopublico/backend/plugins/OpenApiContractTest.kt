@@ -1,5 +1,7 @@
 package es.aviferdev.datopublico.backend.plugins
 
+import es.aviferdev.datopublico.model.ApiErrorCodeDto
+import es.aviferdev.datopublico.model.ApiErrorDto
 import es.aviferdev.datopublico.model.CategoriaDto
 import es.aviferdev.datopublico.model.ChatCitationDto
 import es.aviferdev.datopublico.model.ChatRequestDto
@@ -99,6 +101,7 @@ private val SCHEMA_SERIALIZERS: Map<String, KSerializer<*>> = mapOf(
     "ChatResponseDto" to ChatResponseDto.serializer(),
     "ChatCitationDto" to ChatCitationDto.serializer(),
     "HealthDto" to HealthDto.serializer(),
+    "ApiErrorDto" to ApiErrorDto.serializer(),
 )
 
 /** Enums de wire del documento y el enum de `:shared` cuyos tokens espejan. */
@@ -107,4 +110,5 @@ private val ENUM_SERIALIZERS: Map<String, KSerializer<*>> = mapOf(
     "SeccionBoeDto" to SeccionBoeDto.serializer(),
     "HighlightReasonDto" to HighlightReasonDto.serializer(),
     "ChatStatusDto" to ChatStatusDto.serializer(),
+    "ApiErrorCodeDto" to ApiErrorCodeDto.serializer(),
 )

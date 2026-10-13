@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "DatoPublico API",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "summary": "API pública de solo lectura del BOE",
-    "description": "API pública y de solo lectura de DatoPublico: explica en lenguaje claro qué se ha publicado en el BOE. Los endpoints de dominio (feed diario, detalle de publicación, búsqueda y chat de verificación) se sirven bajo el prefijo /v1; /health y este documento son operacionales y no están versionados. Sin cuentas ni datos personales; todo resumen enlaza siempre a la fuente oficial. Este documento es la fuente de verdad del contrato y los DTO de :shared son su implementación (un test anti-deriva los mantiene alineados). El contrato de error tipado, el CORS y el rate limiting son posteriores (FT00030)."
+    "description": "API pública y de solo lectura de DatoPublico: explica en lenguaje claro qué se ha publicado en el BOE. Los endpoints de dominio (feed diario, detalle de publicación, búsqueda y chat de verificación) se sirven bajo el prefijo /v1; /health y este documento son operacionales y no están versionados. Sin cuentas ni datos personales; todo resumen enlaza siempre a la fuente oficial. Este documento es la fuente de verdad del contrato y los DTO de :shared son su implementación (un test anti-deriva los mantiene alineados). Los errores devuelven un cuerpo tipado (ApiErrorDto) con Content-Type JSON, sin filtrar detalles internos; la API resuelve CORS para el cliente Web y limita las peticiones por IP (con un cupo más estricto para el chat), eximiendo /health y este documento."
   },
   "servers": [
     { "url": "/" }
@@ -56,7 +56,26 @@
             }
           },
           "400": {
-            "description": "Parámetro inválido (fecha ausente o no ISO, o paginación fuera de rango), sin cuerpo tipado."
+            "description": "Parámetro inválido (fecha ausente o no ISO, o paginación fuera de rango).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "429": {
+            "description": "Se ha superado el límite de peticiones por IP.",
+            "headers": {
+              "Retry-After": {
+                "description": "Segundos que hay que esperar antes de reintentar.",
+                "schema": { "type": "integer", "minimum": 0 }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
           }
         }
       }
@@ -85,8 +104,36 @@
               }
             }
           },
-          "400": { "description": "Identificador en blanco o desmesurado, sin cuerpo tipado." },
-          "404": { "description": "Identificador desconocido o publicación sin resumen publicado." }
+          "400": {
+            "description": "Identificador en blanco o desmesurado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Identificador desconocido o publicación sin resumen publicado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "429": {
+            "description": "Se ha superado el límite de peticiones por IP.",
+            "headers": {
+              "Retry-After": {
+                "description": "Segundos que hay que esperar antes de reintentar.",
+                "schema": { "type": "integer", "minimum": 0 }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
         }
       }
     },
@@ -143,7 +190,26 @@
             }
           },
           "400": {
-            "description": "Parámetro inválido (q ausente o en blanco, categoría no válida, fecha no ISO o límite fuera de rango), sin cuerpo tipado."
+            "description": "Parámetro inválido (q ausente o en blanco, categoría no válida, fecha no ISO o límite fuera de rango).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "429": {
+            "description": "Se ha superado el límite de peticiones por IP.",
+            "headers": {
+              "Retry-After": {
+                "description": "Segundos que hay que esperar antes de reintentar.",
+                "schema": { "type": "integer", "minimum": 0 }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
           }
         }
       }
@@ -172,10 +238,43 @@
             }
           },
           "400": {
-            "description": "Cuerpo ilegible o consulta ausente, en blanco o desmesurada, sin cuerpo tipado."
+            "description": "Cuerpo ilegible o consulta ausente, en blanco o desmesurada.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
           },
-          "502": { "description": "Fallo del proveedor de texto o salida no interpretable." },
-          "500": { "description": "Fallo de la inferencia local de embeddings." }
+          "429": {
+            "description": "Se ha superado el límite de peticiones por IP (cupo del chat, más estricto).",
+            "headers": {
+              "Retry-After": {
+                "description": "Segundos que hay que esperar antes de reintentar.",
+                "schema": { "type": "integer", "minimum": 0 }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "502": {
+            "description": "Fallo del proveedor de texto o salida no interpretable.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "Fallo de la inferencia local de embeddings.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
         }
       }
     },
@@ -255,6 +354,26 @@
         "type": "string",
         "description": "Estado del dominio de una respuesta del chat.",
         "enum": ["respondida", "refutada", "sin_fundamento"]
+      },
+      "ApiErrorCodeDto": {
+        "type": "string",
+        "description": "Código de error de wire (token `snake_case`) del contrato `ApiErrorDto`.",
+        "enum": [
+          "solicitud_invalida",
+          "no_encontrado",
+          "demasiadas_peticiones",
+          "error_interno",
+          "servicio_no_disponible"
+        ]
+      },
+      "ApiErrorDto": {
+        "type": "object",
+        "description": "Cuerpo de error tipado de la API: código estable y mensaje genérico, sin detalles internos.",
+        "properties": {
+          "codigo": { "$ref": "#/components/schemas/ApiErrorCodeDto" },
+          "mensaje": { "type": "string" }
+        },
+        "required": ["codigo", "mensaje"]
       },
       "PlazoDto": {
         "type": "object",

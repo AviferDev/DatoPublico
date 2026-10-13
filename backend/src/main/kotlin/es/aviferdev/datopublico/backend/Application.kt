@@ -17,9 +17,11 @@ import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioHttpClient
 import es.aviferdev.datopublico.backend.ingesta.sumario.boeSumarioHttpClient
 import es.aviferdev.datopublico.backend.persistence.FeedRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
+import es.aviferdev.datopublico.backend.persistence.SummaryRepositoryJdbc
 import es.aviferdev.datopublico.backend.plugins.configureMonitoring
 import es.aviferdev.datopublico.backend.plugins.configureRouting
 import es.aviferdev.datopublico.backend.plugins.configureSerialization
+import es.aviferdev.datopublico.backend.publication.PublicationDetailService
 import io.ktor.client.HttpClient
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopped
@@ -52,16 +54,16 @@ fun main() {
 
 /**
  * Módulo Ktor: serialización, logging de llamadas, pool JDBC **único** compartido
- * por el feed y la ingesta, rutas e ingesta condicional.
+ * por el feed, el detalle y la ingesta, rutas e ingesta condicional.
  *
  * El pool lo crea el composition root (una sola vez) y lo cierra **una sola vez**
- * en `ApplicationStopped`; ni la ruta ni la ingesta lo cierran.
+ * en `ApplicationStopped`; ni las rutas ni la ingesta lo cierran.
  */
 fun Application.module() {
     configureSerialization()
     configureMonitoring()
     val dataSource = createDataSourceOrNull()
-    configureRouting(feedServiceOf(dataSource))
+    configureRouting(feedServiceOf(dataSource), detailServiceOf(dataSource))
     configureIngestion(dataSource)
     monitorDataSource(dataSource)
 }
@@ -69,7 +71,7 @@ fun Application.module() {
 /**
  * Crea el pool JDBC **único** del backend, o `null` si la configuración de base de
  * datos no resuelve (`POSTGRES_PASSWORD` ausente, etc.). Un fallo **no** impide el
- * arranque: sin pool, el feed no se registra y la ingesta se omite.
+ * arranque: sin pool, el feed y el detalle no se registran y la ingesta se omite.
  */
 private fun Application.createDataSourceOrNull(): DataSource? =
     try {
@@ -91,6 +93,21 @@ private fun Application.monitorDataSource(dataSource: DataSource?) {
 /** Construye el feed sobre el pool compartido, o `null` si no hay base de datos. */
 private fun feedServiceOf(dataSource: DataSource?): DailyFeedService? =
     if (dataSource == null) null else DailyFeedService(FeedRepositoryJdbc(dataSource))
+
+/**
+ * Construye el detalle de publicación sobre el **mismo** pool compartido
+ * (reutiliza [PublicationRepositoryJdbc] y [SummaryRepositoryJdbc]), o `null` si
+ * no hay base de datos.
+ */
+private fun detailServiceOf(dataSource: DataSource?): PublicationDetailService? =
+    if (dataSource == null) {
+        null
+    } else {
+        PublicationDetailService(
+            PublicationRepositoryJdbc(dataSource),
+            SummaryRepositoryJdbc(dataSource),
+        )
+    }
 
 /** Cierra el pool si su implementación lo permite (HikariCP lo es). */
 private fun closeDataSource(dataSource: DataSource) {

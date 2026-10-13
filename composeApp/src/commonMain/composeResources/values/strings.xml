@@ -7,9 +7,10 @@
   `stringResource(Res.string.*)`. Solo se admiten literales en `@Preview` y
   símbolos tipográficos.
 
-  Este fichero es la única fuente de textos de la UI del feed (FT00032):
-  títulos, etiquetas de las 11 categorías, motivos de destacado, plazo, estados
-  y `contentDescription` de los iconos con significado.
+  Este fichero es la única fuente de textos de la UI del feed (FT00032) y del
+  detalle (FT00033): títulos, etiquetas de las 11 categorías, motivos de
+  destacado, plazo, bloques del resumen, estados y `contentDescription` de los
+  iconos con significado.
 -->
 <resources>
     <!-- Identidad y pantalla del feed -->
@@ -42,6 +43,25 @@
     <string name="reason_thematic_keyword">Interés ciudadano directo</string>
     <string name="reason_open_deadline">Plazo abierto</string>
     <string name="reason_relevant_body">Organismo de referencia</string>
+
+    <!-- Detalle de publicación (FT00033) -->
+    <string name="detail_loading">Cargando el detalle de la publicación…</string>
+    <string name="detail_what_changes">¿Qué cambia?</string>
+    <string name="detail_who_is_affected">¿A quién afecta?</string>
+    <string name="detail_key_figures">Cifras clave</string>
+    <string name="detail_deadline_title">Plazo de solicitud</string>
+    <string name="detail_official_source">Consultar la fuente oficial</string>
+    <string name="detail_ai_notice">Resumen generado con inteligencia artificial. Comprueba siempre la fuente oficial.</string>
+    <string name="detail_not_found_title">Publicación no encontrada</string>
+    <string name="detail_not_found_message">No existe o ya no está disponible la publicación solicitada.</string>
+    <string name="detail_error_title">No se ha podido cargar el detalle</string>
+    <string name="detail_error_message">Ha ocurrido un problema al obtener la publicación. Vuelve a intentarlo.</string>
+    <string name="detail_retry">Reintentar</string>
+    <string name="cd_back">Volver</string>
+    <string name="cd_ai_notice">Aviso de contenido generado por IA</string>
+    <string name="cd_official_source">Abrir la fuente oficial</string>
+    <string name="cd_not_found">Publicación no encontrada</string>
+    <string name="cd_detail_error">Error al cargar el detalle</string>
 
     <!-- Etiquetas de las 11 categorías curadas -->
     <string name="category_normative_regulation">Normas y legislación</string>

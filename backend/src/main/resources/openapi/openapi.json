@@ -1,0 +1,399 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "DatoPublico API",
+    "version": "0.5.0",
+    "summary": "API pública de solo lectura del BOE",
+    "description": "API pública y de solo lectura de DatoPublico: explica en lenguaje claro qué se ha publicado en el BOE. Los endpoints de dominio (feed diario, detalle de publicación, búsqueda y chat de verificación) se sirven bajo el prefijo /v1; /health y este documento son operacionales y no están versionados. Sin cuentas ni datos personales; todo resumen enlaza siempre a la fuente oficial. Este documento es la fuente de verdad del contrato y los DTO de :shared son su implementación (un test anti-deriva los mantiene alineados). El contrato de error tipado, el CORS y el rate limiting son posteriores (FT00030)."
+  },
+  "servers": [
+    { "url": "/" }
+  ],
+  "tags": [
+    { "name": "feed", "description": "Feed diario de publicaciones del BOE." },
+    { "name": "detalle", "description": "Detalle de una publicación por su identificador oficial." },
+    { "name": "busqueda", "description": "Búsqueda por similitud semántica sobre el corpus publicado." },
+    { "name": "chat", "description": "Chat de verificación contra el corpus, con citas a la fuente oficial." },
+    { "name": "operacional", "description": "Endpoints operacionales, sin versión." }
+  ],
+  "paths": {
+    "/v1/feed": {
+      "get": {
+        "tags": ["feed"],
+        "operationId": "getDailyFeed",
+        "summary": "Feed diario de publicaciones del BOE",
+        "description": "Publicaciones con resumen `publicado` del día indicado, paginadas, con los destacados del día (explicados por motivos) y los totales del día completo.",
+        "parameters": [
+          {
+            "name": "fecha",
+            "in": "query",
+            "required": true,
+            "description": "Fecha ISO-8601 (`YYYY-MM-DD`) del día a consultar.",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "required": false,
+            "description": "Página 1-based (por defecto 1).",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "tamanoPagina",
+            "in": "query",
+            "required": false,
+            "description": "Tamaño de página (por defecto 20, máximo 100).",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Feed del día; un día sin publicaciones devuelve listas vacías.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ResumenDiarioDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Parámetro inválido (fecha ausente o no ISO, o paginación fuera de rango), sin cuerpo tipado."
+          }
+        }
+      }
+    },
+    "/v1/publicacion/{id}": {
+      "get": {
+        "tags": ["detalle"],
+        "operationId": "getPublicationDetail",
+        "summary": "Detalle de una publicación del BOE",
+        "description": "Publicación con resumen `publicado` por su identificador oficial. Un identificador desconocido o un resumen no publicado responde 404.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identificador oficial del BOE (opaco), p. ej. `BOE-A-2026-20979`.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle de la publicación.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PublicacionDto" }
+              }
+            }
+          },
+          "400": { "description": "Identificador en blanco o desmesurado, sin cuerpo tipado." },
+          "404": { "description": "Identificador desconocido o publicación sin resumen publicado." }
+        }
+      }
+    },
+    "/v1/buscar": {
+      "get": {
+        "tags": ["busqueda"],
+        "operationId": "searchPublished",
+        "summary": "Búsqueda sobre el corpus publicado",
+        "description": "Publicaciones con resumen `publicado` más relevantes por similitud semántica, deduplicadas por publicación y ordenadas por relevancia (top-k, sin paginación).",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Consulta (no vacía).",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "categoria",
+            "in": "query",
+            "required": false,
+            "description": "Token de wire de `CategoriaDto` (p. ej. `becas_subvenciones_y_ayudas`).",
+            "schema": { "$ref": "#/components/schemas/CategoriaDto" }
+          },
+          {
+            "name": "desde",
+            "in": "query",
+            "required": false,
+            "description": "Fecha ISO-8601 mínima de publicación (inclusiva).",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "required": false,
+            "description": "Fecha ISO-8601 máxima de publicación (inclusiva).",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "description": "Número máximo de publicaciones (por defecto 10, máximo 50).",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 10 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultados de la búsqueda; una consulta sin resultados devuelve `resultados` vacío.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SearchResultsDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Parámetro inválido (q ausente o en blanco, categoría no válida, fecha no ISO o límite fuera de rango), sin cuerpo tipado."
+          }
+        }
+      }
+    },
+    "/v1/chat": {
+      "post": {
+        "tags": ["chat"],
+        "operationId": "askCorpus",
+        "summary": "Chat de verificación contra el corpus",
+        "description": "Responde una pregunta o verifica una afirmación contra el corpus del BOE con los tres estados del dominio y las citas a la fuente oficial. `sin_fundamento` no es un error y lleva `citas` vacía.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChatRequestDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respuesta del chat con su estado y sus citas.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChatResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Cuerpo ilegible o consulta ausente, en blanco o desmesurada, sin cuerpo tipado."
+          },
+          "502": { "description": "Fallo del proveedor de texto o salida no interpretable." },
+          "500": { "description": "Fallo de la inferencia local de embeddings." }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["operacional"],
+        "operationId": "getHealth",
+        "summary": "Healthcheck del servidor",
+        "description": "Endpoint operacional; no depende de la base de datos y no está versionado.",
+        "responses": {
+          "200": {
+            "description": "El servidor está operativo.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "tags": ["operacional"],
+        "operationId": "getOpenApiDocument",
+        "summary": "Documento OpenAPI de esta API",
+        "description": "Sirve este documento OpenAPI 3.1; no está versionado.",
+        "responses": {
+          "200": {
+            "description": "Documento OpenAPI 3.1 en JSON.",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CategoriaDto": {
+        "type": "string",
+        "description": "Familia curada de la publicación (token de wire en `snake_case`).",
+        "enum": [
+          "normas_y_legislacion",
+          "nombramientos_y_ceses",
+          "oposiciones_y_empleo_publico",
+          "becas_subvenciones_y_ayudas",
+          "premios",
+          "convenios_y_acuerdos",
+          "educacion_y_planes_de_estudio",
+          "medio_ambiente",
+          "recursos_y_resoluciones",
+          "informacion_publica_y_concesiones",
+          "otras_disposiciones_y_anuncios"
+        ]
+      },
+      "SeccionBoeDto": {
+        "type": "string",
+        "description": "Sección del BOE de la que procede la publicación (notación oficial).",
+        "enum": ["I", "II.A", "II.B", "III", "IV", "V.A", "V.B", "V.C"]
+      },
+      "HighlightReasonDto": {
+        "type": "string",
+        "description": "Motivo objetivo por el que una publicación aparece como destacada.",
+        "enum": [
+          "seccion_normativa",
+          "rango_normativo",
+          "categoria_tematica",
+          "plazo_abierto",
+          "organismo_relevante"
+        ]
+      },
+      "ChatStatusDto": {
+        "type": "string",
+        "description": "Estado del dominio de una respuesta del chat.",
+        "enum": ["respondida", "refutada", "sin_fundamento"]
+      },
+      "PlazoDto": {
+        "type": "object",
+        "description": "Plazo de solicitud de una convocatoria.",
+        "properties": {
+          "fechaLimite": { "type": "string", "format": "date" },
+          "descripcion": { "type": ["string", "null"] }
+        },
+        "required": ["fechaLimite"]
+      },
+      "ResumenDto": {
+        "type": "object",
+        "description": "Resumen ciudadano estructurado de una publicación.",
+        "properties": {
+          "queCambia": { "type": "string" },
+          "aQuienAfecta": { "type": "string" },
+          "cifrasClave": { "type": "array", "items": { "type": "string" } },
+          "fuenteOficial": { "type": "string", "format": "uri" },
+          "avisoIA": { "type": "boolean" },
+          "plazo": {
+            "anyOf": [{ "$ref": "#/components/schemas/PlazoDto" }, { "type": "null" }]
+          }
+        },
+        "required": ["queCambia", "aQuienAfecta", "fuenteOficial"]
+      },
+      "PublicacionDto": {
+        "type": "object",
+        "description": "Publicación del BOE: unidad base del contrato.",
+        "properties": {
+          "id": { "type": "string" },
+          "titulo": { "type": "string" },
+          "fechaPublicacion": { "type": "string", "format": "date" },
+          "organismo": { "type": ["string", "null"] },
+          "seccion": { "$ref": "#/components/schemas/SeccionBoeDto" },
+          "epigrafe": { "type": ["string", "null"] },
+          "categoria": { "$ref": "#/components/schemas/CategoriaDto" },
+          "urlOficial": { "type": "string", "format": "uri" },
+          "resumen": {
+            "anyOf": [{ "$ref": "#/components/schemas/ResumenDto" }, { "type": "null" }]
+          },
+          "plazo": {
+            "anyOf": [{ "$ref": "#/components/schemas/PlazoDto" }, { "type": "null" }]
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "fechaPublicacion",
+          "organismo",
+          "seccion",
+          "epigrafe",
+          "categoria",
+          "urlOficial"
+        ]
+      },
+      "HighlightDto": {
+        "type": "object",
+        "description": "Publicación destacada del día, con los motivos que la justifican.",
+        "properties": {
+          "publicacion": { "$ref": "#/components/schemas/PublicacionDto" },
+          "motivos": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/HighlightReasonDto" }
+          }
+        },
+        "required": ["publicacion", "motivos"]
+      },
+      "ResumenDiarioDto": {
+        "type": "object",
+        "description": "Feed diario: página solicitada, destacados del día completo y totales.",
+        "properties": {
+          "fecha": { "type": "string", "format": "date" },
+          "publicaciones": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublicacionDto" }
+          },
+          "destacados": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/HighlightDto" }
+          },
+          "pagina": { "type": "integer", "minimum": 1 },
+          "tamanoPagina": { "type": "integer", "minimum": 1 },
+          "total": { "type": "integer", "minimum": 0 },
+          "totalPaginas": { "type": "integer", "minimum": 0 }
+        },
+        "required": ["fecha"]
+      },
+      "SearchResultsDto": {
+        "type": "object",
+        "description": "Resultado de la búsqueda: eco de la consulta y publicaciones relevantes.",
+        "properties": {
+          "q": { "type": "string" },
+          "resultados": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublicacionDto" }
+          }
+        },
+        "required": ["q"]
+      },
+      "ChatRequestDto": {
+        "type": "object",
+        "description": "Petición del chat: la pregunta o la afirmación a verificar.",
+        "properties": {
+          "consulta": { "type": "string" }
+        },
+        "required": ["consulta"]
+      },
+      "ChatCitationDto": {
+        "type": "object",
+        "description": "Cita a la fuente oficial de una publicación usada como sustento.",
+        "properties": {
+          "publicacionId": { "type": "string" },
+          "titulo": { "type": "string" },
+          "urlOficial": { "type": "string", "format": "uri" }
+        },
+        "required": ["publicacionId", "titulo", "urlOficial"]
+      },
+      "ChatResponseDto": {
+        "type": "object",
+        "description": "Respuesta del chat: eco de la consulta, estado, texto y citas.",
+        "properties": {
+          "consulta": { "type": "string" },
+          "estado": { "$ref": "#/components/schemas/ChatStatusDto" },
+          "respuesta": { "type": "string" },
+          "citas": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ChatCitationDto" }
+          }
+        },
+        "required": ["consulta", "estado", "respuesta"]
+      },
+      "HealthDto": {
+        "type": "object",
+        "description": "Respuesta del healthcheck (operacional).",
+        "properties": {
+          "status": { "type": "string" }
+        },
+        "required": ["status"]
+      }
+    }
+  }
+}

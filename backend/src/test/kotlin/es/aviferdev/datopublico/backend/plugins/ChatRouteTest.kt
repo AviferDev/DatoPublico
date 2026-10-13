@@ -31,7 +31,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Tests de gate de la ruta `POST /chat` (FT00031) con `testApplication` y
+ * Tests de gate de la ruta `POST /v1/chat` (FT00031) con `testApplication` y
  * **dobles deterministas** (sin red ni BD): `200` con el JSON del chat
  * (`consulta`/`estado`/`respuesta`/`citas`), `200` con `sin_fundamento` y citas
  * vacías, `400` por consulta ausente/en blanco/desmesurada o cuerpo ilegible, `404`
@@ -71,7 +71,7 @@ class ChatRouteTest {
     fun `chat responds 400 when the query is missing, blank or oversized`() = testApplication {
         installChat(serviceWith(FakeTextGenerationProvider(ANSWERED_JSON)))
 
-        assertEquals(HttpStatusCode.BadRequest, client.post("/chat").status)
+        assertEquals(HttpStatusCode.BadRequest, client.post("/v1/chat").status)
         assertEquals(HttpStatusCode.BadRequest, postChat("""{"consulta":"   "}""").status)
         assertEquals(
             HttpStatusCode.BadRequest,
@@ -93,7 +93,7 @@ class ChatRouteTest {
             configureRouting()
         }
 
-        assertEquals(HttpStatusCode.NotFound, client.post("/chat").status)
+        assertEquals(HttpStatusCode.NotFound, client.post("/v1/chat").status)
         assertEquals(HttpStatusCode.NotFound, postChat("""{"consulta":"¿Cuál es el plazo?"}""").status)
     }
 
@@ -126,8 +126,8 @@ class ChatRouteTest {
         }
     }
 
-    /** Envía una petición `POST /chat` con un cuerpo JSON crudo. */
-    private suspend fun ApplicationTestBuilder.postChat(payload: String) = client.post("/chat") {
+    /** Envía una petición `POST /v1/chat` con un cuerpo JSON crudo. */
+    private suspend fun ApplicationTestBuilder.postChat(payload: String) = client.post("/v1/chat") {
         contentType(ContentType.Application.Json)
         setBody(payload)
     }

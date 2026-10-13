@@ -52,21 +52,26 @@ Notas:
 ./gradlew :backend:run
 ```
 
-Arranca Netty en `0.0.0.0:8080` **sin** base de datos: el healthcheck no depende
-de PostgreSQL. Se detiene con `Ctrl+C`.
+Arranca Netty en `0.0.0.0:8080` **sin** base de datos: el healthcheck y el
+contrato OpenAPI no dependen de PostgreSQL. Se detiene con `Ctrl+C`.
 
 ```sh
-curl -s http://localhost:8080/health   # {"status":"ok"}
+curl -s http://localhost:8080/health        # {"status":"ok"}
+curl -s http://localhost:8080/openapi.json  # contrato OpenAPI 3.1
 ```
 
-Sin base de datos (`POSTGRES_PASSWORD` ausente) el servidor sigue sirviendo
-`/health` (200) y los endpoints `/feed`, `/publicacion/{id}`, `/buscar` y `/chat`
-**no** se registran (404). Con base de datos, el composition root crea un **pool
-JDBC único** que comparten el feed, el detalle, la búsqueda, el chat y la ingesta y
-lo cierra una sola vez al parar (ver «Feed diario», «Detalle de publicación»,
-«Búsqueda (`GET /buscar`)» y «Chat RAG (`POST /chat`)»). La búsqueda necesita
-**además** el modelo E5; el chat, el modelo E5 y `OPENCODE_API_KEY`: sin cualquiera
-de los tres la ruta `/chat` no se registra.
+Los endpoints de **dominio** se sirven bajo el prefijo de versión **`/v1`**
+(`/v1/feed`, `/v1/publicacion/{id}`, `/v1/buscar`, `/v1/chat`); `/health` y
+`/openapi.json` son operacionales y van **sin** versión. Sin base de datos
+(`POSTGRES_PASSWORD` ausente) el servidor sigue sirviendo `/health` (200) y
+`/openapi.json` (200) y las rutas de dominio **no** se registran (404). Con base de
+datos, el composition root crea un **pool JDBC único** que comparten el feed, el
+detalle, la búsqueda, el chat y la ingesta y lo cierra una sola vez al parar (ver
+«Feed diario», «Detalle de publicación», «Búsqueda (`GET /v1/buscar`)» y «Chat RAG
+(`POST /v1/chat`)»). La búsqueda necesita **además** el modelo E5; el chat, el
+modelo E5 y `OPENCODE_API_KEY`: sin cualquiera de los tres la ruta `/v1/chat` no se
+registra. El contrato y el versionado se detallan en «Contratos OpenAPI y
+versionado».
 
 Variables de entorno (todas opcionales; un valor inválido aborta el arranque con
 un mensaje claro):
@@ -710,16 +715,16 @@ Esperado: el publicado se lee `publicado` con su `confianza`; el encolado aparec
 en `listPending()`; reencolarlo no duplica la fila pendiente. Decisión durable en
 el ADR 0018 (harness privado).
 
-## Feed diario (`GET /feed`) (`:backend`)
+## Feed diario (`GET /v1/feed`) (`:backend`)
 
 El paquete `es.aviferdev.datopublico.backend.feed` (FT00026) expone el **primer
 endpoint de lectura de datos** del backend: el **feed diario** paginado. Es la
 primera feature que comparte un **pool JDBC único** entre la API y la ingesta: sin
-base de datos (`POSTGRES_PASSWORD` ausente) el pool no se crea, `/feed` **no** se
+base de datos (`POSTGRES_PASSWORD` ausente) el pool no se crea, `/v1/feed` **no** se
 registra (404) y `/health` sigue operativo.
 
 ```
-GET /feed?fecha=2026-10-11&pagina=1&tamanoPagina=20
+GET /v1/feed?fecha=2026-10-11&pagina=1&tamanoPagina=20
 ```
 
 - `fecha` (**obligatoria**, ISO `YYYY-MM-DD`) selecciona el día; el feed **no**
@@ -736,7 +741,7 @@ GET /feed?fecha=2026-10-11&pagina=1&tamanoPagina=20
   parametrizado y filtra `estado = 'publicado'`.
 
 ```sh
-curl -s 'http://localhost:8080/feed?fecha=2026-10-11' | jq .
+curl -s 'http://localhost:8080/v1/feed?fecha=2026-10-11' | jq .
 ```
 
 La prueba real (solo el resumen publicado se sirve) es **opt-in** y queda fuera del
@@ -752,7 +757,7 @@ docker compose down -v
 
 Decisión durable en el ADR 0021 (harness privado).
 
-## Detalle de publicación (`GET /publicacion/{id}`) (`:backend`)
+## Detalle de publicación (`GET /v1/publicacion/{id}`) (`:backend`)
 
 El paquete `es.aviferdev.datopublico.backend.publication` (FT00027) expone el
 **segundo endpoint de lectura de datos**: el detalle de una publicación por su
@@ -761,7 +766,7 @@ y el mapeo puro `feed/FeedDtoMapper` de FT00026 (no hay DTO nuevo) y comparte el
 **mismo pool JDBC único** que el feed y la ingesta.
 
 ```
-GET /publicacion/BOE-A-2026-20979
+GET /v1/publicacion/BOE-A-2026-20979
 ```
 
 - Sirve **solo** publicaciones con `resumen.estado = 'publicado'` (token
@@ -781,7 +786,7 @@ GET /publicacion/BOE-A-2026-20979
   `/health` sigue operativo.
 
 ```sh
-curl -s 'http://localhost:8080/publicacion/BOE-A-2026-20979' | jq .
+curl -s 'http://localhost:8080/v1/publicacion/BOE-A-2026-20979' | jq .
 ```
 
 La prueba real (solo el resumen publicado se sirve) es **opt-in** y queda fuera del
@@ -797,17 +802,17 @@ docker compose down -v
 
 Decisión durable en el ADR 0022 (harness privado).
 
-## Búsqueda (`GET /buscar`) (`:backend`)
+## Búsqueda (`GET /v1/buscar`) (`:backend`)
 
 El paquete `es.aviferdev.datopublico.backend.search` (FT00028) expone la
 **búsqueda** sobre el corpus: dada una consulta, devuelve las publicaciones
 **publicadas** más relevantes por **similitud semántica** sobre los fragmentos
 indexados. Reutiliza la recuperación híbrida (`rag/retrieval`, FT00017) y el mapeo
 `feed/FeedDtoMapper` (FT00026), y solo sirve publicaciones con resumen
-`estado = 'publicado'` (coherente con `/feed` y `/publicacion/{id}`).
+`estado = 'publicado'` (coherente con `/v1/feed` y `/v1/publicacion/{id}`).
 
 ```
-GET /buscar?q=<consulta>&categoria=<token>&desde=<ISO>&hasta=<ISO>&limite=<n>
+GET /v1/buscar?q=<consulta>&categoria=<token>&desde=<ISO>&hasta=<ISO>&limite=<n>
 ```
 
 - `q` (**obligatoria**, no vacía) es la consulta.
@@ -826,11 +831,11 @@ GET /buscar?q=<consulta>&categoria=<token>&desde=<ISO>&hasta=<ISO>&limite=<n>
   `Dispatchers.IO`; el SQL está parametrizado.
 
 ```sh
-curl -s 'http://localhost:8080/buscar?q=becas%20para%20j%C3%B3venes&categoria=becas_subvenciones_y_ayudas&limite=5' | jq .
+curl -s 'http://localhost:8080/v1/buscar?q=becas%20para%20j%C3%B3venes&categoria=becas_subvenciones_y_ayudas&limite=5' | jq .
 ```
 
 La búsqueda es el **primer** cableado del proveedor de embeddings: **sin** el
-modelo E5 (o sin config de BD) el servidor arranca igual, `/buscar` **no** se
+modelo E5 (o sin config de BD) el servidor arranca igual, `/v1/buscar` **no** se
 registra (`404`) y `/health` sigue operativo. El modelo se aprovisiona como se
 describe en «Embeddings locales (ONNX)» (véase esa sección).
 
@@ -850,7 +855,7 @@ docker compose down -v
 
 Decisión durable en el ADR 0023 (harness privado).
 
-## Chat RAG (`POST /chat`) (`:backend`)
+## Chat RAG (`POST /v1/chat`) (`:backend`)
 
 El paquete `es.aviferdev.datopublico.backend.chat` (FT00031) expone el **endpoint
 de chat RAG**: dada una **pregunta** o una **afirmación a verificar** en lenguaje
@@ -861,7 +866,7 @@ las **citas a la fuente oficial**. Cablea por primera vez la librería `rag/chat
 **mismo pool JDBC único** que el feed/el detalle/la ingesta.
 
 ```
-POST /chat
+POST /v1/chat
 Content-Type: application/json
 
 {"consulta":"¿Cuál es el plazo de solicitud?"}
@@ -886,12 +891,12 @@ Content-Type: application/json
   `Dispatchers.IO`; la clave de OpenCode vive **solo** en el servidor.
 
 ```sh
-curl -s -X POST http://localhost:8080/chat \
+curl -s -X POST http://localhost:8080/v1/chat \
   -H 'Content-Type: application/json' \
   -d '{"consulta":"¿Cuál es el plazo de solicitud?"}' | jq .
 ```
 
-Sin base de datos, sin el modelo E5 o sin `OPENCODE_API_KEY`, `/chat` **no** se
+Sin base de datos, sin el modelo E5 o sin `OPENCODE_API_KEY`, `/v1/chat` **no** se
 registra (404) y `/health` sigue operativo. El arranque real necesita las tres
 cosas: `docker compose up -d` + `./gradlew :backend:flywayMigrate`, el modelo
 (`backend/tools/download-embedding-model.sh`) y la clave (`OPENCODE_API_KEY`). La
@@ -914,6 +919,49 @@ docker compose down -v
 ```
 
 Decisión durable en el ADR 0024 (harness privado).
+
+## Contratos OpenAPI y versionado (`/openapi.json`, `/v1`) (`:backend`)
+
+El backend publica (FT00029) el **contrato OpenAPI 3.1** de sus endpoints de
+dominio y fija una **versión de API** estable para los clientes. El documento es un
+artefacto **estático y versionado** en los recursos del módulo
+(`backend/src/main/resources/openapi/openapi.json`): **no** se genera en tiempo de
+compilación (el compilador OpenAPI de Ktor exige Kotlin ≥ 2.2.20 y el proyecto fija
+2.1.20) y **no** añade dependencias Gradle. Se sirve tal cual, sin depender de la
+base de datos, el modelo ni OpenCode.
+
+```sh
+curl -s http://localhost:8080/openapi.json | jq '.info.version, (.paths | keys)'
+```
+
+- `GET /openapi.json` responde `200` `application/json` con `openapi` `3.1.0`,
+  `info.title` `DatoPublico API`, `info.version` `0.5.0` y los `paths`
+  `/v1/feed`, `/v1/publicacion/{id}`, `/v1/buscar`, `/v1/chat`, `/health` y el
+  propio `/openapi.json`. No lleva versión en el path (es meta/operacional) y se
+  registra **siempre**.
+- Las rutas de **dominio** viven bajo el prefijo **`/v1`**: `GET /v1/feed`,
+  `GET /v1/publicacion/{id}`, `GET /v1/buscar` y `POST /v1/chat`. Una ruta de
+  dominio **sin** `/v1` (p. ej. `GET /feed`) responde `404`. El prefijo solo
+  versiona; no cambia métodos, parámetros ni semántica.
+- Los `components.schemas` son el **espejo** de los DTOs de `:shared`
+  (`PublicacionDto`, `ResumenDto`, `PlazoDto`, `ResumenDiarioDto`, `HighlightDto`,
+  `HighlightReasonDto`, `CategoriaDto`, `SeccionBoeDto`, `SearchResultsDto`,
+  `ChatRequestDto`, `ChatResponseDto`, `ChatStatusDto`, `ChatCitationDto`) más el
+  `HealthDto` operacional, con los **mismos nombres de propiedad** que sus
+  `@SerialName` y los **mismos tokens** de enum. **Sin** esquema de error: el
+  contrato de error tipado es FT00030.
+- **Test anti-deriva** en el gate: `OpenApiContractTest` compara los esquemas
+  documentados con los `@SerialName`/tokens reales de los DTOs y **falla** ante
+  cualquier divergencia; `OpenApiRouteTest` comprueba `200`, el JSON válido y las
+  rutas documentadas. Todo corre **sin red, BD, modelo ni OpenCode**.
+- **Política de versionado**: los cambios **aditivos y compatibles** mantienen
+  `/v1` y suben la *minor/patch* de `info.version`; un cambio **incompatible**
+  exige un prefijo nuevo (`/v2`) con `/v1` conservado hasta su deprecación. El
+  documento es la **fuente de verdad** del contrato y los DTOs de `:shared` su
+  implementación: si un DTO cambia, hay que actualizar el documento (el test lo
+  fuerza).
+
+Decisión durable en el ADR 0025 (harness privado).
 
 ## Ingesta diaria (job programado)
 

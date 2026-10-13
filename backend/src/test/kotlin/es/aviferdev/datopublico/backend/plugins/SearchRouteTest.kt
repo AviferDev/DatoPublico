@@ -27,7 +27,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Tests de gate de la ruta `GET /buscar` (FT00028) con `testApplication` y
+ * Tests de gate de la ruta `GET /v1/buscar` (FT00028) con `testApplication` y
  * dobles en memoria: `200` con el JSON (`q` + `resultados`), `400` por `q`
  * ausente/en blanco, `categoria` inválida, fecha no ISO o `limite` inválido, y
  * `404` cuando el servicio no se registra (sin BD o sin modelo).
@@ -38,7 +38,7 @@ class SearchRouteTest {
     fun `buscar responds 200 with the echoed query and the published results`() = testApplication {
         installSearch(listOf(item("BOE-A-1")))
 
-        val response = client.get("/buscar?q=becas&categoria=becas_subvenciones_y_ayudas")
+        val response = client.get("/v1/buscar?q=becas&categoria=becas_subvenciones_y_ayudas")
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
@@ -53,7 +53,7 @@ class SearchRouteTest {
     fun `buscar responds 200 with an empty result when nothing matches`() = testApplication {
         installSearch(emptyList())
 
-        val response = client.get("/buscar?q=sin+coincidencias")
+        val response = client.get("/v1/buscar?q=sin+coincidencias")
 
         assertEquals(HttpStatusCode.OK, response.status)
         val results = DatoPublicoJson.decodeFromString<SearchResultsDto>(response.bodyAsText())
@@ -65,34 +65,34 @@ class SearchRouteTest {
     fun `buscar responds 400 when the query is missing or blank`() = testApplication {
         installSearch(listOf(item("BOE-A-1")))
 
-        assertEquals(HttpStatusCode.BadRequest, client.get("/buscar").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/buscar?q=").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/buscar?q=%20%20").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/buscar").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/buscar?q=").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/buscar?q=%20%20").status)
     }
 
     @Test
     fun `buscar responds 400 when the category token is invalid`() = testApplication {
         installSearch(listOf(item("BOE-A-1")))
 
-        assertEquals(HttpStatusCode.BadRequest, client.get("/buscar?q=tema&categoria=no_existe").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/buscar?q=tema&categoria=NORMAS_Y_LEGISLACION").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/buscar?q=tema&categoria=no_existe").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/buscar?q=tema&categoria=NORMAS_Y_LEGISLACION").status)
     }
 
     @Test
     fun `buscar responds 400 when a date is not iso`() = testApplication {
         installSearch(listOf(item("BOE-A-1")))
 
-        assertEquals(HttpStatusCode.BadRequest, client.get("/buscar?q=tema&desde=ayer").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/buscar?q=tema&hasta=2026-13-40").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/buscar?q=tema&desde=ayer").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/buscar?q=tema&hasta=2026-13-40").status)
     }
 
     @Test
     fun `buscar responds 400 when the limit is invalid`() = testApplication {
         installSearch(listOf(item("BOE-A-1")))
 
-        assertEquals(HttpStatusCode.BadRequest, client.get("/buscar?q=tema&limite=0").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/buscar?q=tema&limite=abc").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/buscar?q=tema&limite=51").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/buscar?q=tema&limite=0").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/buscar?q=tema&limite=abc").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/buscar?q=tema&limite=51").status)
     }
 
     @Test
@@ -102,7 +102,7 @@ class SearchRouteTest {
             configureRouting()
         }
 
-        assertEquals(HttpStatusCode.NotFound, client.get("/buscar?q=tema").status)
+        assertEquals(HttpStatusCode.NotFound, client.get("/v1/buscar?q=tema").status)
     }
 
     /** Registra serialización + rutas con un servicio de búsqueda sobre dobles en memoria. */

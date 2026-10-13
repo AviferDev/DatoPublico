@@ -29,7 +29,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Prueba **opt-in** de `POST /chat` contra el endpoint **real** de OpenCode
+ * Prueba **opt-in** de `POST /v1/chat` contra el endpoint **real** de OpenCode
  * (escenario 8 del spec): responde una pregunta con fragmentos de prueba **en
  * memoria** (sin PostgreSQL ni ONNX) y comprueba que la respuesta está
  * fundamentada y lleva **cita a la fuente oficial**.
@@ -66,7 +66,7 @@ class ChatRouteLiveTest {
                 configureSerialization()
                 configureRouting(chatService = liveService(openCodeClient, config))
             }
-            val response = client.post("/chat") {
+            val response = client.post("/v1/chat") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"consulta":"¿Cuál es el plazo de solicitud?"}""")
             }

@@ -21,10 +21,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Tests de gate de la ruta `GET /feed` (FT00026) con `testApplication` y un
+ * Tests de gate de la ruta `GET /v1/feed` (FT00026) con `testApplication` y un
  * [FeedRepository] en memoria: `200` con el JSON paginado (fecha, publicaciones,
- * destacados, página), `400` por fecha ausente/mal formada o paginación inválida
- * y `404` cuando el servicio no se registra (sin base de datos).
+ * destacados, página), `400` por fecha ausente/mal formada o paginación inválida,
+ * `404` cuando el servicio no se registra (sin base de datos) y `404` en la ruta
+ * **sin** el prefijo de versión `/v1` (FT00029).
  */
 class FeedRouteTest {
 
@@ -32,7 +33,7 @@ class FeedRouteTest {
     fun `feed responds 200 with the paginated json for a valid day`() = testApplication {
         installFeed(listOf(item("BOE-A-1")))
 
-        val response = client.get("/feed?fecha=$DATE")
+        val response = client.get("/v1/feed?fecha=$DATE")
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
@@ -50,7 +51,7 @@ class FeedRouteTest {
     fun `feed responds 200 with empty lists for a day without content`() = testApplication {
         installFeed(listOf(item("BOE-A-1")))
 
-        val response = client.get("/feed?fecha=2026-01-01")
+        val response = client.get("/v1/feed?fecha=2026-01-01")
 
         assertEquals(HttpStatusCode.OK, response.status)
         val feed = DatoPublicoJson.decodeFromString<ResumenDiarioDto>(response.bodyAsText())
@@ -63,19 +64,19 @@ class FeedRouteTest {
     fun `feed responds 400 when the date is missing or not iso`() = testApplication {
         installFeed(listOf(item("BOE-A-1")))
 
-        assertEquals(HttpStatusCode.BadRequest, client.get("/feed").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/feed?fecha=ayer").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/feed?fecha=2026-13-40").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/feed").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/feed?fecha=ayer").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/feed?fecha=2026-13-40").status)
     }
 
     @Test
     fun `feed responds 400 when the pagination is invalid`() = testApplication {
         installFeed(listOf(item("BOE-A-1")))
 
-        assertEquals(HttpStatusCode.BadRequest, client.get("/feed?fecha=$DATE&pagina=0").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/feed?fecha=$DATE&pagina=abc").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/feed?fecha=$DATE&tamanoPagina=0").status)
-        assertEquals(HttpStatusCode.BadRequest, client.get("/feed?fecha=$DATE&tamanoPagina=101").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/feed?fecha=$DATE&pagina=0").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/feed?fecha=$DATE&pagina=abc").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/feed?fecha=$DATE&tamanoPagina=0").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/feed?fecha=$DATE&tamanoPagina=101").status)
     }
 
     @Test
@@ -85,6 +86,14 @@ class FeedRouteTest {
             configureRouting()
         }
 
+        assertEquals(HttpStatusCode.NotFound, client.get("/v1/feed?fecha=$DATE").status)
+    }
+
+    @Test
+    fun `feed is only served under the v1 prefix`() = testApplication {
+        installFeed(listOf(item("BOE-A-1")))
+
+        assertEquals(HttpStatusCode.OK, client.get("/v1/feed?fecha=$DATE").status)
         assertEquals(HttpStatusCode.NotFound, client.get("/feed?fecha=$DATE").status)
     }
 

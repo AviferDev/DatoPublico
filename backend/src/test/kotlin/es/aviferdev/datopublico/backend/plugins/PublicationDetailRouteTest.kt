@@ -24,7 +24,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Tests de gate de la ruta `GET /publicacion/{id}` (FT00027) con `testApplication`
+ * Tests de gate de la ruta `GET /v1/publicacion/{id}` (FT00027) con `testApplication`
  * y repositorios en memoria: `200` con el JSON `PublicacionDto` (resumen,
  * categoría, `urlOficial` y plazo), `400` por id en blanco/desmesurado, `404` por
  * id desconocido o resumen no publicado y `404` cuando el servicio no se registra
@@ -39,7 +39,7 @@ class PublicationDetailRouteTest {
             summaries = listOf(summary(PUBLISHED_ID, SummaryState.PUBLISHED.persistedValue)),
         )
 
-        val response = client.get("/publicacion/$PUBLISHED_ID")
+        val response = client.get("/v1/publicacion/$PUBLISHED_ID")
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
@@ -62,10 +62,10 @@ class PublicationDetailRouteTest {
             summaries = listOf(summary(PUBLISHED_ID, SummaryState.PUBLISHED.persistedValue)),
         )
 
-        assertEquals(HttpStatusCode.BadRequest, client.get("/publicacion/%20").status)
+        assertEquals(HttpStatusCode.BadRequest, client.get("/v1/publicacion/%20").status)
         assertEquals(
             HttpStatusCode.BadRequest,
-            client.get("/publicacion/${"a".repeat(PublicationDetailService.MAX_ID_LENGTH + 1)}").status,
+            client.get("/v1/publicacion/${"a".repeat(PublicationDetailService.MAX_ID_LENGTH + 1)}").status,
         )
     }
 
@@ -76,8 +76,8 @@ class PublicationDetailRouteTest {
             summaries = listOf(summary(QUEUED_ID, SummaryState.IN_REVIEW.persistedValue)),
         )
 
-        assertEquals(HttpStatusCode.NotFound, client.get("/publicacion/BOE-A-DESCONOCIDA").status)
-        assertEquals(HttpStatusCode.NotFound, client.get("/publicacion/$QUEUED_ID").status)
+        assertEquals(HttpStatusCode.NotFound, client.get("/v1/publicacion/BOE-A-DESCONOCIDA").status)
+        assertEquals(HttpStatusCode.NotFound, client.get("/v1/publicacion/$QUEUED_ID").status)
     }
 
     @Test
@@ -87,7 +87,7 @@ class PublicationDetailRouteTest {
             configureRouting()
         }
 
-        assertEquals(HttpStatusCode.NotFound, client.get("/publicacion/$PUBLISHED_ID").status)
+        assertEquals(HttpStatusCode.NotFound, client.get("/v1/publicacion/$PUBLISHED_ID").status)
     }
 
     /** Registra serialización + rutas con el servicio del detalle sobre dobles en memoria. */

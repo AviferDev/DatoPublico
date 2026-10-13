@@ -27,9 +27,23 @@ error**) en `feature/feed/{domain,data,ui}`. Todos los textos salen de
 `composeApp/src/commonMain/composeResources/values/strings.xml` (castellano) y
 todos los colores, de `MaterialTheme.colorScheme`.
 
-Los datos del feed son **de ejemplo** (repositorio en memoria): el cliente HTTP
-real, la caché offline y el mapeo desde `:shared` son FT00035, y la navegación y
-el ViewModel con `StateFlow`, FT00034.
+Desde FT00033 existe además la **pantalla de detalle** de una publicación
+(`feature/detail/{domain,data,ui}`): cabecera (título, categoría y fecha), el
+resumen ciudadano estructurado («¿Qué cambia?», «¿A quién afecta?» y «Cifras
+clave»), el **plazo** resaltado en convocatorias, el **enlace destacado a la
+fuente oficial** y el **aviso de IA**, con los estados **carga / contenido / no
+encontrada / error**. Sus componentes reutilizables viven en `design/components/`
+(`AiNotice`, `OfficialSourceLink`, `SectionBlock`) y reutiliza el tema, la
+etiqueta de categoría y el badge de plazo del feed.
+
+El detalle **no** es alcanzable todavía desde el feed: FT00033 entrega la pantalla
+y su contrato de invocación (`DetailRoute(stateHolder, onBack)`), y FT00034
+conectará la navegación (feed → detalle) y sustituirá el holder local por un
+ViewModel con `StateFlow`.
+
+Los datos del feed y del detalle son **de ejemplo** (repositorio en memoria): el
+cliente HTTP real, la caché offline y el mapeo desde `:shared` son FT00035, y la
+navegación y el ViewModel con `StateFlow`, FT00034.
 
 ```sh
 # Android (APK de debug)
@@ -57,6 +71,13 @@ Notas:
   `InMemoryFeedRepository(mode = InMemoryFeedMode.EMPTY)` (o `UNAVAILABLE`) en
   `App()` de forma **temporal** y vuelve a `SAMPLE` antes de commitear. Los
   estados también quedan fijados por los tests y por las `@Preview`.
+- **Detalle**: como aún no hay navegación (FT00034), para ver la pantalla en
+  local renderiza `DetailRoute` de forma **temporal** en `App()` con
+  `DetailStateHolder(id, GetPublicationDetail(InMemoryDetailRepository()))` y el
+  `id` de ejemplo (`BOE-A-2026-21002`); revierte `App()` al feed antes de
+  commitear. El repositorio del detalle tiene los modos `SAMPLE`, `NOT_FOUND` y
+  `UNAVAILABLE` para ejercitar sus estados. Los estados también quedan fijados por
+  los tests y por las `@Preview`.
 - **Android**: el manifest declara `Theme.Material.Light.NoActionBar` y el
   contenido raíz se pinta con `safeDrawingPadding()`. Con `targetSdk 35` el modo
   *edge-to-edge* está forzado y un ActionBar de plataforma se superpone al

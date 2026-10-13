@@ -1,6 +1,8 @@
 package es.aviferdev.datopublico.backend.persistence
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.rag.review.SummaryState
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.time.LocalDate
 import javax.sql.DataSource
@@ -17,9 +19,11 @@ data class FeedItem(val publication: Publicacion, val summary: SummaryEntity)
  * Lectura del **feed diario** en la tabla `resumen` (FT00026).
  *
  * Expone, para una fecha ISO-8601, las publicaciones del día que tienen un
- * resumen en `estado = 'publicado'` (token que escribe FT00023). Es una interfaz
- * de **solo lectura**: no anticipa filtros de búsqueda (FT00028) ni el detalle
- * (FT00027).
+ * resumen en `estado = 'publicado'` (token que escribe FT00023) y, desde FT00028,
+ * las publicaciones de un **lote de identificadores** con resumen publicado (para
+ * resolver los fragmentos de una búsqueda). Es una interfaz de **solo lectura**:
+ * no anticipa filtros de búsqueda en SQL (el filtro semántico lo aplica
+ * `rag/retrieval`) ni el detalle (FT00027).
  */
 interface FeedRepository {
     /**
@@ -30,6 +34,21 @@ interface FeedRepository {
      * @return elementos del feed del día; vacío si no hay ninguno publicado.
      */
     fun listPublishedByDate(publicationDate: String): List<FeedItem>
+
+    /**
+     * Lista las publicaciones con resumen **publicado** cuyos identificadores
+     * están en [ids] (lectura por lote, sin orden garantizado).
+     *
+     * Se usa para resolver en una sola consulta los fragmentos que devuelve la
+     * búsqueda; el orden de relevancia lo reimpone el servicio. El filtro
+     * `estado = 'publicado'` y la exclusión de categoría nula son los mismos que
+     * en [listPublishedByDate].
+     *
+     * @param ids identificadores oficiales; si está vacío devuelve lista vacía
+     *   **sin** abrir conexión.
+     * @return los elementos publicados presentes; vacío si ninguno casa.
+     */
+    fun listPublishedByIds(ids: List<String>): List<FeedItem>
 }
 
 /**
@@ -38,6 +57,8 @@ interface FeedRepository {
  * Una sola consulta combina `publicacion ⋈ resumen` y filtra `estado =
  * 'publicado'`; el `JOIN` garantiza 1:1. La fecha se enlaza como texto con el
  * *cast* `?::date` (patrón de FT00012/FT00017) y el SQL está **parametrizado**.
+ * [listPublishedByIds] reutiliza las mismas columnas y el mismo mapeo, con el
+ * lote enlazado como array (`ANY(?)`) y el token `SummaryState.PUBLISHED`.
  *
  * La lectura es **bloqueante** (JDBC) y debe invocarse fuera del hilo de eventos
  * HTTP (el servicio la envuelve en `Dispatchers.IO`). Se devuelve el **día
@@ -56,6 +77,23 @@ class FeedRepositoryJdbc(private val dataSource: DataSource) : FeedRepository {
             { statement -> statement.setString(1, publicationDate) },
             { rows -> rows.toFeedItem() },
         ).filter { item -> item.publication.categoria != null }
+
+    override fun listPublishedByIds(ids: List<String>): List<FeedItem> =
+        if (ids.isEmpty()) {
+            emptyList()
+        } else {
+            dataSource.queryRows(
+                SELECT_PUBLISHED_BY_IDS,
+                { statement -> statement.bindIds(ids) },
+                { rows -> rows.toFeedItem() },
+            ).filter { item -> item.publication.categoria != null }
+        }
+
+    /** Asigna el lote de identificadores (`ANY(?)`) y el token del estado publicado. */
+    private fun PreparedStatement.bindIds(ids: List<String>) {
+        setArray(1, connection.createArrayOf("text", ids.toTypedArray()))
+        setString(2, SummaryState.PUBLISHED.persistedValue)
+    }
 
     /** Reconstruye el [FeedItem] de la fila combinada reutilizando los mappers. */
     private fun ResultSet.toFeedItem(): FeedItem = FeedItem(
@@ -106,6 +144,13 @@ class FeedRepositoryJdbc(private val dataSource: DataSource) : FeedRepository {
             JOIN resumen r ON r.publicacion_id = p.id
             WHERE p.fecha_publicacion = ?::date AND r.estado = 'publicado'
             ORDER BY p.id
+        """
+
+        const val SELECT_PUBLISHED_BY_IDS = """
+            SELECT $PUBLICATION_COLUMNS, $SUMMARY_COLUMNS
+            FROM publicacion p
+            JOIN resumen r ON r.publicacion_id = p.id
+            WHERE p.id = ANY(?::text[]) AND r.estado = ?
         """
     }
 }

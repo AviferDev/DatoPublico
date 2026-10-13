@@ -6,9 +6,11 @@
 # AGP en `:composeApp`; FT00006 activa el motor de cliente Ktor (CIO) y su doble
 # de test (`ktor-client-mock`); FT00008 activa la persistencia JDBC (driver
 # PostgreSQL y pool HikariCP) para los repositorios de `:backend`; FT00015 activa
-# los embeddings locales (ONNX Runtime en CPU) y el tokenizador XLM-R de DJL. Las
-# versiones restantes (coroutines) quedan predeclaradas para que las features
-# siguientes las activen sin tocar la raíz del build.
+# los embeddings locales (ONNX Runtime en CPU) y el tokenizador XLM-R de DJL;
+# FT00030 activa el endurecimiento HTTP (CORS, rate limiting y errores tipados)
+# con tres plugins oficiales de Ktor. Las versiones restantes (coroutines) quedan
+# predeclaradas para que las features siguientes las activen sin tocar la raíz del
+# build.
 
 [versions]
 kotlin = "2.1.20"
@@ -70,6 +72,12 @@ ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor"
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+# Endurecimiento HTTP (FT00030): CORS (preflight y cabeceras `Access-Control-*`),
+# rate limiting por IP (`X-RateLimit-*`/`Retry-After`) y StatusPages (cuerpo de
+# error tipado). Plugins oficiales de Ktor a la versión fijada; no abren sockets.
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
+ktor-server-rate-limit = { module = "io.ktor:ktor-server-rate-limit", version.ref = "ktor" }
+ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
 
 # Logging estructurado: una línea JSON por evento en stdout (sin destino externo).
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

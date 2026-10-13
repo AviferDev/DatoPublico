@@ -4,8 +4,10 @@ import es.aviferdev.datopublico.backend.chat.ChatService
 import es.aviferdev.datopublico.backend.chat.PublicationCitationResolver
 import es.aviferdev.datopublico.backend.feed.DailyFeedService
 import es.aviferdev.datopublico.backend.infra.AppConfig
+import es.aviferdev.datopublico.backend.infra.CorsSettings
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
+import es.aviferdev.datopublico.backend.infra.RateLimitSettings
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionConfig
 import es.aviferdev.datopublico.backend.ingesta.job.DailyIngestionJob
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionRunState
@@ -21,7 +23,10 @@ import es.aviferdev.datopublico.backend.persistence.FeedRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.FragmentRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.SummaryRepositoryJdbc
+import es.aviferdev.datopublico.backend.plugins.configureCors
+import es.aviferdev.datopublico.backend.plugins.configureErrorHandling
 import es.aviferdev.datopublico.backend.plugins.configureMonitoring
+import es.aviferdev.datopublico.backend.plugins.configureRateLimit
 import es.aviferdev.datopublico.backend.plugins.configureRouting
 import es.aviferdev.datopublico.backend.plugins.configureSerialization
 import es.aviferdev.datopublico.backend.publication.PublicationDetailService
@@ -67,19 +72,28 @@ fun main() {
 }
 
 /**
- * Módulo Ktor: serialización, logging de llamadas, pool JDBC **único** compartido
- * por el feed, el detalle, la búsqueda, el chat y la ingesta, proveedores
- * condicionales (embeddings y texto), rutas e ingesta condicional.
+ * Módulo Ktor: serialización, logging de llamadas, **endurecimiento HTTP**
+ * (CORS, rate limiting y cuerpo de error tipado, FT00030), pool JDBC **único**
+ * compartido por el feed, el detalle, la búsqueda, el chat y la ingesta,
+ * proveedores condicionales (embeddings y texto), rutas e ingesta condicional.
  *
  * El pool lo crea el composition root (una sola vez) y lo cierra **una sola vez**
  * en `ApplicationStopped`; ni las rutas ni la ingesta lo cierran. El proveedor de
  * embeddings y el cliente HTTP de OpenCode se cablean de forma **condicional**
  * (sin modelo o sin clave quedan a `null`, las rutas `/buscar`/`/chat` no se
  * registran y el arranque no falla) y se cierran también una sola vez al parar.
+ *
+ * Los tres plugins de endurecimiento (CORS, errores y rate limiting) se instalan
+ * **siempre** y no dependen de la BD, el modelo ni la clave: el arranque parcial
+ * (solo salud) sigue funcionando y el rate limiting solo se aplica a las rutas de
+ * dominio (`applyRateLimits = true`).
  */
 fun Application.module() {
     configureSerialization()
     configureMonitoring()
+    configureCors(CorsSettings.fromEnv())
+    configureErrorHandling()
+    configureRateLimit(RateLimitSettings.fromEnv())
     val dataSource = createDataSourceOrNull()
     val embeddingProvider = createEmbeddingProviderOrNull()
     val textRuntime = createTextGenerationOrNull()
@@ -88,6 +102,7 @@ fun Application.module() {
         detailServiceOf(dataSource),
         searchServiceOf(dataSource, embeddingProvider),
         chatServiceOf(dataSource, embeddingProvider, textRuntime),
+        applyRateLimits = true,
     )
     configureIngestion(dataSource)
     monitorResources(dataSource, embeddingProvider, textRuntime)

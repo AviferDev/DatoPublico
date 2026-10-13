@@ -79,6 +79,12 @@ un mensaje claro):
 - `SERVER_HOST` (por defecto `0.0.0.0`).
 - `SERVER_PORT` (por defecto `8080`); `PORT` como alternativa.
 - `APP_ENV` (por defecto `local`) y `LOG_LEVEL` (por defecto `INFO`).
+- `CORS_ALLOWED_ORIGINS` (por defecto: sin allowlist ⇒ cualquier origen).
+- `RATE_LIMIT_REQUESTS`/`RATE_LIMIT_WINDOW_SECONDS` (por defecto `60`/`60`).
+- `CHAT_RATE_LIMIT_REQUESTS`/`CHAT_RATE_LIMIT_WINDOW_SECONDS` (por defecto `6`/`60`).
+
+(El endurecimiento HTTP —CORS, rate limiting y errores tipados— se detalla en
+«Endurecimiento HTTP».)
 
 Los logs son **JSON de una línea por evento en stdout** (Logback +
 `logstash-logback-encoder`), con los campos `app` y `env` tomados de esas
@@ -962,6 +968,53 @@ curl -s http://localhost:8080/openapi.json | jq '.info.version, (.paths | keys)'
   fuerza).
 
 Decisión durable en el ADR 0025 (harness privado).
+
+## Endurecimiento HTTP (CORS, rate limiting y errores tipados) (`:backend`)
+
+El backend endurece (FT00030) su API pública con tres plugins **oficiales** de Ktor
+(`CORS`, `RateLimit` y `StatusPages`): resuelve el CORS del cliente Web, limita el
+abuso por IP y devuelve un **cuerpo de error JSON tipado** (`ApiErrorDto`). Se
+instalan **siempre** (no dependen de la BD, el modelo ni OpenCode) y el rate
+limiting se aplica a las rutas de dominio bajo `/v1`. Decisión durable en el ADR
+0026 (harness privado).
+
+- **CORS** (`CORS_ALLOWED_ORIGINS`): con la variable **ausente/vacía** se permite
+  cualquier origen (la API es pública y **sin** credenciales); con una lista
+  separada por comas, solo se permiten esos orígenes. El *preflight* de
+  `POST /v1/chat` con `Content-Type: application/json` se resuelve.
+- **Rate limiting por IP** (en memoria, por instancia): `RATE_LIMIT_REQUESTS`
+  (por defecto `60`) por `RATE_LIMIT_WINDOW_SECONDS` (por defecto `60`) para los
+  endpoints de dominio y `CHAT_RATE_LIMIT_REQUESTS` (por defecto `6`) por
+  `CHAT_RATE_LIMIT_WINDOW_SECONDS` (por defecto `60`) para el chat (lo más caro).
+  `/health` y `/openapi.json` **no** están limitados. Superar el cupo responde
+  `429` con `Retry-After`.
+- **Errores**: `400`/`404`/`429`/`500`/`502` responden `application/json` con
+  `{"codigo":…,"mensaje":…}` (códigos `solicitud_invalida`, `no_encontrado`,
+  `demasiadas_peticiones`, `error_interno`, `servicio_no_disponible`), **sin**
+  filtrar detalles internos.
+
+```sh
+# Preflight CORS del chat (el navegador lo dispara con POST + JSON)
+curl -si -X OPTIONS http://localhost:8080/v1/chat \
+  -H 'Origin: https://cliente.example' \
+  -H 'Access-Control-Request-Method: POST' \
+  -H 'Access-Control-Request-Headers: content-type' | head -n 12
+
+# Error tipado (400: cuerpo inválido)
+curl -s -X POST http://localhost:8080/v1/chat \
+  -H 'Content-Type: application/json' -d '{}'
+
+# Rate limiting (429 + Retry-After tras superar el cupo del chat)
+for i in $(seq 1 8); do
+  curl -si -X POST http://localhost:8080/v1/chat \
+    -H 'Content-Type: application/json' \
+    -d '{"consulta":"¿Cuál es el plazo de solicitud?"}' | grep -E '^HTTP|^Retry-After'
+done
+```
+
+El gate cubre CORS, rate limiting y errores con `testApplication` y **dobles
+deterministas**, sin red, BD, modelo ni OpenCode (`CorsRouteTest`,
+`RateLimitRouteTest`, `ErrorsRouteTest`, `HttpHardeningConfigTest`).
 
 ## Ingesta diaria (job programado)
 

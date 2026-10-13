@@ -3,6 +3,7 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>MatchingDeclarationName:Health.kt$HealthDto</ID>
+    <ID>MatchingDeclarationName:RateLimiting.kt$ApiRateLimiter</ID>
     <ID>ReturnCount:AppConfig.kt$AppConfig.Companion$private fun parsePort(raw: String?): Int</ID>
   </CurrentIssues>
 </SmellBaseline>

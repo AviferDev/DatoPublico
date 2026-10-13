@@ -39,6 +39,13 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.call.logging)
+
+    // Endurecimiento HTTP (FT00030): CORS, rate limiting por IP y StatusPages
+    // (cuerpo de error tipado). Plugins oficiales de Ktor a la versión fijada.
+    implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.server.rate.limit)
+    implementation(libs.ktor.server.status.pages)
+
     implementation(libs.logback.classic)
     implementation(libs.logstash.logback.encoder)
 

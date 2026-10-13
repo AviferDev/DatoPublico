@@ -59,6 +59,11 @@ de PostgreSQL. Se detiene con `Ctrl+C`.
 curl -s http://localhost:8080/health   # {"status":"ok"}
 ```
 
+Sin base de datos (`POSTGRES_PASSWORD` ausente) el servidor sigue sirviendo
+`/health` (200) y el endpoint `/feed` **no** se registra (404). Con base de datos,
+el composition root crea un **pool JDBC único** que comparten el feed y la ingesta
+y lo cierra una sola vez al parar (ver «Feed diario»).
+
 Variables de entorno (todas opcionales; un valor inválido aborta el arranque con
 un mensaje claro):
 
@@ -267,8 +272,10 @@ La capa de datos de `:backend` vive en
 `es.aviferdev.datopublico.backend.persistence` (repositorios **JDBC** +
 entidades `...Entity`) con la configuración de conexión
 (`infra/DatabaseConfig`, derivada de `POSTGRES_*`) y el pool **HikariCP**
-(`infra/Database`, tamaño ≤5). **No** se cablea en el arranque del servidor: la
-crea y la cierra quien la consume (job o test).
+(`infra/Database`, tamaño ≤5). Desde FT00026 el composition root (`Application.kt`)
+crea **un único** pool cuando la configuración de BD resuelve, lo comparte entre el
+feed (API) y la ingesta y lo cierra **una sola vez** en `ApplicationStopped`; sin
+BD no se crea pool y el feed no se registra.
 
 La migración `V2__persistencia_publicaciones.sql` crea las tablas `publicacion`,
 `fragmento`, `resumen` y `cola_revision`; la `V3__fragmento_embedding.sql` añade
@@ -697,6 +704,48 @@ docker compose down -v
 Esperado: el publicado se lee `publicado` con su `confianza`; el encolado aparece
 en `listPending()`; reencolarlo no duplica la fila pendiente. Decisión durable en
 el ADR 0018 (harness privado).
+
+## Feed diario (`GET /feed`) (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.feed` (FT00026) expone el **primer
+endpoint de lectura de datos** del backend: el **feed diario** paginado. Es la
+primera feature que comparte un **pool JDBC único** entre la API y la ingesta: sin
+base de datos (`POSTGRES_PASSWORD` ausente) el pool no se crea, `/feed` **no** se
+registra (404) y `/health` sigue operativo.
+
+```
+GET /feed?fecha=2026-10-11&pagina=1&tamanoPagina=20
+```
+
+- `fecha` (**obligatoria**, ISO `YYYY-MM-DD`) selecciona el día; el feed **no**
+  filtra por categoría (eso es FT00028).
+- `pagina` (default `1`) y `tamanoPagina` (default `20`, máx `100`) paginan.
+- Responde `200` con `fecha`, `publicaciones` (solo las que tienen un resumen
+  `estado = 'publicado'`, cada una con su `resumen`, `categoria`, `urlOficial` y
+  `plazo`), `destacados` (calculados *on-the-fly* con `HighlightRanker`, con sus
+  `motivos` y **sin** `score`) y `total`/`totalPaginas`.
+- Un día sin publicado responde `200` con listas vacías; `fecha` ausente/no ISO o
+  `pagina`/`tamanoPagina` no entero, `< 1` o `> 100` responden `400` (sin cuerpo
+  tipado; el contrato de error es FT00030).
+- La lectura JDBC bloqueante se ejecuta en `Dispatchers.IO`; el SQL está
+  parametrizado y filtra `estado = 'publicado'`.
+
+```sh
+curl -s 'http://localhost:8080/feed?fecha=2026-10-11' | jq .
+```
+
+La prueba real (solo el resumen publicado se sirve) es **opt-in** y queda fuera del
+gate y de la CI:
+
+```sh
+cp .env.example .env
+docker compose up -d
+./gradlew :backend:flywayMigrate
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*FeedPersistenceLiveTest'
+docker compose down -v
+```
+
+Decisión durable en el ADR 0021 (harness privado).
 
 ## Ingesta diaria (job programado)
 

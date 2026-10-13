@@ -1,5 +1,6 @@
 package es.aviferdev.datopublico.backend
 
+import es.aviferdev.datopublico.backend.feed.DailyFeedService
 import es.aviferdev.datopublico.backend.infra.AppConfig
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
@@ -14,6 +15,7 @@ import es.aviferdev.datopublico.backend.ingesta.publicacion.BoeTextoHttpClient
 import es.aviferdev.datopublico.backend.ingesta.publicacion.boeTextoHttpClient
 import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioHttpClient
 import es.aviferdev.datopublico.backend.ingesta.sumario.boeSumarioHttpClient
+import es.aviferdev.datopublico.backend.persistence.FeedRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
 import es.aviferdev.datopublico.backend.plugins.configureMonitoring
 import es.aviferdev.datopublico.backend.plugins.configureRouting
@@ -34,9 +36,9 @@ import kotlinx.coroutines.cancel
 /**
  * Composition root del backend: lee la configuración del entorno y arranca Netty.
  *
- * El arranque no depende de la base de datos ni de servicios externos; los
- * subsistemas sin configuración suficiente se omiten y el servidor sigue
- * sirviendo `/health`.
+ * El arranque no depende de la base de datos ni de servicios externos: si la
+ * configuración de BD no resuelve, no se crea el pool, `/feed` no se registra y el
+ * servidor sigue sirviendo `/health`.
  */
 fun main() {
     val config = AppConfig.fromEnv()
@@ -48,35 +50,74 @@ fun main() {
     ).start(wait = true)
 }
 
-/** Módulo Ktor: serialización, logging de llamadas, rutas e ingesta condicional. */
+/**
+ * Módulo Ktor: serialización, logging de llamadas, pool JDBC **único** compartido
+ * por el feed y la ingesta, rutas e ingesta condicional.
+ *
+ * El pool lo crea el composition root (una sola vez) y lo cierra **una sola vez**
+ * en `ApplicationStopped`; ni la ruta ni la ingesta lo cierran.
+ */
 fun Application.module() {
     configureSerialization()
     configureMonitoring()
-    configureRouting()
-    configureIngestion()
+    val dataSource = createDataSourceOrNull()
+    configureRouting(feedServiceOf(dataSource))
+    configureIngestion(dataSource)
+    monitorDataSource(dataSource)
+}
+
+/**
+ * Crea el pool JDBC **único** del backend, o `null` si la configuración de base de
+ * datos no resuelve (`POSTGRES_PASSWORD` ausente, etc.). Un fallo **no** impide el
+ * arranque: sin pool, el feed no se registra y la ingesta se omite.
+ */
+private fun Application.createDataSourceOrNull(): DataSource? =
+    try {
+        Database.createDataSource(DatabaseConfig.fromEnv())
+    } catch (cancellation: CancellationException) {
+        throw cancellation
+    } catch (error: Exception) {
+        log.warn("Base de datos no configurada: {}", error.message)
+        null
+    }
+
+/** Programa el cierre **único** del pool compartido al parar el servidor. */
+private fun Application.monitorDataSource(dataSource: DataSource?) {
+    if (dataSource != null) {
+        monitor.subscribe(ApplicationStopped) { closeDataSource(dataSource) }
+    }
+}
+
+/** Construye el feed sobre el pool compartido, o `null` si no hay base de datos. */
+private fun feedServiceOf(dataSource: DataSource?): DailyFeedService? =
+    if (dataSource == null) null else DailyFeedService(FeedRepositoryJdbc(dataSource))
+
+/** Cierra el pool si su implementación lo permite (HikariCP lo es). */
+private fun closeDataSource(dataSource: DataSource) {
+    (dataSource as? AutoCloseable)?.close()
 }
 
 /**
  * Cablea la ingesta de forma **condicional y no bloqueante**.
  *
- * Solo se arranca si `INGESTA_ENABLED` está activo **y** la configuración de base
- * de datos resuelve (`POSTGRES_PASSWORD` presenta). Cualquier fallo al construirla
- * se registra y el servidor sigue arrancando; al parar la aplicación se cancela el
- * bucle y se cierran el pool y los clientes HTTP.
+ * Solo se arranca si `INGESTA_ENABLED` está activo **y** hay pool (la config de
+ * BD resuelve). Cualquier fallo al construirla se registra y el servidor sigue
+ * arrancando; al parar se cancela el bucle y se cierran los clientes HTTP (el
+ * pool lo cierra el composition root).
  */
-private fun Application.configureIngestion() {
+private fun Application.configureIngestion(dataSource: DataSource?) {
     val config = IngestionConfig.fromEnv()
-    if (config.enabled) {
-        startIngestion(config)
+    if (config.enabled && dataSource != null) {
+        startIngestion(config, dataSource)
     } else {
-        log.info("Ingesta deshabilitada (INGESTA_ENABLED=false)")
+        log.info("Ingesta no programada (INGESTA_ENABLED=false o sin base de datos)")
     }
 }
 
 /** Arranca la ingesta y programa su cierre; un fallo no impide el arranque. */
-private fun Application.startIngestion(config: IngestionConfig) {
+private fun Application.startIngestion(config: IngestionConfig, dataSource: DataSource) {
     try {
-        val runtime = createIngestionRuntime(config)
+        val runtime = createIngestionRuntime(config, dataSource)
         monitor.subscribe(ApplicationStopped) { runtime.close() }
     } catch (cancellation: CancellationException) {
         throw cancellation
@@ -86,11 +127,15 @@ private fun Application.startIngestion(config: IngestionConfig) {
 }
 
 /**
- * Construye los recursos de la ingesta (pool JDBC, clientes HTTP, job, scheduler
- * y vigilante) y lanza sus bucles. Si algo falla, cierra lo ya creado y propaga.
+ * Construye los recursos de la ingesta (clientes HTTP, job, scheduler y
+ * vigilante) sobre el [dataSource] compartido y lanza sus bucles. Si algo falla,
+ * cierra los clientes ya creados y propaga (el pool lo cierra el composition
+ * root).
  */
-private fun Application.createIngestionRuntime(config: IngestionConfig): IngestionRuntime {
-    val dataSource = Database.createDataSource(DatabaseConfig.fromEnv())
+private fun Application.createIngestionRuntime(
+    config: IngestionConfig,
+    dataSource: DataSource,
+): IngestionRuntime {
     val summaryHttp = boeSumarioHttpClient()
     val textHttp = boeTextoHttpClient()
     return try {
@@ -120,27 +165,24 @@ private fun Application.createIngestionRuntime(config: IngestionConfig): Ingesti
             config.zone,
             config.grace.toMinutes(),
         )
-        IngestionRuntime(scope, dataSource, listOf(summaryHttp, textHttp))
+        IngestionRuntime(scope, listOf(summaryHttp, textHttp))
     } catch (error: Exception) {
         summaryHttp.close()
         textHttp.close()
-        (dataSource as? AutoCloseable)?.close()
         throw error
     }
 }
 
 /**
- * Recursos vivos de la ingesta: el bucle del scheduler, el pool JDBC y los
- * clientes HTTP. [close] los libera en `ApplicationStopped`.
+ * Recursos vivos de la ingesta: el bucle del scheduler y los clientes HTTP.
+ * [close] los libera en `ApplicationStopped`.
  */
 private class IngestionRuntime(
     private val scope: CoroutineScope,
-    private val dataSource: DataSource,
     private val httpClients: List<HttpClient>,
 ) : AutoCloseable {
     override fun close() {
         scope.cancel()
         httpClients.forEach(HttpClient::close)
-        (dataSource as? AutoCloseable)?.close()
     }
 }

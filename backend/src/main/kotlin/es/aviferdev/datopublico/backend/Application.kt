@@ -1,5 +1,7 @@
 package es.aviferdev.datopublico.backend
 
+import es.aviferdev.datopublico.backend.chat.ChatService
+import es.aviferdev.datopublico.backend.chat.PublicationCitationResolver
 import es.aviferdev.datopublico.backend.feed.DailyFeedService
 import es.aviferdev.datopublico.backend.infra.AppConfig
 import es.aviferdev.datopublico.backend.infra.Database
@@ -23,9 +25,15 @@ import es.aviferdev.datopublico.backend.plugins.configureMonitoring
 import es.aviferdev.datopublico.backend.plugins.configureRouting
 import es.aviferdev.datopublico.backend.plugins.configureSerialization
 import es.aviferdev.datopublico.backend.publication.PublicationDetailService
+import es.aviferdev.datopublico.backend.rag.chat.RagChatService
 import es.aviferdev.datopublico.backend.rag.embeddings.E5EmbeddingProvider
 import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingConfig
 import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
+import es.aviferdev.datopublico.backend.rag.generation.OpenCodeConfig
+import es.aviferdev.datopublico.backend.rag.generation.OpenCodeTextGenerationProvider
+import es.aviferdev.datopublico.backend.rag.generation.TextGenerationException
+import es.aviferdev.datopublico.backend.rag.generation.TextGenerationProvider
+import es.aviferdev.datopublico.backend.rag.generation.openCodeHttpClient
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.search.SearchService
 import io.ktor.client.HttpClient
@@ -60,33 +68,36 @@ fun main() {
 
 /**
  * Módulo Ktor: serialización, logging de llamadas, pool JDBC **único** compartido
- * por el feed, el detalle, la búsqueda y la ingesta, proveedor de embeddings
- * condicional, rutas e ingesta condicional.
+ * por el feed, el detalle, la búsqueda, el chat y la ingesta, proveedores
+ * condicionales (embeddings y texto), rutas e ingesta condicional.
  *
- * El pool y el proveedor de embeddings los crea el composition root (una sola vez)
- * y se cierran **una sola vez** en `ApplicationStopped`; ni las rutas ni la ingesta
- * los cierran.
+ * El pool lo crea el composition root (una sola vez) y lo cierra **una sola vez**
+ * en `ApplicationStopped`; ni las rutas ni la ingesta lo cierran. El proveedor de
+ * embeddings y el cliente HTTP de OpenCode se cablean de forma **condicional**
+ * (sin modelo o sin clave quedan a `null`, las rutas `/buscar`/`/chat` no se
+ * registran y el arranque no falla) y se cierran también una sola vez al parar.
  */
 fun Application.module() {
     configureSerialization()
     configureMonitoring()
     val dataSource = createDataSourceOrNull()
     val embeddingProvider = createEmbeddingProviderOrNull()
+    val textRuntime = createTextGenerationOrNull()
     configureRouting(
         feedServiceOf(dataSource),
         detailServiceOf(dataSource),
         searchServiceOf(dataSource, embeddingProvider),
+        chatServiceOf(dataSource, embeddingProvider, textRuntime),
     )
     configureIngestion(dataSource)
-    monitorDataSource(dataSource)
-    monitorEmbeddingProvider(embeddingProvider)
+    monitorResources(dataSource, embeddingProvider, textRuntime)
 }
 
 /**
- * Crea el proveedor de embeddings **condicionalmente**: si falta el modelo, el
- * tokenizador o su configuración, registra un aviso y devuelve `null` **sin**
- * impedir el arranque (sin proveedor, `/buscar` no se registra). El proveedor se
- * cierra una sola vez en `ApplicationStopped`.
+ * Crea el proveedor de embeddings locales (ONNX) de forma **condicional**, o
+ * `null` si falta el modelo/tokenizador o su configuración. Un fallo **no** impide
+ * el arranque: se registra un aviso y `/buscar` y `/chat` no se registran. El
+ * proveedor se cierra una sola vez en `ApplicationStopped`.
  */
 private fun Application.createEmbeddingProviderOrNull(): EmbeddingProvider? =
     try {
@@ -102,8 +113,8 @@ private fun Application.createEmbeddingProviderOrNull(): EmbeddingProvider? =
 /**
  * Crea el pool JDBC **único** del backend, o `null` si la configuración de base de
  * datos no resuelve (`POSTGRES_PASSWORD` ausente, etc.). Un fallo **no** impide el
- * arranque: sin pool, ni el feed, ni el detalle ni la búsqueda se registran y la
- * ingesta se omite.
+ * arranque: sin pool, ni el feed, ni el detalle, ni la búsqueda ni el chat se
+ * registran y la ingesta se omite.
  */
 private fun Application.createDataSourceOrNull(): DataSource? =
     try {
@@ -115,10 +126,24 @@ private fun Application.createDataSourceOrNull(): DataSource? =
         null
     }
 
-/** Programa el cierre **único** del pool compartido al parar el servidor. */
-private fun Application.monitorDataSource(dataSource: DataSource?) {
+/**
+ * Programa el cierre **único** de los recursos compartidos al parar el servidor:
+ * el pool JDBC, el proveedor de embeddings y el runtime de texto de OpenCode. Cada
+ * recurso se libera una sola vez y solo si existe.
+ */
+private fun Application.monitorResources(
+    dataSource: DataSource?,
+    embeddingProvider: EmbeddingProvider?,
+    textRuntime: TextGenerationRuntime?,
+) {
     if (dataSource != null) {
         monitor.subscribe(ApplicationStopped) { closeDataSource(dataSource) }
+    }
+    if (embeddingProvider != null) {
+        monitor.subscribe(ApplicationStopped) { embeddingProvider.close() }
+    }
+    if (textRuntime != null) {
+        monitor.subscribe(ApplicationStopped) { textRuntime.close() }
     }
 }
 
@@ -156,12 +181,51 @@ private fun searchServiceOf(dataSource: DataSource?, embeddingProvider: Embeddin
         )
     }
 
-/** Programa el cierre **único** del proveedor de embeddings al parar el servidor. */
-private fun Application.monitorEmbeddingProvider(embeddingProvider: EmbeddingProvider?) {
-    if (embeddingProvider != null) {
-        monitor.subscribe(ApplicationStopped) { embeddingProvider.close() }
+/**
+ * Construye el **chat RAG** sobre el **mismo** pool compartido, o `null` si falta
+ * cualquiera de sus dependencias (base de datos, proveedor de embeddings o
+ * proveedor de texto): en ese caso `/chat` no se registra (`404`) y `/health`
+ * sigue operativo.
+ *
+ * Reutiliza el pool único con `FragmentRepositoryJdbc` (recuperación) y
+ * `PublicationRepositoryJdbc` (resolución de la cita) e **inyecta** la fuente
+ * oficial con [PublicationCitationResolver]. El `limit` del contexto lo fija
+ * [RagChatService] (no controlable por el cliente).
+ */
+private fun chatServiceOf(
+    dataSource: DataSource?,
+    embeddingProvider: EmbeddingProvider?,
+    textRuntime: TextGenerationRuntime?,
+): ChatService? =
+    if (dataSource == null || embeddingProvider == null || textRuntime == null) {
+        null
+    } else {
+        ChatService(
+            RagChatService(
+                hybridSearch = HybridSearch(embeddingProvider, FragmentRepositoryJdbc(dataSource)),
+                textGenerationProvider = textRuntime.provider,
+                citationResolver = PublicationCitationResolver(PublicationRepositoryJdbc(dataSource)),
+            ),
+        )
     }
-}
+
+/**
+ * Crea el proveedor de texto de OpenCode de forma **condicional**, o `null` si
+ * falta `OPENCODE_API_KEY` (fail-fast de [OpenCodeConfig.fromEnv]). La clave vive
+ * **solo** en el servidor y nunca se registra. El runtime devuelto cierra el
+ * `HttpClient` al parar el servidor.
+ */
+private fun Application.createTextGenerationOrNull(): TextGenerationRuntime? =
+    try {
+        val config = OpenCodeConfig.fromEnv()
+        val client = openCodeHttpClient()
+        TextGenerationRuntime(OpenCodeTextGenerationProvider(client, config), client)
+    } catch (cancellation: CancellationException) {
+        throw cancellation
+    } catch (error: TextGenerationException) {
+        log.warn("Proveedor de generación OpenCode no configurado: {}", error.message)
+        null
+    }
 
 /** Cierra el pool si su implementación lo permite (HikariCP lo es). */
 private fun closeDataSource(dataSource: DataSource) {
@@ -255,5 +319,19 @@ private class IngestionRuntime(
     override fun close() {
         scope.cancel()
         httpClients.forEach(HttpClient::close)
+    }
+}
+
+/**
+ * Recursos vivos del proveedor de texto de OpenCode: el proveedor y su
+ * `HttpClient`. [close] cierra el cliente una sola vez en `ApplicationStopped`; la
+ * clave vive **solo** en el servidor y nunca se registra.
+ */
+private class TextGenerationRuntime(
+    val provider: TextGenerationProvider,
+    private val httpClient: HttpClient,
+) : AutoCloseable {
+    override fun close() {
+        httpClient.close()
     }
 }

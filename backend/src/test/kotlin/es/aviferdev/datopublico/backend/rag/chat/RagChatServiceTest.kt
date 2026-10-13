@@ -32,7 +32,7 @@ class RagChatServiceTest {
         val usage = TokenUsage(promptTokens = 10, completionTokens = 20, totalTokens = 30)
         val provider = FakeTextGenerationProvider(ANSWERED_JSON, usage)
 
-        val result = serviceCon(provider).answer("¿Cuál es el plazo de solicitud?")
+        val result = serviceWith(provider).answer("¿Cuál es el plazo de solicitud?")
 
         val answered = assertIs<ChatResult.Answered>(result)
         assertEquals(ANSWER_SUPPORTED, answered.answer)
@@ -46,7 +46,7 @@ class RagChatServiceTest {
     fun `refutes a false claim with citations`() = runTest {
         val provider = FakeTextGenerationProvider(REFUTED_JSON)
 
-        val result = serviceCon(provider).answer("Se reduce el impuesto especial")
+        val result = serviceWith(provider).answer("Se reduce el impuesto especial")
 
         val refuted = assertIs<ChatResult.Refuted>(result)
         assertTrue(refuted.citations.isNotEmpty())
@@ -57,7 +57,7 @@ class RagChatServiceTest {
     fun `declares unfounded when the model has no basis`() = runTest {
         val provider = FakeTextGenerationProvider(UNFOUNDED_JSON)
 
-        val result = serviceCon(provider).answer("¿Cuál es el plazo de solicitud?")
+        val result = serviceWith(provider).answer("¿Cuál es el plazo de solicitud?")
 
         val unfounded = assertIs<ChatResult.Unfounded>(result)
         assertEquals("No consta en el BOE", unfounded.answer)
@@ -69,7 +69,7 @@ class RagChatServiceTest {
     fun `does not invoke the provider without retrieved context`() = runTest {
         val provider = FakeTextGenerationProvider(ANSWERED_JSON)
 
-        val result = serviceCon(provider, matches = emptyList()).answer("¿Cuál es el plazo?")
+        val result = serviceWith(provider, matches = emptyList()).answer("¿Cuál es el plazo?")
 
         val unfounded = assertIs<ChatResult.Unfounded>(result)
         assertEquals(RagChatService.UNFOUNDED_MESSAGE, unfounded.answer)
@@ -80,7 +80,7 @@ class RagChatServiceTest {
     fun `the provider receives the built prompt with the numbered context`() = runTest {
         val provider = FakeTextGenerationProvider(ANSWERED_JSON)
 
-        serviceCon(provider).answer("¿Cuál es el plazo de solicitud?")
+        serviceWith(provider).answer("¿Cuál es el plazo de solicitud?")
 
         val request = assertNotNull(provider.lastRequest)
         assertEquals(1, provider.calls)
@@ -93,7 +93,7 @@ class RagChatServiceTest {
     fun `degrades to unfounded when the answer is not grounded`() = runTest {
         val provider = FakeTextGenerationProvider(UNSUPPORTED_JSON)
 
-        val result = serviceCon(provider).answer("¿Cuál es el plazo de solicitud?")
+        val result = serviceWith(provider).answer("¿Cuál es el plazo de solicitud?")
 
         val unfounded = assertIs<ChatResult.Unfounded>(result)
         assertEquals(RagChatService.UNFOUNDED_MESSAGE, unfounded.answer)
@@ -103,7 +103,7 @@ class RagChatServiceTest {
     fun `degrades to unfounded when the citations are empty`() = runTest {
         val provider = FakeTextGenerationProvider(EMPTY_CITATIONS_JSON)
 
-        val result = serviceCon(provider).answer("¿Cuál es el plazo de solicitud?")
+        val result = serviceWith(provider).answer("¿Cuál es el plazo de solicitud?")
 
         assertIs<ChatResult.Unfounded>(result)
     }
@@ -112,7 +112,7 @@ class RagChatServiceTest {
     fun `degrades to unfounded when the publication cannot be resolved`() = runTest {
         val provider = FakeTextGenerationProvider(ANSWERED_JSON)
 
-        val result = serviceCon(provider, resolver = CitationResolver { null }).answer("¿Cuál es el plazo?")
+        val result = serviceWith(provider, resolver = CitationResolver { null }).answer("¿Cuál es el plazo?")
 
         assertIs<ChatResult.Unfounded>(result)
     }
@@ -121,26 +121,26 @@ class RagChatServiceTest {
     fun `fails fast when the model cites an out of range fragment`() = runTest {
         val provider = FakeTextGenerationProvider(OUT_OF_RANGE_JSON)
 
-        assertFailsWith<ChatGenerationException> { serviceCon(provider).answer("¿Cuál es el plazo?") }
+        assertFailsWith<ChatGenerationException> { serviceWith(provider).answer("¿Cuál es el plazo?") }
     }
 
     @Test
     fun `fails fast when the status is unknown`() = runTest {
         val provider = FakeTextGenerationProvider(UNKNOWN_STATUS_JSON)
 
-        assertFailsWith<ChatGenerationException> { serviceCon(provider).answer("¿Cuál es el plazo?") }
+        assertFailsWith<ChatGenerationException> { serviceWith(provider).answer("¿Cuál es el plazo?") }
     }
 
     @Test
     fun `a blank query fails fast before invoking the provider`() = runTest {
         val provider = FakeTextGenerationProvider(ANSWERED_JSON)
 
-        assertFailsWith<IllegalArgumentException> { serviceCon(provider).answer("   ") }
+        assertFailsWith<IllegalArgumentException> { serviceWith(provider).answer("   ") }
 
         assertEquals(0, provider.calls)
     }
 
-    private fun serviceCon(
+    private fun serviceWith(
         provider: TextGenerationProvider,
         matches: List<FragmentMatch> = listOf(match()),
         resolver: CitationResolver = resolver(),

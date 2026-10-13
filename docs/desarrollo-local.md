@@ -60,11 +60,13 @@ curl -s http://localhost:8080/health   # {"status":"ok"}
 ```
 
 Sin base de datos (`POSTGRES_PASSWORD` ausente) el servidor sigue sirviendo
-`/health` (200) y los endpoints `/feed`, `/publicacion/{id}` y `/buscar` **no** se
-registran (404). Con base de datos, el composition root crea un **pool JDBC único**
-que comparten el feed, el detalle, la búsqueda y la ingesta y lo cierra una sola vez
-al parar (ver «Feed diario», «Detalle de publicación» y «Búsqueda (`GET /buscar`)»);
-la búsqueda necesita **además** el modelo E5.
+`/health` (200) y los endpoints `/feed`, `/publicacion/{id}`, `/buscar` y `/chat`
+**no** se registran (404). Con base de datos, el composition root crea un **pool
+JDBC único** que comparten el feed, el detalle, la búsqueda, el chat y la ingesta y
+lo cierra una sola vez al parar (ver «Feed diario», «Detalle de publicación»,
+«Búsqueda (`GET /buscar`)» y «Chat RAG (`POST /chat`)»). La búsqueda necesita
+**además** el modelo E5; el chat, el modelo E5 y `OPENCODE_API_KEY`: sin cualquiera
+de los tres la ruta `/chat` no se registra.
 
 Variables de entorno (todas opcionales; un valor inválido aborta el arranque con
 un mensaje claro):
@@ -847,6 +849,71 @@ docker compose down -v
 ```
 
 Decisión durable en el ADR 0023 (harness privado).
+
+## Chat RAG (`POST /chat`) (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.chat` (FT00031) expone el **endpoint
+de chat RAG**: dada una **pregunta** o una **afirmación a verificar** en lenguaje
+natural, devuelve una **respuesta fundamentada** con los tres estados del dominio y
+las **citas a la fuente oficial**. Cablea por primera vez la librería `rag/chat`
+(FT00025), su primer `CitationResolver` de producción
+(`PublicationCitationResolver`) y el proveedor de texto de OpenCode sobre el
+**mismo pool JDBC único** que el feed/el detalle/la ingesta.
+
+```
+POST /chat
+Content-Type: application/json
+
+{"consulta":"¿Cuál es el plazo de solicitud?"}
+```
+
+- Responde `200` con `ChatResponseDto`: `consulta` (eco), `estado`
+  (`respondida`/`refutada`/`sin_fundamento`), `respuesta` y `citas` (cada una con
+  `publicacionId`, `titulo` y `urlOficial`).
+- `sin_fundamento` **no** es un error (`200`) y lleva `citas` vacía; el proveedor
+  **no** se invoca si no hay contexto recuperado. `respondida`/`refutada` llevan
+  **≥1** cita; la URL oficial la **inyecta** el servidor desde la publicación (el
+  modelo solo aporta índices de fragmento).
+- Una `consulta` ausente, en blanco, más larga que
+  `ChatService.MAX_QUERY_LENGTH` o un cuerpo ilegible responden `400` (sin cuerpo
+  tipado; el contrato de error es FT00030).
+- Un fallo del proveedor de OpenCode o una salida no interpretable responden `502`;
+  un fallo de la inferencia local (ONNX) responde `500`.
+- El contexto se acota al `limit` por defecto de `RagChatService` (no controlable
+  por el cliente); **no** hay historial ni caché y el consumo de tokens (`usage`)
+  no se expone. El rate limiting es FT00030.
+- La recuperación ONNX/JDBC y la resolución de citas JDBC se ejecutan en
+  `Dispatchers.IO`; la clave de OpenCode vive **solo** en el servidor.
+
+```sh
+curl -s -X POST http://localhost:8080/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"consulta":"¿Cuál es el plazo de solicitud?"}' | jq .
+```
+
+Sin base de datos, sin el modelo E5 o sin `OPENCODE_API_KEY`, `/chat` **no** se
+registra (404) y `/health` sigue operativo. El arranque real necesita las tres
+cosas: `docker compose up -d` + `./gradlew :backend:flywayMigrate`, el modelo
+(`backend/tools/download-embedding-model.sh`) y la clave (`OPENCODE_API_KEY`). La
+prueba real contra OpenCode (respuesta con cita) es **opt-in** y queda fuera del
+gate y de la CI:
+
+```sh
+OPENCODE_LIVE_TEST=1 OPENCODE_API_KEY=<clave> \
+  ./gradlew :backend:test --tests '*ChatRouteLiveTest'
+```
+
+La resolución real de la cita contra PostgreSQL es **opt-in**:
+
+```sh
+cp .env.example .env
+docker compose up -d
+./gradlew :backend:flywayMigrate
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*PublicationCitationResolverLiveTest'
+docker compose down -v
+```
+
+Decisión durable en el ADR 0024 (harness privado).
 
 ## Ingesta diaria (job programado)
 

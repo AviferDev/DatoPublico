@@ -149,6 +149,9 @@ class DailyFeedServiceTest {
     private class InMemoryFeedRepository(private val items: List<FeedItem>) : FeedRepository {
         override fun listPublishedByDate(publicationDate: String): List<FeedItem> =
             items.filter { item -> item.publication.fechaPublicacion == publicationDate }
+
+        override fun listPublishedByIds(ids: List<String>): List<FeedItem> =
+            items.filter { item -> item.publication.id in ids }
     }
 
     private companion object {

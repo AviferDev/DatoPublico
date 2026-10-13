@@ -16,12 +16,18 @@ import es.aviferdev.datopublico.backend.ingesta.publicacion.boeTextoHttpClient
 import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioHttpClient
 import es.aviferdev.datopublico.backend.ingesta.sumario.boeSumarioHttpClient
 import es.aviferdev.datopublico.backend.persistence.FeedRepositoryJdbc
+import es.aviferdev.datopublico.backend.persistence.FragmentRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.SummaryRepositoryJdbc
 import es.aviferdev.datopublico.backend.plugins.configureMonitoring
 import es.aviferdev.datopublico.backend.plugins.configureRouting
 import es.aviferdev.datopublico.backend.plugins.configureSerialization
 import es.aviferdev.datopublico.backend.publication.PublicationDetailService
+import es.aviferdev.datopublico.backend.rag.embeddings.E5EmbeddingProvider
+import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingConfig
+import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
+import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
+import es.aviferdev.datopublico.backend.search.SearchService
 import io.ktor.client.HttpClient
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopped
@@ -54,24 +60,50 @@ fun main() {
 
 /**
  * Módulo Ktor: serialización, logging de llamadas, pool JDBC **único** compartido
- * por el feed, el detalle y la ingesta, rutas e ingesta condicional.
+ * por el feed, el detalle, la búsqueda y la ingesta, proveedor de embeddings
+ * condicional, rutas e ingesta condicional.
  *
- * El pool lo crea el composition root (una sola vez) y lo cierra **una sola vez**
- * en `ApplicationStopped`; ni las rutas ni la ingesta lo cierran.
+ * El pool y el proveedor de embeddings los crea el composition root (una sola vez)
+ * y se cierran **una sola vez** en `ApplicationStopped`; ni las rutas ni la ingesta
+ * los cierran.
  */
 fun Application.module() {
     configureSerialization()
     configureMonitoring()
     val dataSource = createDataSourceOrNull()
-    configureRouting(feedServiceOf(dataSource), detailServiceOf(dataSource))
+    val embeddingProvider = createEmbeddingProviderOrNull()
+    configureRouting(
+        feedServiceOf(dataSource),
+        detailServiceOf(dataSource),
+        searchServiceOf(dataSource, embeddingProvider),
+    )
     configureIngestion(dataSource)
     monitorDataSource(dataSource)
+    monitorEmbeddingProvider(embeddingProvider)
 }
+
+/**
+ * Crea el proveedor de embeddings **condicionalmente**: si falta el modelo, el
+ * tokenizador o su configuración, registra un aviso y devuelve `null` **sin**
+ * impedir el arranque (sin proveedor, `/buscar` no se registra). El proveedor se
+ * cierra una sola vez en `ApplicationStopped`.
+ */
+private fun Application.createEmbeddingProviderOrNull(): EmbeddingProvider? =
+    try {
+        val config = EmbeddingConfig.fromEnv()
+        E5EmbeddingProvider.from(config.modelPath, config.tokenizerPath, config.maxTokens)
+    } catch (cancellation: CancellationException) {
+        throw cancellation
+    } catch (error: Exception) {
+        log.warn("Proveedor de embeddings no disponible: {}", error.message)
+        null
+    }
 
 /**
  * Crea el pool JDBC **único** del backend, o `null` si la configuración de base de
  * datos no resuelve (`POSTGRES_PASSWORD` ausente, etc.). Un fallo **no** impide el
- * arranque: sin pool, el feed y el detalle no se registran y la ingesta se omite.
+ * arranque: sin pool, ni el feed, ni el detalle ni la búsqueda se registran y la
+ * ingesta se omite.
  */
 private fun Application.createDataSourceOrNull(): DataSource? =
     try {
@@ -108,6 +140,28 @@ private fun detailServiceOf(dataSource: DataSource?): PublicationDetailService? 
             SummaryRepositoryJdbc(dataSource),
         )
     }
+
+/**
+ * Construye el servicio de búsqueda sobre el **pool compartido** y el proveedor de
+ * embeddings, o `null` si falta cualquiera de los dos (sin BD o sin modelo,
+ * `/buscar` no se registra).
+ */
+private fun searchServiceOf(dataSource: DataSource?, embeddingProvider: EmbeddingProvider?): SearchService? =
+    if (dataSource == null || embeddingProvider == null) {
+        null
+    } else {
+        SearchService(
+            hybridSearch = HybridSearch(embeddingProvider, FragmentRepositoryJdbc(dataSource)),
+            feedRepository = FeedRepositoryJdbc(dataSource),
+        )
+    }
+
+/** Programa el cierre **único** del proveedor de embeddings al parar el servidor. */
+private fun Application.monitorEmbeddingProvider(embeddingProvider: EmbeddingProvider?) {
+    if (embeddingProvider != null) {
+        monitor.subscribe(ApplicationStopped) { embeddingProvider.close() }
+    }
+}
 
 /** Cierra el pool si su implementación lo permite (HikariCP lo es). */
 private fun closeDataSource(dataSource: DataSource) {

@@ -60,10 +60,11 @@ curl -s http://localhost:8080/health   # {"status":"ok"}
 ```
 
 Sin base de datos (`POSTGRES_PASSWORD` ausente) el servidor sigue sirviendo
-`/health` (200) y los endpoints `/feed` y `/publicacion/{id}` **no** se registran
-(404). Con base de datos, el composition root crea un **pool JDBC único** que
-comparten el feed, el detalle y la ingesta y lo cierra una sola vez al parar (ver
-«Feed diario» y «Detalle de publicación»).
+`/health` (200) y los endpoints `/feed`, `/publicacion/{id}` y `/buscar` **no** se
+registran (404). Con base de datos, el composition root crea un **pool JDBC único**
+que comparten el feed, el detalle, la búsqueda y la ingesta y lo cierra una sola vez
+al parar (ver «Feed diario», «Detalle de publicación» y «Búsqueda (`GET /buscar`)»);
+la búsqueda necesita **además** el modelo E5.
 
 Variables de entorno (todas opcionales; un valor inválido aborta el arranque con
 un mensaje claro):
@@ -275,9 +276,9 @@ entidades `...Entity`) con la configuración de conexión
 (`infra/DatabaseConfig`, derivada de `POSTGRES_*`) y el pool **HikariCP**
 (`infra/Database`, tamaño ≤5). Desde FT00026 el composition root (`Application.kt`)
 crea **un único** pool cuando la configuración de BD resuelve, lo comparte entre la
-API (feed y detalle) y la ingesta y lo cierra **una sola vez** en
-`ApplicationStopped`; sin BD no se crea pool y ni el feed ni el detalle se
-registran.
+API (feed, detalle y búsqueda) y la ingesta y lo cierra **una sola vez** en
+`ApplicationStopped`; sin BD no se crea pool y ni el feed, ni el detalle ni la
+búsqueda se registran.
 
 La migración `V2__persistencia_publicaciones.sql` crea las tablas `publicacion`,
 `fragmento`, `resumen` y `cola_revision`; la `V3__fragmento_embedding.sql` añade
@@ -793,6 +794,59 @@ docker compose down -v
 ```
 
 Decisión durable en el ADR 0022 (harness privado).
+
+## Búsqueda (`GET /buscar`) (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.search` (FT00028) expone la
+**búsqueda** sobre el corpus: dada una consulta, devuelve las publicaciones
+**publicadas** más relevantes por **similitud semántica** sobre los fragmentos
+indexados. Reutiliza la recuperación híbrida (`rag/retrieval`, FT00017) y el mapeo
+`feed/FeedDtoMapper` (FT00026), y solo sirve publicaciones con resumen
+`estado = 'publicado'` (coherente con `/feed` y `/publicacion/{id}`).
+
+```
+GET /buscar?q=<consulta>&categoria=<token>&desde=<ISO>&hasta=<ISO>&limite=<n>
+```
+
+- `q` (**obligatoria**, no vacía) es la consulta.
+- `categoria` (opcional) es el **token de wire** de `CategoriaDto`
+  (p. ej. `becas_subvenciones_y_ayudas`), no el nombre del enum.
+- `desde`/`hasta` (opcionales, ISO `YYYY-MM-DD`) acotan por fecha de publicación
+  de forma **inclusiva**.
+- `limite` (opcional, default `10`, máx `50`) acota el número de publicaciones.
+- Responde `200` con `q` (eco de la consulta) y `resultados` (cada uno el mismo
+  `PublicacionDto` del feed, con su `resumen`, `categoria`, `urlOficial` y
+  `plazo`), **deduplicados** por publicación y ordenados por relevancia. Una
+  consulta sin resultados y un rango `desde > hasta` responden `200` con lista
+  vacía; un parámetro inválido responde `400` sin cuerpo tipado (el contrato de
+  error es FT00030).
+- La lectura JDBC y la inferencia ONNX (bloqueantes) se ejecutan en
+  `Dispatchers.IO`; el SQL está parametrizado.
+
+```sh
+curl -s 'http://localhost:8080/buscar?q=becas%20para%20j%C3%B3venes&categoria=becas_subvenciones_y_ayudas&limite=5' | jq .
+```
+
+La búsqueda es el **primer** cableado del proveedor de embeddings: **sin** el
+modelo E5 (o sin config de BD) el servidor arranca igual, `/buscar` **no** se
+registra (`404`) y `/health` sigue operativo. El modelo se aprovisiona como se
+describe en «Embeddings locales (ONNX)» (véase esa sección).
+
+La prueba real (extremo a extremo con el **modelo E5** y PostgreSQL: la publicación
+relevante va primero y los filtros se respetan) es **opt-in** y queda fuera del gate
+y de la CI:
+
+```sh
+cp .env.example .env
+docker compose up -d
+./gradlew :backend:flywayMigrate
+backend/tools/download-embedding-model.sh
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*SearchPersistenceLiveTest'
+DB_LIVE_TEST=1 EMBEDDING_LIVE_TEST=1 ./gradlew :backend:test --tests '*SearchServiceLiveTest'
+docker compose down -v
+```
+
+Decisión durable en el ADR 0023 (harness privado).
 
 ## Ingesta diaria (job programado)
 

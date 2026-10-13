@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Textos visibles de `:composeApp` (castellano, locale por defecto).
+
+  Regla MUST de CONSTRAINTS.md §«Cliente (Compose Multiplatform)»: ningún texto
+  visible al usuario se hardcodea en los composables; todos se leen con
+  `stringResource(Res.string.*)`. Solo se admiten literales en `@Preview` y
+  símbolos tipográficos.
+
+  Este fichero es la única fuente de textos de la UI del feed (FT00032):
+  títulos, etiquetas de las 11 categorías, motivos de destacado, plazo, estados
+  y `contentDescription` de los iconos con significado.
+-->
+<resources>
+    <!-- Identidad y pantalla del feed -->
+    <string name="app_title">DatoPublico</string>
+    <string name="feed_highlights_title">Destacados del día</string>
+    <string name="feed_publications_title">Publicaciones del día</string>
+
+    <!-- Plazo de una convocatoria: se rellena con la fecha límite formateada -->
+    <string name="deadline_badge">Plazo: %1$s</string>
+
+    <!-- Estado de carga -->
+    <string name="feed_loading">Cargando las publicaciones del día…</string>
+
+    <!-- Estado vacío -->
+    <string name="feed_empty_title">No hay publicaciones</string>
+    <string name="feed_empty_message">Hoy no se ha publicado ninguna disposición en el BOE.</string>
+    <string name="cd_empty">Sin publicaciones</string>
+
+    <!-- Estado de error -->
+    <string name="feed_error_title">No se han podido cargar las publicaciones</string>
+    <string name="feed_error_message">Ha ocurrido un problema al obtener el feed. Vuelve a intentarlo.</string>
+    <string name="feed_retry">Reintentar</string>
+    <string name="cd_error">Error al cargar</string>
+
+    <!-- Motivos de destacado (vocabulario objetivo del ranker) -->
+    <string name="cd_highlight">Publicación destacada</string>
+    <string name="cd_deadline">Plazo de solicitud</string>
+    <string name="reason_normative_section">Norma de la Sección I</string>
+    <string name="reason_normative_rank">Rango normativo alto</string>
+    <string name="reason_thematic_keyword">Interés ciudadano directo</string>
+    <string name="reason_open_deadline">Plazo abierto</string>
+    <string name="reason_relevant_body">Organismo de referencia</string>
+
+    <!-- Etiquetas de las 11 categorías curadas -->
+    <string name="category_normative_regulation">Normas y legislación</string>
+    <string name="category_appointments_and_dismissals">Nombramientos y ceses</string>
+    <string name="category_public_employment_and_exams">Oposiciones y empleo público</string>
+    <string name="category_grants_and_subsidies">Becas y subvenciones</string>
+    <string name="category_awards">Premios</string>
+    <string name="category_agreements_and_conventions">Convenios y acuerdos</string>
+    <string name="category_education_and_study_plans">Educación y planes de estudio</string>
+    <string name="category_environment">Medio ambiente</string>
+    <string name="category_appeals_and_resolutions">Recursos y resoluciones</string>
+    <string name="category_public_information_and_concessions">Información pública y concesiones</string>
+    <string name="category_other_provisions_and_announcements">Otras disposiciones y anuncios</string>
+</resources>

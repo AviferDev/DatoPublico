@@ -19,6 +19,18 @@ su entrypoint (`MainActivity` en Android, `main()` en Wasm,
 `MainViewController()` en iOS). El target `jvm()` se conserva **solo** para
 tests/dev.
 
+Desde FT00032 la app monta el **feed diario**: `DatoPublicoTheme`
+(`design/theme/`) aplica los tokens de `DESIGN.md`, los componentes reutilizables
+viven en `design/components/` (`CategoryLabel`, `PublicationCard`,
+`PublicationBadges`) y la pantalla con sus estados (**carga / contenido / vacío /
+error**) en `feature/feed/{domain,data,ui}`. Todos los textos salen de
+`composeApp/src/commonMain/composeResources/values/strings.xml` (castellano) y
+todos los colores, de `MaterialTheme.colorScheme`.
+
+Los datos del feed son **de ejemplo** (repositorio en memoria): el cliente HTTP
+real, la caché offline y el mapeo desde `:shared` son FT00035, y la navegación y
+el ViewModel con `StateFlow`, FT00034.
+
 ```sh
 # Android (APK de debug)
 ./gradlew :composeApp:assembleDebug
@@ -33,10 +45,24 @@ tests/dev.
 ./gradlew :composeApp:compileKotlinIosSimulatorArm64
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
 # → composeApp/build/bin/iosSimulatorArm64/debugFramework/ComposeApp.framework
+
+# Tests de la lógica pura del cliente (estado, repositorio y formateo de fechas)
+./gradlew :composeApp:jvmTest
 ```
 
 Notas:
 
+- **Estados vacío y error**: el repositorio en memoria tiene modos `EMPTY` y
+  `UNAVAILABLE`; para verlos en local, construye
+  `InMemoryFeedRepository(mode = InMemoryFeedMode.EMPTY)` (o `UNAVAILABLE`) en
+  `App()` de forma **temporal** y vuelve a `SAMPLE` antes de commitear. Los
+  estados también quedan fijados por los tests y por las `@Preview`.
+- **Android**: el manifest declara `Theme.Material.Light.NoActionBar` y el
+  contenido raíz se pinta con `safeDrawingPadding()`. Con `targetSdk 35` el modo
+  *edge-to-edge* está forzado y un ActionBar de plataforma se superpone al
+  contenido de Compose (ocultaría el encabezado del feed).
+- **`:shared` aún no se cablea**: `:composeApp` usa modelos de dominio propios
+  (el mapeo desde los DTOs llega con FT00035) para no romper el gate SDK-free.
 - El toolchain de Kotlin/JS-Wasm (Node, Yarn y Binaryen) se descarga a la caché
   de Gradle. Sus repositorios Ivy se declaran en `settings.gradle.kts`, que usa
   `PREFER_SETTINGS` porque el plugin los registra a nivel de proyecto.

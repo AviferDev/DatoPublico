@@ -42,6 +42,10 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.uiToolingPreview)
+            // Recursos i18n (FT00032): los textos visibles viven en
+            // `composeResources/values/strings.xml` y se leen con
+            // `stringResource(Res.string.*)`.
+            implementation(compose.components.resources)
         }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
@@ -49,8 +53,18 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            // `runTest` para los tests de estado y de repositorio (FT00032), que
+            // esperan funciones `suspend` sin abrir sockets ni tocar la BD.
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
+}
+
+// Paquete explícito de la clase `Res` generada por Compose Resources: así los
+// composables importan `es.aviferdev.datopublico.resources.Res` en vez del
+// paquete por defecto derivado del módulo.
+compose.resources {
+    packageOfResClass = "es.aviferdev.datopublico.resources"
 }
 
 android {

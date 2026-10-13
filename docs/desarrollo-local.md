@@ -60,9 +60,10 @@ curl -s http://localhost:8080/health   # {"status":"ok"}
 ```
 
 Sin base de datos (`POSTGRES_PASSWORD` ausente) el servidor sigue sirviendo
-`/health` (200) y el endpoint `/feed` **no** se registra (404). Con base de datos,
-el composition root crea un **pool JDBC único** que comparten el feed y la ingesta
-y lo cierra una sola vez al parar (ver «Feed diario»).
+`/health` (200) y los endpoints `/feed` y `/publicacion/{id}` **no** se registran
+(404). Con base de datos, el composition root crea un **pool JDBC único** que
+comparten el feed, el detalle y la ingesta y lo cierra una sola vez al parar (ver
+«Feed diario» y «Detalle de publicación»).
 
 Variables de entorno (todas opcionales; un valor inválido aborta el arranque con
 un mensaje claro):
@@ -273,9 +274,10 @@ La capa de datos de `:backend` vive en
 entidades `...Entity`) con la configuración de conexión
 (`infra/DatabaseConfig`, derivada de `POSTGRES_*`) y el pool **HikariCP**
 (`infra/Database`, tamaño ≤5). Desde FT00026 el composition root (`Application.kt`)
-crea **un único** pool cuando la configuración de BD resuelve, lo comparte entre el
-feed (API) y la ingesta y lo cierra **una sola vez** en `ApplicationStopped`; sin
-BD no se crea pool y el feed no se registra.
+crea **un único** pool cuando la configuración de BD resuelve, lo comparte entre la
+API (feed y detalle) y la ingesta y lo cierra **una sola vez** en
+`ApplicationStopped`; sin BD no se crea pool y ni el feed ni el detalle se
+registran.
 
 La migración `V2__persistencia_publicaciones.sql` crea las tablas `publicacion`,
 `fragmento`, `resumen` y `cola_revision`; la `V3__fragmento_embedding.sql` añade
@@ -746,6 +748,51 @@ docker compose down -v
 ```
 
 Decisión durable en el ADR 0021 (harness privado).
+
+## Detalle de publicación (`GET /publicacion/{id}`) (`:backend`)
+
+El paquete `es.aviferdev.datopublico.backend.publication` (FT00027) expone el
+**segundo endpoint de lectura de datos**: el detalle de una publicación por su
+identificador oficial del BOE. Reutiliza el contrato `PublicacionDto` de `:shared`
+y el mapeo puro `feed/FeedDtoMapper` de FT00026 (no hay DTO nuevo) y comparte el
+**mismo pool JDBC único** que el feed y la ingesta.
+
+```
+GET /publicacion/BOE-A-2026-20979
+```
+
+- Sirve **solo** publicaciones con `resumen.estado = 'publicado'` (token
+  `SummaryState.PUBLISHED` que escribe FT00023); un resumen no publicado o ausente,
+  un identificador desconocido y una publicación sin categoría (dato corrupto)
+  responden `404`.
+- Responde `200` con el `PublicacionDto` completo (`id`, `titulo`,
+  `fechaPublicacion`, `organismo`, `seccion`, `epigrafe`, `categoria`, `urlOficial`,
+  `resumen` con `queCambia`/`aQuienAfecta`/`cifrasClave`/`fuenteOficial`/`avisoIA` y
+  `plazo` si la publicación lo tiene).
+- Un `id` **en blanco** o más largo que `PublicationDetailService.MAX_ID_LENGTH`
+  responde `400` (sin cuerpo tipado; el contrato de error es FT00030).
+- La lectura JDBC bloqueante se ejecuta en `Dispatchers.IO`; el detalle compone
+  `PublicationRepository.findById` + `SummaryRepository.findByPublication` (dos
+  *lookups* por clave, sin `JOIN` nuevo) y **no** duplica el SQL del feed.
+- Sin base de datos el pool no se crea, la ruta **no** se registra (404) y
+  `/health` sigue operativo.
+
+```sh
+curl -s 'http://localhost:8080/publicacion/BOE-A-2026-20979' | jq .
+```
+
+La prueba real (solo el resumen publicado se sirve) es **opt-in** y queda fuera del
+gate y de la CI:
+
+```sh
+cp .env.example .env
+docker compose up -d
+./gradlew :backend:flywayMigrate
+DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*PublicationDetailLiveTest'
+docker compose down -v
+```
+
+Decisión durable en el ADR 0022 (harness privado).
 
 ## Ingesta diaria (job programado)
 

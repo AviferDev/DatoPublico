@@ -173,3 +173,15 @@ tasks.register<JavaExec>("evaluateSummary") {
     mainClass.set("es.aviferdev.datopublico.backend.rag.evaluation.SummaryEvaluationMainKt")
     classpath = sourceSets["main"].runtimeClasspath
 }
+
+// Generación one-shot de resúmenes ciudadanos reales (operación): tarea explícita,
+// nunca enganchada a `build`/`check` (la CI corre sin red, BD, modelo ni OpenCode).
+// Hereda el entorno del proceso; PostgreSQL (`docker-compose`), el modelo E5
+// (`backend/tools/download-embedding-model.sh`) y `OPENCODE_API_KEY` son
+// obligatorios en tiempo de ejecución. Config del rango por entorno `SUMMARY_*`.
+tasks.register<JavaExec>("generateSummaries") {
+    group = "application"
+    description = "Genera y publica resúmenes ciudadanos reales con OpenCode (one-shot, opt-in)."
+    mainClass.set("es.aviferdev.datopublico.backend.rag.summary.GenerateSummariesMainKt")
+    classpath = sourceSets["main"].runtimeClasspath
+}

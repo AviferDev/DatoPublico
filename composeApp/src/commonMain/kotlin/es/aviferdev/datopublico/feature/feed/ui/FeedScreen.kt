@@ -3,8 +3,10 @@ package es.aviferdev.datopublico.feature.feed.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +36,7 @@ import es.aviferdev.datopublico.resources.Res
 import es.aviferdev.datopublico.resources.app_title
 import es.aviferdev.datopublico.resources.cd_empty
 import es.aviferdev.datopublico.resources.cd_error
+import es.aviferdev.datopublico.resources.chat_entry
 import es.aviferdev.datopublico.resources.feed_empty_message
 import es.aviferdev.datopublico.resources.feed_empty_title
 import es.aviferdev.datopublico.resources.feed_error_message
@@ -51,6 +55,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * @param onRetry acción a ejecutar al pulsar «Reintentar».
  * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
  *   publicación.
+ * @param onOpenChat acción al pulsar la entrada de chat del encabezado.
  * @param modifier modificador de layout del llamante.
  */
 @Composable
@@ -58,14 +63,48 @@ fun FeedScreen(
     state: FeedUiState,
     onRetry: () -> Unit,
     onPublicationClick: (String) -> Unit,
+    onOpenChat: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         when (state) {
             FeedUiState.Loading -> LoadingView()
-            is FeedUiState.Content -> FeedContent(feed = state.feed, onPublicationClick = onPublicationClick)
+            is FeedUiState.Content -> FeedContent(
+                feed = state.feed,
+                onPublicationClick = onPublicationClick,
+                onOpenChat = onOpenChat,
+            )
             FeedUiState.Empty -> EmptyView()
             FeedUiState.Error -> ErrorView(onRetry = onRetry)
+        }
+    }
+}
+
+/**
+ * Encabezado del feed: título de la app y la acción de **chat** («Preguntar al
+ * BOE»).
+ *
+ * Se usa una acción de **texto** (no un icono) porque el set
+ * `material-icons-core` no incluye `Chat`/`Forum` y no se añade
+ * `material-icons-extended`.
+ *
+ * @param onOpenChat acción al pulsar la entrada de chat.
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun FeedHeader(onOpenChat: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(Res.string.app_title),
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = onOpenChat) {
+            Text(text = stringResource(Res.string.chat_entry))
         }
     }
 }
@@ -77,9 +116,14 @@ fun FeedScreen(
  * @param feed feed que se muestra.
  * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
  *   publicación.
+ * @param onOpenChat acción al pulsar la entrada de chat del encabezado.
  */
 @Composable
-private fun FeedContent(feed: DailyFeed, onPublicationClick: (String) -> Unit) {
+private fun FeedContent(
+    feed: DailyFeed,
+    onPublicationClick: (String) -> Unit,
+    onOpenChat: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -87,11 +131,7 @@ private fun FeedContent(feed: DailyFeed, onPublicationClick: (String) -> Unit) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            text = stringResource(Res.string.app_title),
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary,
-        )
+        FeedHeader(onOpenChat = onOpenChat)
         if (feed.highlights.isNotEmpty()) {
             HighlightsSection(highlights = feed.highlights, onPublicationClick = onPublicationClick)
         }
@@ -213,7 +253,7 @@ private fun previewDailyFeed(): DailyFeed = DailyFeed(
 private fun FeedScreenLoadingPreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            FeedScreen(state = FeedUiState.Loading, onRetry = {}, onPublicationClick = {})
+            FeedScreen(state = FeedUiState.Loading, onRetry = {}, onPublicationClick = {}, onOpenChat = {})
         }
     }
 }
@@ -228,6 +268,7 @@ private fun FeedScreenContentPreview() {
                 state = FeedUiState.Content(feed = previewDailyFeed()),
                 onRetry = {},
                 onPublicationClick = {},
+                onOpenChat = {},
             )
         }
     }
@@ -261,7 +302,18 @@ private fun ErrorViewPreview() {
 private fun FeedContentPreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            FeedContent(feed = previewDailyFeed(), onPublicationClick = {})
+            FeedContent(feed = previewDailyFeed(), onPublicationClick = {}, onOpenChat = {})
+        }
+    }
+}
+
+/** Previsualización del encabezado del feed con la acción de chat. */
+@Preview
+@Composable
+private fun FeedHeaderPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            FeedHeader(onOpenChat = {}, modifier = Modifier.padding(8.dp))
         }
     }
 }

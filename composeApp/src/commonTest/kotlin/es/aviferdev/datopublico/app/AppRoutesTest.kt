@@ -17,6 +17,11 @@ class AppRoutesTest {
     }
 
     @Test
+    fun chatRouteIsStable() {
+        assertEquals("chat", AppRoutes.CHAT)
+    }
+
+    @Test
     fun detailPatternDeclaresArgument() {
         assertEquals("detail/{publicationId}", AppRoutes.DETAIL)
     }

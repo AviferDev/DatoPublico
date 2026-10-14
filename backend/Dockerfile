@@ -10,7 +10,7 @@
 # lectura). El contexto de build se reduce con `.dockerignore`.
 
 # --- Stage build: compila la distribución del backend ---
-FROM eclipse-temurin:21-jdk AS build
+FROM eclipse-temurin:21-jdk-jammy AS build
 WORKDIR /workspace
 COPY gradlew gradlew
 COPY gradle gradle
@@ -22,7 +22,7 @@ RUN chmod +x gradlew \
     && ./gradlew :backend:installDist -PskipClient --no-daemon
 
 # --- Stage runtime: solo la JRE y la distribución ---
-FROM eclipse-temurin:21-jre AS runtime
+FROM eclipse-temurin:21-jre-jammy AS runtime
 WORKDIR /app
 RUN useradd --create-home --uid 10001 appuser
 COPY --from=build /workspace/backend/build/install/backend/ ./

@@ -78,4 +78,26 @@
     <string name="category_appeals_and_resolutions">Recursos y resoluciones</string>
     <string name="category_public_information_and_concessions">Información pública y concesiones</string>
     <string name="category_other_provisions_and_announcements">Otras disposiciones y anuncios</string>
+
+    <!-- Chat RAG (FT00037): entrada desde el feed, pantalla, estados y citas -->
+    <string name="chat_entry">Preguntar al BOE</string>
+    <string name="chat_title">Preguntar al BOE</string>
+    <string name="chat_question_label">Tu pregunta o afirmación</string>
+    <string name="chat_question_placeholder">Escribe una pregunta o pega una afirmación para comprobarla…</string>
+    <string name="cd_chat_send">Enviar la consulta</string>
+    <string name="cd_chat_intro">Consultar el BOE</string>
+    <string name="chat_intro">Pregunta al BOE o pega una afirmación para comprobar si es cierta. Te responderé con las fuentes oficiales.</string>
+    <string name="chat_loading">Buscando en el BOE…</string>
+    <string name="chat_question_sent">Tu consulta</string>
+    <string name="chat_status_answered">Respondida</string>
+    <string name="chat_status_refuted">Refutada</string>
+    <string name="chat_status_unfounded">Sin fundamento</string>
+    <string name="chat_unfounded_message">El BOE no permite confirmar ni refutar esta consulta. Puedes reformularla.</string>
+    <string name="chat_citations_title">Fuentes oficiales</string>
+    <string name="chat_citation_source">Fuente oficial</string>
+    <string name="chat_ai_notice">Respuesta generada con inteligencia artificial a partir del BOE. Comprueba siempre la fuente oficial.</string>
+    <string name="chat_error_title">No se ha podido obtener la respuesta</string>
+    <string name="chat_error_message">Ha ocurrido un problema al consultar el BOE. Vuelve a intentarlo.</string>
+    <string name="chat_retry">Reintentar</string>
+    <string name="cd_chat_error">Error al consultar el BOE</string>
 </resources>

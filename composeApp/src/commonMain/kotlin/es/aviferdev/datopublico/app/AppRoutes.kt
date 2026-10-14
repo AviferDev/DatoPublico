@@ -18,6 +18,9 @@ object AppRoutes {
     /** Ruta del feed diario; es el destino inicial del grafo. */
     const val FEED: String = "feed"
 
+    /** Ruta del chat RAG; sin argumentos (un solo intercambio efímero). */
+    const val CHAT: String = "chat"
+
     /** Patrón de la ruta de detalle, con el argumento entre llaves. */
     const val DETAIL: String = "detail/{publicationId}"
 

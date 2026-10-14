@@ -28,13 +28,17 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  *
  * Es una regla MUST del producto que el aviso sea visible cuando el contenido lo
  * genera la IA (ver `CONSTRAINTS.md` §«Producto y datos»). El componente no tiene
- * estado ni lógica: siempre pinta el mismo texto de recurso. Lo reutilizará el
- * chat (FT00037).
+ * estado ni lógica: pinta el texto recibido (por defecto, el del resumen; el chat
+ * pasa el suyo). Lo reutiliza el chat (FT00037).
  *
+ * @param text texto del aviso; por defecto, el del resumen ciudadano del detalle.
  * @param modifier modificador de layout del llamante.
  */
 @Composable
-fun AiNotice(modifier: Modifier = Modifier) {
+fun AiNotice(
+    text: String = stringResource(Res.string.detail_ai_notice),
+    modifier: Modifier = Modifier,
+) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
@@ -52,7 +56,7 @@ fun AiNotice(modifier: Modifier = Modifier) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = stringResource(Res.string.detail_ai_notice),
+                text = text,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

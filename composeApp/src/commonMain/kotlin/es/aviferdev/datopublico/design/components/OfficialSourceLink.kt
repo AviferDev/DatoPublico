@@ -72,12 +72,13 @@ fun OfficialSourceLink(url: String, modifier: Modifier = Modifier) {
  * Comprueba que la URL sea navegable (`http://` o `https://`).
  *
  * Es una función **pura**: evita abrir esquemas inesperados y, por tanto, un
- * *crash* del `UriHandler` de la plataforma.
+ * *crash* del `UriHandler` de la plataforma. Es `internal` para que el chat
+ * (FT00037) reutilice la misma guarda en sus citas.
  *
  * @param url URL a comprobar.
  * @return `true` si la URL empieza por `http://` o `https://`.
  */
-private fun isHttpUrl(url: String): Boolean =
+internal fun isHttpUrl(url: String): Boolean =
     url.startsWith("https://") || url.startsWith("http://")
 
 /** Previsualización del enlace oficial destacado. */

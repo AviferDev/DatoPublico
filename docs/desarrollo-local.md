@@ -57,6 +57,22 @@ estado de error. El **detalle** usa un repositorio en memoria y su pantalla real
 `DetailRoute` (`AppNavHost`). La navegación y el ViewModel con `StateFlow` son
 FT00034.
 
+Desde FT00037 existe la **pantalla de chat RAG** (`feature/chat/{domain,data,ui}`),
+alcanzable desde la acción «Preguntar al BOE» del encabezado del feed (ruta `chat`
+del grafo). Permite escribir una **pregunta** o pegar una **afirmación a
+verificar** y muestra la **respuesta fundamentada** con su **estado**
+(`respondida`/`refutada`/`sin_fundamento`), el **texto** y las **citas a la fuente
+oficial** (cada una abre el BOE), más el **aviso de IA** siempre visible y los
+estados **carga** y **error** con reintento. `sin_fundamento` se muestra como
+**estado** (no como error) y sin citas. El chat es **un solo intercambio**
+efímero: no hay historial ni persistencia. El `ChatViewModel` expone el estado con
+`StateFlow` (UDF) y los composables son stateless, como en el feed. Los datos los
+sirve el **cliente HTTP real** (`POST /v1/chat`, `feature/chat/data/remote/`,
+inyectado en `App()`); el **repositorio en memoria**
+(`InMemoryChatRepository(mode = InMemoryChatMode.SAMPLE | UNAVAILABLE)`) queda para
+`@Preview` y tests (útil para ver el estado de error sin backend). El detalle real
+sigue pendiente de integrar (FT00033).
+
 ```sh
 # Android (APK de debug)
 ./gradlew :composeApp:assembleDebug

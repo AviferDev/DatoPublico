@@ -18,6 +18,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import es.aviferdev.datopublico.design.theme.DatoPublicoTheme
+import es.aviferdev.datopublico.feature.chat.ui.ChatRoute
+import es.aviferdev.datopublico.feature.chat.ui.ChatViewModel
 import es.aviferdev.datopublico.feature.detail.data.InMemoryDetailRepository
 import es.aviferdev.datopublico.feature.detail.domain.GetPublicationDetail
 import es.aviferdev.datopublico.feature.detail.ui.DetailRoute
@@ -29,21 +31,27 @@ import es.aviferdev.datopublico.feature.feed.ui.FeedViewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * Grafo de navegación del cliente: **feed** ↔ **detalle**.
+ * Grafo de navegación del cliente: **feed** ↔ **detalle** y **chat**.
  *
  * La UI es común a las tres plataformas (`commonMain`), así que cada plataforma
  * solo aporta su *entrypoint* y la librería oficial de navegación resuelve el
- * atrás del sistema/navegador. El [FeedViewModel] queda *scopeado* a la entrada
- * de *back stack* del feed: al volver del detalle, el feed reaparece con su
- * estado ya cargado.
+ * atrás del sistema/navegador. El [FeedViewModel] y el `ChatViewModel` quedan
+ * *scopeados* a su entrada de *back stack*: al volver del detalle o del chat, el
+ * feed reaparece con su estado ya cargado.
  *
  * @param feedViewModelFactory factory manual del [FeedViewModel] (DI por
  *   constructor).
+ * @param chatViewModelFactory factory manual del `ChatViewModel`; por defecto usa
+ *   el repositorio en memoria (el *composition root* inyecta el HTTP real).
  * @param modifier modificador de layout del llamante.
  */
 @Suppress("FunctionNaming")
 @Composable
-fun AppNavHost(feedViewModelFactory: ViewModelProvider.Factory, modifier: Modifier = Modifier) {
+fun AppNavHost(
+    feedViewModelFactory: ViewModelProvider.Factory,
+    chatViewModelFactory: ViewModelProvider.Factory = ChatViewModel.factory(),
+    modifier: Modifier = Modifier,
+) {
     val navController = rememberNavController()
     NavHost(
         navController = navController,
@@ -56,9 +64,29 @@ fun AppNavHost(feedViewModelFactory: ViewModelProvider.Factory, modifier: Modifi
                 onPublicationClick = { publicationId ->
                     navController.navigate(AppRoutes.detail(publicationId))
                 },
+                onOpenChat = { navController.navigate(AppRoutes.CHAT) },
             )
         }
         detailDestination(navController = navController)
+        chatDestination(navController = navController, chatViewModelFactory = chatViewModelFactory)
+    }
+}
+
+/**
+ * Destino de **chat** del grafo: monta la pantalla de chat RAG con su atrás.
+ *
+ * @param navController controlador del grafo, para el atrás.
+ * @param chatViewModelFactory factory del `ChatViewModel` a usar.
+ */
+private fun NavGraphBuilder.chatDestination(
+    navController: NavHostController,
+    chatViewModelFactory: ViewModelProvider.Factory,
+) {
+    composable(AppRoutes.CHAT) {
+        ChatRoute(
+            onBack = { navController.popBackStack() },
+            viewModel = viewModel(factory = chatViewModelFactory),
+        )
     }
 }
 

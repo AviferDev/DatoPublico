@@ -21,6 +21,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  *
  * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
  *   publicación para navegar a su detalle.
+ * @param onOpenChat acción al pulsar la entrada de chat del encabezado.
  * @param viewModel ViewModel del feed; por defecto se obtiene de la factory
  *   manual (DI por constructor).
  * @param modifier modificador de layout del llamante.
@@ -28,6 +29,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun FeedRoute(
     onPublicationClick: (String) -> Unit,
+    onOpenChat: () -> Unit,
     viewModel: FeedViewModel = viewModel(factory = feedViewModelFactory()),
     modifier: Modifier = Modifier,
 ) {
@@ -36,6 +38,7 @@ fun FeedRoute(
         state = state,
         onRetry = viewModel::onRetry,
         onPublicationClick = onPublicationClick,
+        onOpenChat = onOpenChat,
         modifier = modifier,
     )
 }
@@ -47,6 +50,7 @@ private fun FeedRoutePreview() {
     DatoPublicoTheme {
         FeedRoute(
             onPublicationClick = {},
+            onOpenChat = {},
             viewModel = FeedViewModel(GetDailyFeed(InMemoryFeedRepository(latencyMillis = 0))),
         )
     }

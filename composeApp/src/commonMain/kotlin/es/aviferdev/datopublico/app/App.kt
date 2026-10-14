@@ -24,8 +24,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * de forma **app-scoped**, el cliente HTTP común (`ktor-client`), la API del feed,
  * la cache offline en memoria y el repositorio HTTP, y se inyectan en la *factory*
  * del `FeedViewModel` (vía `GetDailyFeed`). La URL base la resuelve la plataforma
- * (`expect/actual`), no este código común. El detalle real es FT00033 (aquí solo
- * hay un *placeholder* de navegación).
+ * (`expect/actual`), no este código común. El grafo ya monta la pantalla de
+ * detalle real (FT00033); hoy lee de un repositorio en memoria, y el cliente HTTP
+ * del detalle es una feature posterior.
  *
  * El contenido se pinta con `safeDrawingPadding()` para no quedar bajo las barras
  * del sistema (en Android el modo *edge-to-edge* está forzado por `targetSdk 35`).

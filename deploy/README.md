@@ -11,7 +11,8 @@ Decisión durable en el ADR `0030-despliegue-servidor-propio` (harness privado).
 
 | Fichero | Para qué |
 | --- | --- |
-| `deploy/docker-compose.prod.yml` | Compose de producción: `postgres` (loopback), `backend` (sin puerto) y `nginx` (80/443). |
+| `deploy/docker-compose.prod.yml` | Compose de producción: `postgres` (loopback), `backend` (sin puerto) y `nginx` (80/443, configurables). |
+| `deploy/docker-compose.backend-direct.yml` | Override de **pruebas**: publica el backend sin Nginx (HTTP, sin TLS). |
 | `deploy/nginx/templates/datopublico.conf.template` | Config de Nginx: TLS, redirect 80→443 y proxy con `X-Forwarded-*`. |
 | `deploy/.env.production.example` | Plantilla de entorno (**solo placeholders**). Cópiala a `deploy/.env.production`. |
 | `deploy/verify-deploy.sh` | Verificación offline **opt-in** (Compose + Nginx + secretos); no la ejecuta el gate. |
@@ -20,7 +21,8 @@ Decisión durable en el ADR `0030-despliegue-servidor-propio` (harness privado).
 
 ## Arquitectura del despliegue
 
-- **`nginx`** es la **única superficie publicada** (80/443): termina TLS y hace
+- **`nginx`** es la **única superficie publicada** (80/443 por defecto,
+  configurables con `HTTP_PORT`/`HTTPS_PORT`): termina TLS y hace
   proxy a `backend:8080` por la red interna de Compose.
 - **`backend`** **no** publica puerto al host: solo Nginx lo alcanza. Confía en las
   cabeceras `X-Forwarded-*` de Nginx (`TRUST_PROXY_HEADERS=true`) para que el
@@ -144,6 +146,59 @@ docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.producti
 docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.production down
 # `down -v` NO se usa en producción: borraría el volumen `pgdata` (los datos).
 ```
+
+## Alternativas para no ocupar el puerto 80
+
+Si el VPS ya usa el puerto 80 (o 443) para otro servicio, no hace falta publicar
+Nginx de DatoPublico en esos puertos. Hay dos vías:
+
+### (a) Detrás de un proxy ya existente (Nginx/Apache/Caddy)
+
+No publiques el Nginx de DatoPublico en 80/443: publícalo en **puertos internos** y
+deja que el proxy existente sea la única entrada (y el que termina TLS).
+
+En `deploy/.env.production`:
+
+```sh
+HTTP_PORT=8088      # nginx de DatoPublico escucha en 8088 (HTTP)
+HTTPS_PORT=8443     # …y en 8443 (HTTPS)
+```
+
+(o publica **solo** HTTP en loopback editando el compose a `127.0.0.1:8088:80`).
+
+Añade un *server block* al proxy existente que haga `proxy_pass` al stack:
+
+- **al Nginx interno** (el proxy existente termina TLS):
+  `proxy_pass https://127.0.0.1:8443;` (necesitará confiar en el certificado de
+  DatoPublico, o `proxy_ssl_verify off;`). **No** apuntes al bloque HTTP interno
+  (`:8088`): su función es redirigir a HTTPS.
+- **o directamente al backend** (si el proxy existente está en la red de Compose):
+  `proxy_pass http://backend:8080;`.
+
+Propaga las cabeceras (`proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`,
+`X-Forwarded-Proto $scheme;`, `Host $host;`) y mantén `TRUST_PROXY_HEADERS=true`
+para que el *rate limiting* vea la IP real del cliente. El TLS lo gestiona el proxy
+existente.
+
+### (b) Publicar el backend directamente sin Nginx (prueba rápida, HTTP)
+
+Para una prueba rápida **por HTTP y sin TLS**, usa el override de ejemplo, que
+publica el backend y **no** arranca Nginx:
+
+```sh
+docker compose -f deploy/docker-compose.prod.yml \
+  -f deploy/docker-compose.backend-direct.yml \
+  --env-file deploy/.env.production up -d
+# Backend en http://<host>:${BACKEND_PORT:-8080}  (default 8080)
+curl -s "http://localhost:8080/health"   # {"status":"ok"}
+```
+
+`deploy/docker-compose.backend-direct.yml` publica `"${BACKEND_PORT:-8080}:8080"` y
+excluye Nginx con un `profile` (no se activa).
+
+> **Aviso:** en este modo **no hay HTTPS** ni terminación TLS y el backend queda
+> expuesto directamente. Es **solo para pruebas**, nunca para producción. Para
+> producción usa la vía (a) o los puertos 80/443 por defecto.
 
 ## Verificación offline (opt-in)
 

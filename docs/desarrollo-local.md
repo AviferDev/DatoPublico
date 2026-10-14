@@ -1255,6 +1255,11 @@ resumen (FT00041):
   y `OPENCODE_API_KEY` son **fail-fast**.
 - La **ingesta** es el **scheduler interno** (09:30 + 18:00; ADR 0004), **sin cron
   externo**.
+- **Puertos configurables** (`HTTP_PORT`/`HTTPS_PORT`, por defecto 80/443): si el
+  VPS ya usa 80/443 para otro servicio, `deploy/README.md` documenta las
+  alternativas —detrás de un proxy existente, o publicar el backend directamente
+  sin Nginx para pruebas (`deploy/docker-compose.backend-direct.yml`, **sin**
+  HTTPS).
 
 `docker build`, `docker compose`, el *lint* de Nginx y `:backend:flywayMigrate` son
 **opt-in**: el gate estándar (`./gradlew build -PskipClient`/`test`/`detekt` e

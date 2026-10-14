@@ -20,6 +20,7 @@ import androidx.navigation.navArgument
 import es.aviferdev.datopublico.design.theme.DatoPublicoTheme
 import es.aviferdev.datopublico.feature.chat.ui.ChatRoute
 import es.aviferdev.datopublico.feature.chat.ui.ChatViewModel
+import es.aviferdev.datopublico.feature.detail.data.DetailRepository
 import es.aviferdev.datopublico.feature.detail.data.InMemoryDetailRepository
 import es.aviferdev.datopublico.feature.detail.domain.GetPublicationDetail
 import es.aviferdev.datopublico.feature.detail.ui.DetailRoute
@@ -51,6 +52,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * @param searchViewModelFactory factory manual del `SearchViewModel`; el
  *   *composition root* inyecta el repositorio HTTP real y el valor por defecto
  *   (repositorio en memoria de ejemplo) sirve a las `@Preview`.
+ * @param detailRepository repositorio del detalle; el *composition root* inyecta
+ *   el cliente HTTP real (FT00035) y el valor por defecto (en memoria) sirve a
+ *   las `@Preview`.
  * @param modifier modificador de layout del llamante.
  */
 @Suppress("FunctionNaming")
@@ -59,6 +63,7 @@ fun AppNavHost(
     feedViewModelFactory: ViewModelProvider.Factory,
     chatViewModelFactory: ViewModelProvider.Factory = ChatViewModel.factory(),
     searchViewModelFactory: ViewModelProvider.Factory = searchViewModelFactory(),
+    detailRepository: DetailRepository = InMemoryDetailRepository(),
     modifier: Modifier = Modifier,
 ) {
     val navController = rememberNavController()
@@ -78,7 +83,7 @@ fun AppNavHost(
             )
         }
         searchDestination(navController = navController, factory = searchViewModelFactory)
-        detailDestination(navController = navController)
+        detailDestination(navController = navController, detailRepository = detailRepository)
         chatDestination(navController = navController, chatViewModelFactory = chatViewModelFactory)
     }
 }
@@ -129,14 +134,18 @@ private fun NavGraphBuilder.searchDestination(
  * *crash*) y monta la **pantalla de detalle real** (FT00033) a través de
  * [DetailRoute].
  *
- * El [DetailStateHolder] se construye con el repositorio **en memoria**: el
- * cliente HTTP real del detalle es una feature posterior. Se recrea solo cuando
- * cambia el `id`, así que volver al feed y abrir otra publicación recarga su
- * detalle.
+ * El [DetailStateHolder] se construye con el [detailRepository] inyectado (el
+ * *composition root* pasa el cliente HTTP real; las `@Preview`, el de ejemplo). Se
+ * recrea solo cuando cambia el `id`, así que volver al feed y abrir otra
+ * publicación recarga su detalle.
  *
  * @param navController controlador del grafo, para el atrás.
+ * @param detailRepository repositorio del detalle a usar.
  */
-private fun NavGraphBuilder.detailDestination(navController: NavHostController) {
+private fun NavGraphBuilder.detailDestination(
+    navController: NavHostController,
+    detailRepository: DetailRepository,
+) {
     composable(
         route = AppRoutes.DETAIL,
         arguments = listOf(navArgument(AppRoutes.ARG_PUBLICATION_ID) { type = NavType.StringType }),
@@ -145,7 +154,7 @@ private fun NavGraphBuilder.detailDestination(navController: NavHostController) 
         val stateHolder = remember(id) {
             DetailStateHolder(
                 id = id,
-                getPublicationDetail = GetPublicationDetail(InMemoryDetailRepository()),
+                getPublicationDetail = GetPublicationDetail(detailRepository),
             )
         }
         DetailRoute(stateHolder = stateHolder, onBack = { navController.popBackStack() })

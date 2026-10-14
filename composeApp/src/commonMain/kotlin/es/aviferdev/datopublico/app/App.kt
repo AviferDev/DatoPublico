@@ -12,6 +12,8 @@ import es.aviferdev.datopublico.design.theme.DatoPublicoTheme
 import es.aviferdev.datopublico.feature.chat.data.HttpChatRepository
 import es.aviferdev.datopublico.feature.chat.data.remote.ChatApi
 import es.aviferdev.datopublico.feature.chat.ui.ChatViewModel
+import es.aviferdev.datopublico.feature.detail.data.HttpDetailRepository
+import es.aviferdev.datopublico.feature.detail.data.remote.DetailApi
 import es.aviferdev.datopublico.feature.feed.data.HttpFeedRepository
 import es.aviferdev.datopublico.feature.feed.data.cache.InMemoryFeedCache
 import es.aviferdev.datopublico.feature.feed.data.remote.FeedApi
@@ -59,12 +61,16 @@ fun App() {
     val chatFactory = remember {
         ChatViewModel.factory(HttpChatRepository(ChatApi(httpClient = httpClient)))
     }
+    val detailRepository = remember {
+        HttpDetailRepository(DetailApi(httpClient = httpClient))
+    }
     DatoPublicoTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             AppNavHost(
                 feedViewModelFactory = feedFactory,
                 searchViewModelFactory = searchFactory,
                 chatViewModelFactory = chatFactory,
+                detailRepository = detailRepository,
                 modifier = Modifier.safeDrawingPadding(),
             )
         }

@@ -85,7 +85,7 @@ fun CategoryLabel(category: PublicationCategory, modifier: Modifier = Modifier) 
         contentColor = tone.content(MaterialTheme.colorScheme),
     ) {
         Text(
-            text = stringResource(category.label()),
+            text = stringResource(category.labelResource()),
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
         )
@@ -117,8 +117,15 @@ private fun PublicationCategory.tone(): CategoryTone = when (this) {
     -> CategoryTone.INFORMATIVE
 }
 
-/** Texto localizado de la categoría. */
-private fun PublicationCategory.label(): StringResource = when (this) {
+/**
+ * Texto localizado de la categoría.
+ *
+ * Es `internal` para que otras features (p. ej. los chips de categoría de la
+ * búsqueda, FT00036) reutilicen el mismo texto en vez de duplicar el mapeo.
+ *
+ * @return el recurso i18n con la etiqueta de la categoría.
+ */
+internal fun PublicationCategory.labelResource(): StringResource = when (this) {
     PublicationCategory.NORMATIVE_REGULATION -> Res.string.category_normative_regulation
     PublicationCategory.APPOINTMENTS_AND_DISMISSALS -> Res.string.category_appointments_and_dismissals
     PublicationCategory.PUBLIC_EMPLOYMENT_AND_EXAMS -> Res.string.category_public_employment_and_exams

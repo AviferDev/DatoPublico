@@ -22,6 +22,11 @@ class AppRoutesTest {
     }
 
     @Test
+    fun searchRouteIsStable() {
+        assertEquals("search", AppRoutes.SEARCH)
+    }
+
+    @Test
     fun detailPatternDeclaresArgument() {
         assertEquals("detail/{publicationId}", AppRoutes.DETAIL)
     }

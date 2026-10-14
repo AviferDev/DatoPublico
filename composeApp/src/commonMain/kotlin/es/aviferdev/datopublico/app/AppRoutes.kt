@@ -21,6 +21,9 @@ object AppRoutes {
     /** Ruta del chat RAG; sin argumentos (un solo intercambio efímero). */
     const val CHAT: String = "chat"
 
+    /** Ruta de la pantalla de búsqueda; destino estático sin argumentos. */
+    const val SEARCH: String = "search"
+
     /** Patrón de la ruta de detalle, con el argumento entre llaves. */
     const val DETAIL: String = "detail/{publicationId}"
 

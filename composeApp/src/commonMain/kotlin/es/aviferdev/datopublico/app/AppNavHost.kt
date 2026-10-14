@@ -28,21 +28,29 @@ import es.aviferdev.datopublico.feature.feed.data.InMemoryFeedRepository
 import es.aviferdev.datopublico.feature.feed.domain.GetDailyFeed
 import es.aviferdev.datopublico.feature.feed.ui.FeedRoute
 import es.aviferdev.datopublico.feature.feed.ui.FeedViewModel
+import es.aviferdev.datopublico.feature.search.data.InMemorySearchRepository
+import es.aviferdev.datopublico.feature.search.domain.SearchPublications
+import es.aviferdev.datopublico.feature.search.ui.SearchRoute
+import es.aviferdev.datopublico.feature.search.ui.searchViewModelFactory
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * Grafo de navegación del cliente: **feed** ↔ **detalle** y **chat**.
+ * Grafo de navegación del cliente: **feed** ↔ **detalle**, más **búsqueda** y **chat**.
  *
  * La UI es común a las tres plataformas (`commonMain`), así que cada plataforma
  * solo aporta su *entrypoint* y la librería oficial de navegación resuelve el
- * atrás del sistema/navegador. El [FeedViewModel] y el `ChatViewModel` quedan
- * *scopeados* a su entrada de *back stack*: al volver del detalle o del chat, el
- * feed reaparece con su estado ya cargado.
+ * atrás del sistema/navegador. El [FeedViewModel], el
+ * [es.aviferdev.datopublico.feature.search.ui.SearchViewModel] y el
+ * `ChatViewModel` quedan *scopeados* a la entrada de *back stack* de su destino: al
+ * volver, cada pantalla reaparece con su estado ya cargado.
  *
- * @param feedViewModelFactory factory manual del [FeedViewModel] (DI por
+ * @param feedViewModelFactory factory manual del `FeedViewModel` (DI por
  *   constructor).
  * @param chatViewModelFactory factory manual del `ChatViewModel`; por defecto usa
  *   el repositorio en memoria (el *composition root* inyecta el HTTP real).
+ * @param searchViewModelFactory factory manual del `SearchViewModel`; el
+ *   *composition root* inyecta el repositorio HTTP real y el valor por defecto
+ *   (repositorio en memoria de ejemplo) sirve a las `@Preview`.
  * @param modifier modificador de layout del llamante.
  */
 @Suppress("FunctionNaming")
@@ -50,6 +58,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun AppNavHost(
     feedViewModelFactory: ViewModelProvider.Factory,
     chatViewModelFactory: ViewModelProvider.Factory = ChatViewModel.factory(),
+    searchViewModelFactory: ViewModelProvider.Factory = searchViewModelFactory(),
     modifier: Modifier = Modifier,
 ) {
     val navController = rememberNavController()
@@ -65,8 +74,10 @@ fun AppNavHost(
                     navController.navigate(AppRoutes.detail(publicationId))
                 },
                 onOpenChat = { navController.navigate(AppRoutes.CHAT) },
+                onSearchClick = { navController.navigate(AppRoutes.SEARCH) },
             )
         }
+        searchDestination(navController = navController, factory = searchViewModelFactory)
         detailDestination(navController = navController)
         chatDestination(navController = navController, chatViewModelFactory = chatViewModelFactory)
     }
@@ -86,6 +97,28 @@ private fun NavGraphBuilder.chatDestination(
         ChatRoute(
             onBack = { navController.popBackStack() },
             viewModel = viewModel(factory = chatViewModelFactory),
+        )
+    }
+}
+
+/**
+ * Destino de **búsqueda** del grafo: monta la pantalla de búsqueda y conecta sus
+ * acciones con el grafo (abrir un resultado → detalle; atrás → volver).
+ *
+ * @param navController controlador del grafo.
+ * @param factory factory del `SearchViewModel`.
+ */
+private fun NavGraphBuilder.searchDestination(
+    navController: NavHostController,
+    factory: ViewModelProvider.Factory,
+) {
+    composable(AppRoutes.SEARCH) {
+        SearchRoute(
+            viewModel = viewModel(factory = factory),
+            onPublicationClick = { publicationId ->
+                navController.navigate(AppRoutes.detail(publicationId))
+            },
+            onBack = { navController.popBackStack() },
         )
     }
 }
@@ -124,7 +157,11 @@ private fun previewFeedViewModelFactory(): ViewModelProvider.Factory = viewModel
     initializer { FeedViewModel(GetDailyFeed(InMemoryFeedRepository(latencyMillis = 0))) }
 }
 
-/** Previsualización del grafo completo (feed → detalle) con datos de ejemplo. */
+/** Factory de *preview* de la búsqueda, sin latencia para que la previsualización responda. */
+private fun previewSearchViewModelFactory(): ViewModelProvider.Factory =
+    searchViewModelFactory(SearchPublications(InMemorySearchRepository(latencyMillis = 0)))
+
+/** Previsualización del grafo completo (feed → búsqueda/detalle) con datos de ejemplo. */
 @Suppress("FunctionNaming")
 @Preview
 @Composable
@@ -133,6 +170,7 @@ private fun AppNavHostPreview() {
         Surface(color = MaterialTheme.colorScheme.background) {
             AppNavHost(
                 feedViewModelFactory = previewFeedViewModelFactory(),
+                searchViewModelFactory = previewSearchViewModelFactory(),
                 modifier = Modifier.fillMaxSize(),
             )
         }

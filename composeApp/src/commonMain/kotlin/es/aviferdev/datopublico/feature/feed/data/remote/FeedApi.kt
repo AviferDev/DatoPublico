@@ -3,13 +3,10 @@ package es.aviferdev.datopublico.feature.feed.data.remote
 import es.aviferdev.datopublico.core.network.ApiConfig
 import es.aviferdev.datopublico.core.network.ApiFailure
 import es.aviferdev.datopublico.core.network.ApiResult
-import es.aviferdev.datopublico.core.network.ClientApiErrorDto
+import es.aviferdev.datopublico.core.network.toApiResult
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
-import io.ktor.client.statement.HttpResponse
-import io.ktor.http.isSuccess
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -17,11 +14,11 @@ import kotlin.coroutines.cancellation.CancellationException
  *
  * Llama a `GET {baseUrl}/v1/feed?fecha=<ISO>` con el [HttpClient] común y traduce
  * el resultado a un [ApiResult] **tipado**, sin propagar excepciones a la capa de
- * datos: un `200` decodifica el cuerpo; un no-2xx intenta leer el cuerpo de error
- * tipado ([ClientApiErrorDto]) y devuelve [ApiFailure.Server]; un fallo de
- * transporte devuelve [ApiFailure.Network] y un cuerpo ilegible,
- * [ApiFailure.InvalidBody]. [CancellationException] se **re-lanza** para no romper
- * la cancelación de corrutinas.
+ * datos: la traducción de la respuesta (éxito decodificado, error de servidor
+ * tipado o cuerpo ilegible) vive en `core/network` ([toApiResult]) y se reutiliza
+ * entre clientes de API; un fallo de transporte se traduce aquí a
+ * [ApiFailure.Network]. [CancellationException] se **re-lanza** para no romper la
+ * cancelación de corrutinas.
  *
  * No conoce el dominio: solo entrega el DTO de wire; el mapeo es
  * [toDailyFeed].
@@ -49,37 +46,12 @@ class FeedApi(
         } catch (error: Exception) {
             null
         }
-        return response?.toApiResult() ?: ApiResult.Failure(ApiFailure.Network)
-    }
-
-    /** Traduce la respuesta HTTP a un resultado tipado según su estado. */
-    private suspend fun HttpResponse.toApiResult(): ApiResult<FeedResponseDto> {
-        val result = if (status.isSuccess()) decodeFeed() else ApiResult.Failure(serverFailure())
-        return result
-    }
-
-    /** Decodifica el cuerpo `200` o marca [ApiFailure.InvalidBody]. */
-    private suspend fun HttpResponse.decodeFeed(): ApiResult<FeedResponseDto> {
-        val result = try {
-            ApiResult.Success(body<FeedResponseDto>())
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            ApiResult.Failure(ApiFailure.InvalidBody)
+        val result: ApiResult<FeedResponseDto> = if (response == null) {
+            ApiResult.Failure(ApiFailure.Network)
+        } else {
+            response.toApiResult()
         }
         return result
-    }
-
-    /** Lee el cuerpo de error tipado del estado no-2xx, tolerante a ausencia. */
-    private suspend fun HttpResponse.serverFailure(): ApiFailure {
-        val code = try {
-            body<ClientApiErrorDto>().code
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            null
-        }
-        return ApiFailure.Server(status.value, code)
     }
 
     companion object {

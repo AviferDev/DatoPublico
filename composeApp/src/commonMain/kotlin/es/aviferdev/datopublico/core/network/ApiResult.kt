@@ -1,5 +1,10 @@
 package es.aviferdev.datopublico.core.network
 
+import io.ktor.client.call.body
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.isSuccess
+import kotlin.coroutines.cancellation.CancellationException
+
 /**
  * Resultado **tipado** de una llamada al cliente HTTP (FT00035).
  *
@@ -39,4 +44,51 @@ sealed interface ApiFailure {
 
     /** La respuesta era 2xx pero el cuerpo no se pudo decodificar. */
     data object InvalidBody : ApiFailure
+}
+
+/**
+ * Traducción **común** de una respuesta HTTP a un [ApiResult] tipado
+ * (FT00035/FT00036).
+ *
+ * Factoriza el manejo compartido por los clientes de API del cliente (feed y
+ * búsqueda) para no duplicarlo: un `2xx` decodifica el cuerpo; un estado no-2xx
+ * intenta leer el cuerpo de error tipado ([ClientApiErrorDto]) y devuelve
+ * [ApiFailure.Server]; un cuerpo ilegible, [ApiFailure.InvalidBody].
+ * [CancellationException] se **re-lanza** para no romper la cancelación de
+ * corrutinas (regla MUST «reutilizar antes de escribir»).
+ *
+ * @param T tipo del cuerpo decodificado en caso de éxito.
+ * @return el cuerpo decodificado o un fallo tipado; nunca lanza salvo
+ *   cancelación.
+ */
+internal suspend inline fun <reified T> HttpResponse.toApiResult(): ApiResult<T> {
+    val result = if (status.isSuccess()) {
+        try {
+            ApiResult.Success(body<T>())
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Exception) {
+            ApiResult.Failure(ApiFailure.InvalidBody)
+        }
+    } else {
+        ApiResult.Failure(serverFailure())
+    }
+    return result
+}
+
+/**
+ * Lee el cuerpo de error tipado de un estado no-2xx, tolerante a su ausencia.
+ *
+ * @return el fallo de servidor con el código HTTP y, si se pudo leer, el token
+ *   `snake_case` del cuerpo tipado; `code` nulo en caso contrario.
+ */
+internal suspend fun HttpResponse.serverFailure(): ApiFailure {
+    val code = try {
+        body<ClientApiErrorDto>().code
+    } catch (cancellation: CancellationException) {
+        throw cancellation
+    } catch (error: Exception) {
+        null
+    }
+    return ApiFailure.Server(status.value, code)
 }

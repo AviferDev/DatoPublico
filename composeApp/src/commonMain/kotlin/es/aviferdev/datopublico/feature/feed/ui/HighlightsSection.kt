@@ -26,10 +26,16 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  *
  * @param highlights publicaciones destacadas del día; el llamante omite la
  *   sección si la lista está vacía.
+ * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
+ *   publicación.
  * @param modifier modificador de layout del llamante.
  */
 @Composable
-fun HighlightsSection(highlights: List<Publication>, modifier: Modifier = Modifier) {
+fun HighlightsSection(
+    highlights: List<Publication>,
+    onPublicationClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -39,7 +45,12 @@ fun HighlightsSection(highlights: List<Publication>, modifier: Modifier = Modifi
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )
-        highlights.forEach { publication -> PublicationCard(publication = publication) }
+        highlights.forEach { publication ->
+            PublicationCard(
+                publication = publication,
+                onClick = { onPublicationClick(publication.id) },
+            )
+        }
     }
 }
 
@@ -51,6 +62,7 @@ private fun HighlightsSectionPreview() {
         Surface(color = MaterialTheme.colorScheme.background) {
             HighlightsSection(
                 highlights = previewPublications(),
+                onPublicationClick = {},
                 modifier = Modifier.padding(8.dp),
             )
         }

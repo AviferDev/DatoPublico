@@ -8,15 +8,22 @@
 # PostgreSQL y pool HikariCP) para los repositorios de `:backend`; FT00015 activa
 # los embeddings locales (ONNX Runtime en CPU) y el tokenizador XLM-R de DJL;
 # FT00030 activa el endurecimiento HTTP (CORS, rate limiting y errores tipados)
-# con tres plugins oficiales de Ktor. Las versiones restantes (coroutines) quedan
-# predeclaradas para que las features siguientes las activen sin tocar la raíz del
-# build.
+# con tres plugins oficiales de Ktor. FT00034 activa el cliente de navegación y
+# ciclo de vida multiplataforma de JetBrains (navigation-compose + lifecycle) en
+# `:composeApp`. Las versiones restantes (coroutines) quedan predeclaradas para
+# que las features siguientes las activen sin tocar la raíz del build.
 
 [versions]
 kotlin = "2.1.20"
 agp = "8.7.3"
 composeMultiplatform = "1.7.3"
 androidxActivityCompose = "1.9.3"
+# Navegación y ciclo de vida multiplataforma oficiales de JetBrains (FT00034),
+# alineados con Compose Multiplatform `1.7.3`: `navigation-compose:2.8.0-alpha11`
+# declara `lifecycle-*:2.8.4` y `savedstate:1.2.2` (usar esas versiones evita el
+# `IrLinkageError` de iOS al mezclar versiones). Se fijan exactas.
+androidxLifecycle = "2.8.4"
+androidxNavigation = "2.8.0-alpha11"
 ktor = "3.0.3"
 kotlinxSerialization = "1.8.0"
 kotlinxCoroutines = "1.10.1"
@@ -40,6 +47,14 @@ cpd = "3.5"
 # Entry point del cliente Android (Compose desde `activity`); `:composeApp` lo usa
 # en `androidMain` como `MainActivity`.
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivityCompose" }
+
+# Navegación y ciclo de vida multiplataforma (FT00034): `viewModel()` +
+# `viewModelScope` + factory, `collectAsStateWithLifecycle()` y el grafo
+# `NavHost`. Familia `org.jetbrains.androidx.*` (la oficial de Compose
+# Multiplatform); no es red ni serialización.
+androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
+androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
+androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidxNavigation" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }

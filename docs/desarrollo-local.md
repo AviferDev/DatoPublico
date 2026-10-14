@@ -36,14 +36,21 @@ encontrada / error**. Sus componentes reutilizables viven en `design/components/
 (`AiNotice`, `OfficialSourceLink`, `SectionBlock`) y reutiliza el tema, la
 etiqueta de categoría y el badge de plazo del feed.
 
-El detalle **no** es alcanzable todavía desde el feed: FT00033 entrega la pantalla
-y su contrato de invocación (`DetailRoute(stateHolder, onBack)`), y FT00034
-conectará la navegación (feed → detalle) y sustituirá el holder local por un
-ViewModel con `StateFlow`.
+Desde FT00034 el estado del feed lo expone un **`FeedViewModel`** multiplataforma
+(`androidx.lifecycle`) como `StateFlow<FeedUiState>` (UDF): la UI lo recolecta con
+`collectAsStateWithLifecycle()`, los composables siguen **stateless** y el
+reintento es un evento (`onRetry()`). La app monta un **grafo de navegación**
+(`app/AppNavHost` + `app/AppRoutes`, con `navigation-compose` oficial de Compose
+Multiplatform) con dos destinos: `feed` y `detail/{publicationId}`. Pulsar una
+tarjeta navega al detalle llevando el `id` de la publicación y el atrás (botón de
+la UI o atrás del sistema/navegador) vuelve al feed **sin recargar** (conserva el
+estado ya cargado, sin volver a `Loading`).
 
-Los datos del feed y del detalle son **de ejemplo** (repositorio en memoria): el
-cliente HTTP real, la caché offline y el mapeo desde `:shared` son FT00035, y la
-navegación y el ViewModel con `StateFlow`, FT00034.
+Los datos del feed siguen siendo **de ejemplo** (repositorio en memoria): el
+cliente HTTP real, la caché offline y el mapeo desde `:shared` son FT00035. El
+destino `detail` monta todavía un **placeholder** de navegación; la pantalla de
+detalle real (FT00033) existe pero aún **no** está integrada en el grafo (la
+integración de `DetailRoute` en `AppNavHost` es posterior).
 
 ```sh
 # Android (APK de debug)
@@ -71,13 +78,17 @@ Notas:
   `InMemoryFeedRepository(mode = InMemoryFeedMode.EMPTY)` (o `UNAVAILABLE`) en
   `App()` de forma **temporal** y vuelve a `SAMPLE` antes de commitear. Los
   estados también quedan fijados por los tests y por las `@Preview`.
-- **Detalle**: como aún no hay navegación (FT00034), para ver la pantalla en
-  local renderiza `DetailRoute` de forma **temporal** en `App()` con
+- **Navegación feed → detalle → atrás**: la ruta de detalle (`detail/{publicationId}`)
+  monta un **placeholder** (la pantalla real de FT00033 se integrará después). El
+  `FeedViewModel` se usa con `SharingStarted.Eagerly` a propósito: el feed
+  conserva su estado al volver del detalle en vez de reejecutar la carga. El
+  atrás funciona tanto con el botón de la UI como con el atrás del
+  sistema/navegador (lo resuelve `navigation-compose`).
+- **Detalle**: para ver la pantalla real en local (aún no integrada en el grafo),
+  renderiza `DetailRoute` de forma **temporal** en `App()` con
   `DetailStateHolder(id, GetPublicationDetail(InMemoryDetailRepository()))` y el
-  `id` de ejemplo (`BOE-A-2026-21002`); revierte `App()` al feed antes de
-  commitear. El repositorio del detalle tiene los modos `SAMPLE`, `NOT_FOUND` y
-  `UNAVAILABLE` para ejercitar sus estados. Los estados también quedan fijados por
-  los tests y por las `@Preview`.
+  `id` de ejemplo (`BOE-A-2026-21002`); revierte `App()` antes de commitear. El
+  repositorio del detalle tiene los modos `SAMPLE`, `NOT_FOUND` y `UNAVAILABLE`.
 - **Android**: el manifest declara `Theme.Material.Light.NoActionBar` y el
   contenido raíz se pinta con `safeDrawingPadding()`. Con `targetSdk 35` el modo
   *edge-to-edge* está forzado y un ActionBar de plataforma se superpone al

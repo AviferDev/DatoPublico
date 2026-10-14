@@ -60,6 +60,8 @@ class OpenCodeTextGenerationProviderTest {
         assertEquals(HttpMethod.Post, http.method)
         assertEquals("https://opencode.test/v1/chat/completions", http.url.toString())
         assertEquals("Bearer clave-de-prueba", http.headers[HttpHeaders.Authorization])
+        assertTrue(http.headers[SESSION_HEADER].orEmpty().isNotBlank(), "falta x-opencode-session")
+        assertTrue(http.headers[HttpHeaders.UserAgent].orEmpty().isNotBlank(), "falta User-Agent")
         val body = (http.body as TextContent).text
         val json = DatoPublicoJson.parseToJsonElement(body).jsonObject
         assertEquals("modelo-de-prueba", json.getValue("model").jsonPrimitive.content)

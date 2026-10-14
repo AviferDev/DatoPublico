@@ -17,6 +17,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.util.UUID
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -34,10 +35,14 @@ import kotlin.coroutines.cancellation.CancellationException
  * @param httpClient cliente HTTP (CIO en producción; `MockEngine` en los tests).
  * @param config configuración resuelta del entorno (clave, base, modelo y
  *   temperatura).
+ * @param sessionId identificador **estable** de sesión que se envía en la cabecera
+ *   `x-opencode-session` (obligatoria para OpenCode Go): por defecto, el valor de
+ *   `OPENCODE_SESSION_ID` o un UUID nuevo por proceso.
  */
 class OpenCodeTextGenerationProvider internal constructor(
     private val httpClient: HttpClient,
     private val config: OpenCodeConfig,
+    private val sessionId: String = defaultSessionId(),
 ) : TextGenerationProvider {
 
     override suspend fun generate(request: GenerationRequest): GenerationResponse {
@@ -49,6 +54,8 @@ class OpenCodeTextGenerationProvider internal constructor(
     private suspend fun execute(request: GenerationRequest): HttpResponse = try {
         httpClient.post(endpoint()) {
             header(HttpHeaders.Authorization, "Bearer ${config.apiKey}")
+            header(SESSION_HEADER, sessionId)
+            header(HttpHeaders.UserAgent, USER_AGENT)
             contentType(ContentType.Application.Json)
             setBody(toWire(request))
         }
@@ -178,3 +185,20 @@ private const val HTTP_SOCKET_TIMEOUT_MS = 60_000L
 
 /** Tiempo máximo para establecer la conexión con OpenCode (ms). */
 private const val HTTP_CONNECT_TIMEOUT_MS = 10_000L
+
+/** Cabecera que OpenCode Go exige para enrutar y cachear la conversación. */
+internal const val SESSION_HEADER = "x-opencode-session"
+
+/** User-Agent propio con el que el cliente se identifica ante OpenCode. */
+private const val USER_AGENT = "datopublico-backend/0.1"
+
+/** Variable de entorno opcional con el id de sesión estable de OpenCode. */
+private const val SESSION_ENV = "OPENCODE_SESSION_ID"
+
+/** Prefijo del id de sesión generado. */
+private const val SESSION_PREFIX = "datopublico-"
+
+/** Id de sesión por defecto: el de [SESSION_ENV] o un UUID nuevo por proceso. */
+private fun defaultSessionId(): String =
+    System.getenv(SESSION_ENV)?.trim()?.takeIf { value -> value.isNotBlank() }
+        ?: SESSION_PREFIX + UUID.randomUUID()

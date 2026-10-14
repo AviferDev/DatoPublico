@@ -66,16 +66,21 @@ fun FeedScreen(
     onOpenChat: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
-        when (state) {
-            FeedUiState.Loading -> LoadingView()
-            is FeedUiState.Content -> FeedContent(
-                feed = state.feed,
-                onPublicationClick = onPublicationClick,
-                onOpenChat = onOpenChat,
-            )
-            FeedUiState.Empty -> EmptyView()
-            FeedUiState.Error -> ErrorView(onRetry = onRetry)
+    Column(modifier = modifier.fillMaxSize()) {
+        FeedHeader(
+            onOpenChat = onOpenChat,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
+        )
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            when (state) {
+                FeedUiState.Loading -> LoadingView()
+                is FeedUiState.Content -> FeedContent(
+                    feed = state.feed,
+                    onPublicationClick = onPublicationClick,
+                )
+                FeedUiState.Empty -> EmptyView()
+                FeedUiState.Error -> ErrorView(onRetry = onRetry)
+            }
         }
     }
 }
@@ -83,6 +88,10 @@ fun FeedScreen(
 /**
  * Encabezado del feed: título de la app y la acción de **chat** («Preguntar al
  * BOE»).
+ *
+ * Vive **fuera** de la rama de contenido, así que la entrada al chat sigue
+ * disponible en los estados de carga, vacío y error (el feed real puede salir
+ * vacío hasta que se cablee el pipeline de resumen).
  *
  * Se usa una acción de **texto** (no un icono) porque el set
  * `material-icons-core` no incluye `Chat`/`Forum` y no se añade
@@ -110,19 +119,17 @@ private fun FeedHeader(onOpenChat: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 /**
- * Contenido del feed: título, bloque de destacados (si los hay) y lista de
- * publicaciones del día.
+ * Contenido del feed: bloque de destacados (si los hay) y lista de publicaciones
+ * del día.
  *
  * @param feed feed que se muestra.
  * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
  *   publicación.
- * @param onOpenChat acción al pulsar la entrada de chat del encabezado.
  */
 @Composable
 private fun FeedContent(
     feed: DailyFeed,
     onPublicationClick: (String) -> Unit,
-    onOpenChat: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -131,7 +138,6 @@ private fun FeedContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        FeedHeader(onOpenChat = onOpenChat)
         if (feed.highlights.isNotEmpty()) {
             HighlightsSection(highlights = feed.highlights, onPublicationClick = onPublicationClick)
         }
@@ -302,7 +308,7 @@ private fun ErrorViewPreview() {
 private fun FeedContentPreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            FeedContent(feed = previewDailyFeed(), onPublicationClick = {}, onOpenChat = {})
+            FeedContent(feed = previewDailyFeed(), onPublicationClick = {})
         }
     }
 }

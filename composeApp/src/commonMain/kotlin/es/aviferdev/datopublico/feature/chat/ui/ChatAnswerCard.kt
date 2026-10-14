@@ -173,3 +173,21 @@ private fun ChatAnswerCardUnfoundedPreview() {
         }
     }
 }
+
+/** Previsualización de la etiqueta de estado en sus tres variantes. */
+@Preview
+@Composable
+private fun ChatStatusLabelPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ChatStatusLabel(status = ChatStatus.ANSWERED)
+                ChatStatusLabel(status = ChatStatus.REFUTED)
+                ChatStatusLabel(status = ChatStatus.UNFOUNDED)
+            }
+        }
+    }
+}

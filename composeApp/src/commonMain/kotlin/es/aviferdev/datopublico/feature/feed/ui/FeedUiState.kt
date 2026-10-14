@@ -5,8 +5,7 @@ import es.aviferdev.datopublico.feature.feed.domain.DailyFeed
 /**
  * Estado de la pantalla del feed (UDF: estado inmutable que la UI sólo lee).
  *
- * FT00034 sustituirá el holder local por un ViewModel con `StateFlow`; de momento
- * el estado lo expone `FeedStateHolder` y lo pinta `FeedScreen`.
+ * Lo expone `FeedViewModel` como `StateFlow` (FT00034) y lo pinta `FeedScreen`.
  */
 sealed interface FeedUiState {
     /** Se está cargando el feed. */

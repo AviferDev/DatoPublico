@@ -28,16 +28,22 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * Tarjeta de publicación del feed: **título**, **etiqueta de categoría**,
  * **fecha**, **resumen corto** y los badges de **destacado** y **plazo**.
  *
- * Sigue `DESIGN.md`: superficie `surface` con radio `md` y borde sutil, sin
- * `onClick` (el clic hacia el detalle llega con la navegación, FT00034). Todos los
- * colores se leen del tema.
+ * Sigue `DESIGN.md`: superficie `surface` con radio `md` y borde sutil. Es
+ * **clicable** (FT00034): al pulsarla navega al detalle de la publicación. Todos
+ * los colores se leen del tema.
  *
  * @param publication publicación a mostrar.
+ * @param onClick acción al pulsar la tarjeta.
  * @param modifier modificador de layout del llamante.
  */
 @Composable
-fun PublicationCard(publication: Publication, modifier: Modifier = Modifier) {
+fun PublicationCard(
+    publication: Publication,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Surface(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surface,
@@ -150,6 +156,7 @@ private fun PublicationCardHighlightedPreview() {
         Surface(color = MaterialTheme.colorScheme.background) {
             PublicationCard(
                 publication = previewHighlightedPublication(),
+                onClick = {},
                 modifier = Modifier.padding(8.dp),
             )
         }
@@ -164,6 +171,7 @@ private fun PublicationCardPlainPreview() {
         Surface(color = MaterialTheme.colorScheme.background) {
             PublicationCard(
                 publication = previewPlainPublication(),
+                onClick = {},
                 modifier = Modifier.padding(8.dp),
             )
         }

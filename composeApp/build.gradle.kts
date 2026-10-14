@@ -46,6 +46,14 @@ kotlin {
             // `composeResources/values/strings.xml` y se leen con
             // `stringResource(Res.string.*)`.
             implementation(compose.components.resources)
+            // Navegación y estado (FT00034): `StateFlow` del ViewModel, su
+            // recolección con `collectAsStateWithLifecycle()` y el grafo
+            // `NavHost`. Familia `org.jetbrains.androidx.*`, la oficial de
+            // Compose Multiplatform.
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.androidx.navigation.compose)
         }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)

@@ -49,14 +49,21 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  *
  * @param state estado actual de la pantalla.
  * @param onRetry acción a ejecutar al pulsar «Reintentar».
+ * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
+ *   publicación.
  * @param modifier modificador de layout del llamante.
  */
 @Composable
-fun FeedScreen(state: FeedUiState, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+fun FeedScreen(
+    state: FeedUiState,
+    onRetry: () -> Unit,
+    onPublicationClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier = modifier.fillMaxSize()) {
         when (state) {
             FeedUiState.Loading -> LoadingView()
-            is FeedUiState.Content -> FeedContent(feed = state.feed)
+            is FeedUiState.Content -> FeedContent(feed = state.feed, onPublicationClick = onPublicationClick)
             FeedUiState.Empty -> EmptyView()
             FeedUiState.Error -> ErrorView(onRetry = onRetry)
         }
@@ -68,9 +75,11 @@ fun FeedScreen(state: FeedUiState, onRetry: () -> Unit, modifier: Modifier = Mod
  * publicaciones del día.
  *
  * @param feed feed que se muestra.
+ * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
+ *   publicación.
  */
 @Composable
-private fun FeedContent(feed: DailyFeed) {
+private fun FeedContent(feed: DailyFeed, onPublicationClick: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -84,14 +93,19 @@ private fun FeedContent(feed: DailyFeed) {
             color = MaterialTheme.colorScheme.primary,
         )
         if (feed.highlights.isNotEmpty()) {
-            HighlightsSection(highlights = feed.highlights)
+            HighlightsSection(highlights = feed.highlights, onPublicationClick = onPublicationClick)
         }
         Text(
             text = stringResource(Res.string.feed_publications_title),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )
-        feed.publications.forEach { publication -> PublicationCard(publication = publication) }
+        feed.publications.forEach { publication ->
+            PublicationCard(
+                publication = publication,
+                onClick = { onPublicationClick(publication.id) },
+            )
+        }
     }
 }
 
@@ -199,7 +213,7 @@ private fun previewDailyFeed(): DailyFeed = DailyFeed(
 private fun FeedScreenLoadingPreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            FeedScreen(state = FeedUiState.Loading, onRetry = {})
+            FeedScreen(state = FeedUiState.Loading, onRetry = {}, onPublicationClick = {})
         }
     }
 }
@@ -210,7 +224,11 @@ private fun FeedScreenLoadingPreview() {
 private fun FeedScreenContentPreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            FeedScreen(state = FeedUiState.Content(feed = previewDailyFeed()), onRetry = {})
+            FeedScreen(
+                state = FeedUiState.Content(feed = previewDailyFeed()),
+                onRetry = {},
+                onPublicationClick = {},
+            )
         }
     }
 }
@@ -243,7 +261,7 @@ private fun ErrorViewPreview() {
 private fun FeedContentPreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            FeedContent(feed = previewDailyFeed())
+            FeedContent(feed = previewDailyFeed(), onPublicationClick = {})
         }
     }
 }

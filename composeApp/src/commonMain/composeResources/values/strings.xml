@@ -35,6 +35,12 @@
     <string name="feed_retry">Reintentar</string>
     <string name="cd_error">Error al cargar</string>
 
+    <!-- Detalle (placeholder de navegación, FT00034; el detalle real es FT00033) -->
+    <string name="cd_back">Volver al feed</string>
+    <string name="detail_placeholder_title">Detalle de la publicación</string>
+    <string name="detail_placeholder_message">La información completa de esta publicación (qué cambia, a quién afecta, plazo y fuente oficial) estará disponible próximamente.</string>
+    <string name="detail_placeholder_publication_id">Publicación: %1$s</string>
+
     <!-- Motivos de destacado (vocabulario objetivo del ranker) -->
     <string name="cd_highlight">Publicación destacada</string>
     <string name="cd_deadline">Plazo de solicitud</string>
@@ -57,7 +63,6 @@
     <string name="detail_error_title">No se ha podido cargar el detalle</string>
     <string name="detail_error_message">Ha ocurrido un problema al obtener la publicación. Vuelve a intentarlo.</string>
     <string name="detail_retry">Reintentar</string>
-    <string name="cd_back">Volver</string>
     <string name="cd_ai_notice">Aviso de contenido generado por IA</string>
     <string name="cd_official_source">Abrir la fuente oficial</string>
     <string name="cd_not_found">Publicación no encontrada</string>

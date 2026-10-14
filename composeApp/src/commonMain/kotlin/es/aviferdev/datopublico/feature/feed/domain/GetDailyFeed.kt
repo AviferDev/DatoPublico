@@ -5,7 +5,7 @@ import es.aviferdev.datopublico.feature.feed.data.FeedRepository
 /**
  * Caso de uso: obtener el feed diario.
  *
- * La UI (el `FeedStateHolder`) llama siempre a este caso de uso y **nunca** al
+ * La UI (el `FeedViewModel`) llama siempre a este caso de uso y **nunca** al
  * repositorio directamente, según la arquitectura por capas de la skill
  * `compose-multiplatform-architecture`.
  *

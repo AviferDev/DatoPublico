@@ -1,33 +1,41 @@
 package es.aviferdev.datopublico.feature.feed.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import es.aviferdev.datopublico.design.theme.DatoPublicoTheme
 import es.aviferdev.datopublico.feature.feed.data.InMemoryFeedRepository
 import es.aviferdev.datopublico.feature.feed.domain.GetDailyFeed
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * Punto de entrada de la **ruta** del feed: mantiene el [FeedStateHolder], lanza
- * la carga inicial y conecta el reintento con la corrutina de composición.
+ * Punto de entrada de la **ruta** del feed: recolecta el estado del
+ * [FeedViewModel] y delega en [FeedScreen].
  *
- * Es el único composable con efectos de la feature; [FeedScreen] y sus vistas
- * siguen siendo stateless. FT00034 lo sustituirá por un ViewModel con `StateFlow`
- * y navegación.
+ * Es el único composable con dependencia del ViewModel; [FeedScreen] y sus
+ * vistas siguen siendo **stateless** (reciben estado y lambdas). El estado lo
+ * dispara el propio ViewModel (no hay `LaunchedEffect` de carga aquí) y la UI lo
+ * recolecta con `collectAsStateWithLifecycle()`.
  *
- * @param stateHolder holder local del estado del feed.
+ * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
+ *   publicación para navegar a su detalle.
+ * @param viewModel ViewModel del feed; por defecto se obtiene de la factory
+ *   manual (DI por constructor).
  * @param modifier modificador de layout del llamante.
  */
 @Composable
-fun FeedRoute(stateHolder: FeedStateHolder, modifier: Modifier = Modifier) {
-    val scope = rememberCoroutineScope()
-    LaunchedEffect(stateHolder) { stateHolder.load() }
+fun FeedRoute(
+    onPublicationClick: (String) -> Unit,
+    viewModel: FeedViewModel = viewModel(factory = feedViewModelFactory()),
+    modifier: Modifier = Modifier,
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     FeedScreen(
-        state = stateHolder.state,
-        onRetry = { scope.launch { stateHolder.load() } },
+        state = state,
+        onRetry = viewModel::onRetry,
+        onPublicationClick = onPublicationClick,
         modifier = modifier,
     )
 }
@@ -36,8 +44,10 @@ fun FeedRoute(stateHolder: FeedStateHolder, modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun FeedRoutePreview() {
-    val stateHolder = FeedStateHolder(GetDailyFeed(InMemoryFeedRepository(latencyMillis = 0)))
     DatoPublicoTheme {
-        FeedRoute(stateHolder = stateHolder)
+        FeedRoute(
+            onPublicationClick = {},
+            viewModel = FeedViewModel(GetDailyFeed(InMemoryFeedRepository(latencyMillis = 0))),
+        )
     }
 }

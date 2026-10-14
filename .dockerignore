@@ -1,0 +1,21 @@
+# Contexto de build de la imagen del backend (FT00041): pequeño y sin secretos.
+# El Dockerfile solo copia `gradle/`, `config/`, `shared/`, `backend/` y los
+# ficheros de build de la raíz; aquí se excluye todo lo demás.
+
+.harness
+.git
+.github
+.idea
+.gradle
+.kotlin
+build
+**/build
+composeApp
+docs/pr
+local.properties
+.env
+.env.*
+backend/models
+kotlin-js-store
+*.hprof
+.DS_Store

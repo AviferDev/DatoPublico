@@ -79,4 +79,25 @@ class HttpHardeningConfigTest {
             RateLimitSettings.fromEnv(mapOf("CHAT_RATE_LIMIT_WINDOW_SECONDS" to "1.5"))
         }
     }
+
+    @Test
+    fun `proxy headers default to not trusting`() {
+        assertEquals(ProxySettings(false), ProxySettings.default())
+        assertEquals(ProxySettings(false), ProxySettings.fromEnv(emptyMap()))
+        assertEquals(ProxySettings(false), ProxySettings.fromEnv(mapOf("TRUST_PROXY_HEADERS" to "false")))
+        assertEquals(ProxySettings(false), ProxySettings.fromEnv(mapOf("TRUST_PROXY_HEADERS" to "  ")))
+    }
+
+    @Test
+    fun `proxy headers read the override from the environment`() {
+        assertEquals(ProxySettings(true), ProxySettings.fromEnv(mapOf("TRUST_PROXY_HEADERS" to "true")))
+        assertEquals(ProxySettings(true), ProxySettings.fromEnv(mapOf("TRUST_PROXY_HEADERS" to "TRUE")))
+    }
+
+    @Test
+    fun `proxy headers fail fast on invalid values`() {
+        assertFailsWith<IllegalArgumentException> {
+            ProxySettings.fromEnv(mapOf("TRUST_PROXY_HEADERS" to "yes"))
+        }
+    }
 }

@@ -123,3 +123,49 @@ data class RateLimitSettings(
         }
     }
 }
+
+/**
+ * Configuración de la **confianza de cabeceras de proxy** del backend (FT00041),
+ * leída **solo** del entorno.
+ *
+ * En producción el backend va detrás de Nginx, que termina TLS y añade las
+ * cabeceras `X-Forwarded-*`. Sin confiar en ellas, el rate limiting por IP
+ * (FT00030) vería la **IP del proxy** y todos los clientes compartirían cupo. La
+ * confianza es **opt-in** ([trustProxyHeaders], por defecto `false`): solo es
+ * segura si el backend **nunca** publica puerto (lo garantiza el compose de
+ * producción). En desarrollo y en el gate queda apagada y el plugin no se instala.
+ *
+ * @property trustProxyHeaders si se confía en las cabeceras `X-Forwarded-*`.
+ */
+data class ProxySettings(
+    val trustProxyHeaders: Boolean,
+) {
+    companion object {
+        /** Nombre de la variable de entorno que activa la confianza. */
+        const val TRUST_PROXY_HEADERS_ENV = "TRUST_PROXY_HEADERS"
+
+        /** Configuración por defecto: **no** se confía en cabeceras de proxy. */
+        fun default(): ProxySettings = ProxySettings(trustProxyHeaders = false)
+
+        /**
+         * Construye la configuración desde un mapa de entorno (`System.getenv()`
+         * por defecto) para poder testear sin tocar el entorno real.
+         *
+         * `TRUST_PROXY_HEADERS` admite `true`/`false` (sin distinguir mayúsculas);
+         * ausente o en blanco ⇒ `false` (opt-in).
+         *
+         * @throws IllegalArgumentException si el valor no es un booleano (fail-fast).
+         */
+        fun fromEnv(env: Map<String, String> = System.getenv()): ProxySettings =
+            ProxySettings(parseTrust(env[TRUST_PROXY_HEADERS_ENV]))
+
+        /** `TRUST_PROXY_HEADERS` admite `true`/`false`; ausente/en blanco ⇒ `false`. */
+        private fun parseTrust(raw: String?): Boolean = when (raw?.trim()?.lowercase()) {
+            null, "", "false" -> false
+            "true" -> true
+            else -> throw IllegalArgumentException(
+                "Valor inválido de $TRUST_PROXY_HEADERS_ENV: '$raw'. Usa 'true' o 'false'."
+            )
+        }
+    }
+}

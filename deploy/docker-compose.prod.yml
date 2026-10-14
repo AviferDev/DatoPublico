@@ -1,0 +1,109 @@
+# Compose de PRODUCCIÓN (FT00041) del servidor propio (Intel N100 / 8 GB).
+#
+# Tres servicios en la red interna de Compose, todos con `restart: unless-stopped`:
+#   - `postgres`: PostgreSQL + pgvector, publicado **solo en loopback** (para que el
+#     host aplique Flyway); volumen nombrado `pgdata`.
+#   - `backend`: imagen multi-stage (`backend/Dockerfile`); habla con PostgreSQL por
+#     la red interna y **no publica puerto** (solo Nginx lo alcanza).
+#   - `nginx`: única entrada publicada (80/443); termina TLS y hace de proxy.
+#
+# Los secretos y el dominio se inyectan por entorno con
+# `--env-file deploy/.env.production` (no versionado); este fichero solo usa
+# *placeholders*. El gate estándar NO usa este compose (no arranca Docker).
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: datopublico-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-datopublico}
+      POSTGRES_USER: ${POSTGRES_USER:-datopublico}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en deploy/.env.production}
+    # Ajuste para el N100 (8 GB): `shared_buffers` ~1 GB.
+    command: ["postgres", "-c", "shared_buffers=1GB"]
+    ports:
+      # Solo loopback: el host aplica Flyway contra 127.0.0.1.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-datopublico} -d ${POSTGRES_DB:-datopublico}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: datopublico-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Red interna de Compose: host = nombre del servicio, puerto = 5432 interno.
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-datopublico}
+      POSTGRES_USER: ${POSTGRES_USER:-datopublico}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en deploy/.env.production}
+      # Ingesta: scheduler interno por corrutina (ADR 0004), no cron externo.
+      INGESTA_ENABLED: "true"
+      INGESTA_TIMEZONE: ${INGESTA_TIMEZONE:-Europe/Madrid}
+      INGESTA_PRIMARY_TIME: ${INGESTA_PRIMARY_TIME:-09:30}
+      INGESTA_SECONDARY_TIME: ${INGESTA_SECONDARY_TIME:-18:00}
+      # Confía en `X-Forwarded-*` de Nginx: el rate limiting ve la IP del cliente.
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}
+      # Modelo E5 montado por volumen de solo lectura (nunca en la imagen).
+      EMBEDDING_MODEL_PATH: ${EMBEDDING_MODEL_PATH:-/models/multilingual-e5-small/model.onnx}
+      EMBEDDING_TOKENIZER_PATH: ${EMBEDDING_TOKENIZER_PATH:-/models/multilingual-e5-small/tokenizer.json}
+      OPENCODE_API_KEY: ${OPENCODE_API_KEY:?define OPENCODE_API_KEY en deploy/.env.production}
+      OPENCODE_BASE_URL: ${OPENCODE_BASE_URL:-https://opencode.ai/zen/go/v1}
+      OPENCODE_MODEL: ${OPENCODE_MODEL:-deepseek-v4.1-flash}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      RATE_LIMIT_REQUESTS: ${RATE_LIMIT_REQUESTS:-60}
+      RATE_LIMIT_WINDOW_SECONDS: ${RATE_LIMIT_WINDOW_SECONDS:-60}
+      CHAT_RATE_LIMIT_REQUESTS: ${CHAT_RATE_LIMIT_REQUESTS:-6}
+      CHAT_RATE_LIMIT_WINDOW_SECONDS: ${CHAT_RATE_LIMIT_WINDOW_SECONDS:-60}
+      APP_ENV: ${APP_ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xmx1g}
+    volumes:
+      # Modelo E5 y tokenizador (aprox. 118 MB): aprovisiónalos en el host con
+      # `backend/tools/download-embedding-model.sh` antes de levantar el stack.
+      - ${EMBEDDING_MODEL_HOST_DIR:-../backend/models}:/models:ro
+    # Sin `ports`: el backend no se publica al host; solo Nginx lo alcanza.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: datopublico-nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # La plantilla se renderiza con `envsubst` al arrancar (solo `${DOMAIN}`).
+      DOMAIN: ${DOMAIN:?define DOMAIN en deploy/.env.production}
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  pgdata:

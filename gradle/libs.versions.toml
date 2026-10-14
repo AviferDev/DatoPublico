@@ -11,9 +11,11 @@
 # con tres plugins oficiales de Ktor. FT00034 activa el cliente de navegación y
 # ciclo de vida multiplataforma de JetBrains (navigation-compose + lifecycle) en
 # `:composeApp`. FT00035 activa el cliente HTTP real de `:composeApp` (Ktor +
-# serialización JSON) y sus motores por plataforma (OkHttp/CIO/Darwin/JS). Las
-# versiones restantes (coroutines) quedan predeclaradas para que las features
-# siguientes las activen sin tocar la raíz del build.
+# serialización JSON) y sus motores por plataforma (OkHttp/CIO/Darwin/JS).
+# FT00041 activa la confianza de cabeceras de proxy (`XForwardedHeaders`, opt-in)
+# para el despliegue tras Nginx. Las versiones restantes (coroutines) quedan
+# predeclaradas para que las features siguientes las activen sin tocar la raíz del
+# build.
 
 [versions]
 kotlin = "2.1.20"
@@ -102,6 +104,10 @@ ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref 
 ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktor-server-rate-limit = { module = "io.ktor:ktor-server-rate-limit", version.ref = "ktor" }
 ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
+# Confianza de cabeceras de proxy (FT00041): plugin oficial `XForwardedHeaders` para
+# que el rate limiting por IP (FT00030) vea la IP del cliente tras Nginx. Opt-in
+# (`TRUST_PROXY_HEADERS`, por defecto false) y sin abrir sockets.
+ktor-server-forwarded-header = { module = "io.ktor:ktor-server-forwarded-header", version.ref = "ktor" }
 
 # Logging estructurado: una línea JSON por evento en stdout (sin destino externo).
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

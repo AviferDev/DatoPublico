@@ -46,6 +46,10 @@ dependencies {
     implementation(libs.ktor.server.rate.limit)
     implementation(libs.ktor.server.status.pages)
 
+    // Confianza de cabeceras de proxy (FT00041): plugin oficial `XForwardedHeaders`,
+    // condicionado por `TRUST_PROXY_HEADERS` (opt-in). No abre sockets.
+    implementation(libs.ktor.server.forwarded.header)
+
     implementation(libs.logback.classic)
     implementation(libs.logstash.logback.encoder)
 

@@ -7,6 +7,7 @@ import es.aviferdev.datopublico.backend.infra.AppConfig
 import es.aviferdev.datopublico.backend.infra.CorsSettings
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
+import es.aviferdev.datopublico.backend.infra.ProxySettings
 import es.aviferdev.datopublico.backend.infra.RateLimitSettings
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionConfig
 import es.aviferdev.datopublico.backend.ingesta.job.DailyIngestionJob
@@ -25,6 +26,7 @@ import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.SummaryRepositoryJdbc
 import es.aviferdev.datopublico.backend.plugins.configureCors
 import es.aviferdev.datopublico.backend.plugins.configureErrorHandling
+import es.aviferdev.datopublico.backend.plugins.configureForwardedHeaders
 import es.aviferdev.datopublico.backend.plugins.configureMonitoring
 import es.aviferdev.datopublico.backend.plugins.configureRateLimit
 import es.aviferdev.datopublico.backend.plugins.configureRouting
@@ -91,6 +93,7 @@ fun main() {
 fun Application.module() {
     configureSerialization()
     configureMonitoring()
+    configureForwardedHeaders(ProxySettings.fromEnv())
     configureCors(CorsSettings.fromEnv())
     configureErrorHandling()
     configureRateLimit(RateLimitSettings.fromEnv())

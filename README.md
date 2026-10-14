@@ -55,6 +55,11 @@ El proyecto está **en desarrollo**. La primera versión pública será la
 Para levantar la base de datos y aplicar las migraciones, consulta
 [`docs/desarrollo-local.md`](docs/desarrollo-local.md).
 
+## Despliegue en producción
+
+El despliegue en el servidor propio (Docker Compose + Nginx + HTTPS, secretos por
+entorno) está documentado en [`deploy/README.md`](deploy/README.md).
+
 ## Contribuir
 
 Es un proyecto pequeño y en construcción. Si quieres proponer algo, abre una

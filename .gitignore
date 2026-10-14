@@ -9,6 +9,11 @@
 # ...pero la plantilla documentada sí se versiona.
 !.env.example
 
+# Entorno de producción del servidor (secretos; nunca versionado). La plantilla
+# `deploy/.env.production.example` SÍ se versiona.
+deploy/.env.production
+!deploy/.env.production.example
+
 # Estado local del backfill one-shot (progreso, no versionado).
 .backfill-state.txt
 

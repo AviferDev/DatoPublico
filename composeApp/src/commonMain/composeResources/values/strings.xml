@@ -35,11 +35,9 @@
     <string name="feed_retry">Reintentar</string>
     <string name="cd_error">Error al cargar</string>
 
-    <!-- Detalle (placeholder de navegación, FT00034; el detalle real es FT00033) -->
+    <!-- Atrás del detalle (FT00034); el resto de textos del detalle real (FT00033)
+         están en el bloque «Detalle de publicación (FT00033)». -->
     <string name="cd_back">Volver al feed</string>
-    <string name="detail_placeholder_title">Detalle de la publicación</string>
-    <string name="detail_placeholder_message">La información completa de esta publicación (qué cambia, a quién afecta, plazo y fuente oficial) estará disponible próximamente.</string>
-    <string name="detail_placeholder_publication_id">Publicación: %1$s</string>
 
     <!-- Motivos de destacado (vocabulario objetivo del ranker) -->
     <string name="cd_highlight">Publicación destacada</string>

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -17,7 +18,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import es.aviferdev.datopublico.design.theme.DatoPublicoTheme
-import es.aviferdev.datopublico.feature.detail.ui.DetailPlaceholderScreen
+import es.aviferdev.datopublico.feature.detail.data.InMemoryDetailRepository
+import es.aviferdev.datopublico.feature.detail.domain.GetPublicationDetail
+import es.aviferdev.datopublico.feature.detail.ui.DetailRoute
+import es.aviferdev.datopublico.feature.detail.ui.DetailStateHolder
 import es.aviferdev.datopublico.feature.feed.data.InMemoryFeedRepository
 import es.aviferdev.datopublico.feature.feed.domain.GetDailyFeed
 import es.aviferdev.datopublico.feature.feed.ui.FeedRoute
@@ -61,7 +65,13 @@ fun AppNavHost(feedViewModelFactory: ViewModelProvider.Factory, modifier: Modifi
 /**
  * Destino de **detalle** del grafo: lee el `id` de la publicación del argumento
  * de ruta (nunca con `!!`; si faltara se usa cadena vacía para no provocar un
- * *crash*) y monta el **placeholder** de navegación.
+ * *crash*) y monta la **pantalla de detalle real** (FT00033) a través de
+ * [DetailRoute].
+ *
+ * El [DetailStateHolder] se construye con el repositorio **en memoria**: el
+ * cliente HTTP real del detalle es una feature posterior. Se recrea solo cuando
+ * cambia el `id`, así que volver al feed y abrir otra publicación recarga su
+ * detalle.
  *
  * @param navController controlador del grafo, para el atrás.
  */
@@ -70,10 +80,14 @@ private fun NavGraphBuilder.detailDestination(navController: NavHostController) 
         route = AppRoutes.DETAIL,
         arguments = listOf(navArgument(AppRoutes.ARG_PUBLICATION_ID) { type = NavType.StringType }),
     ) { entry ->
-        DetailPlaceholderScreen(
-            publicationId = entry.arguments?.getString(AppRoutes.ARG_PUBLICATION_ID).orEmpty(),
-            onBack = { navController.popBackStack() },
-        )
+        val id = entry.arguments?.getString(AppRoutes.ARG_PUBLICATION_ID).orEmpty()
+        val stateHolder = remember(id) {
+            DetailStateHolder(
+                id = id,
+                getPublicationDetail = GetPublicationDetail(InMemoryDetailRepository()),
+            )
+        }
+        DetailRoute(stateHolder = stateHolder, onBack = { navController.popBackStack() })
     }
 }
 

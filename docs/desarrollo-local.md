@@ -52,10 +52,9 @@ FT00035: la capa común `core/network/` resuelve la **URL base por plataforma**
 wire del cliente** (capa anti-corrupción), su **mapeo al dominio**, el cliente de
 la API (`GET /v1/feed?fecha=<ISO>`) y una **cache offline en memoria**: si la red
 falla y hay feed cacheado, el contenido sigue visible; si no hay cache, aparece el
-estado de error. El **detalle** sigue con un repositorio en memoria y el destino
-`detail` monta todavía un **placeholder**; la pantalla de detalle real (FT00033)
-existe pero aún **no** está integrada en el grafo (la integración de `DetailRoute`
-en `AppNavHost` es posterior). La navegación y el ViewModel con `StateFlow` son
+estado de error. El **detalle** usa un repositorio en memoria y su pantalla real
+(FT00033) ya está **integrada** en el grafo: pulsar una tarjeta abre
+`DetailRoute` (`AppNavHost`). La navegación y el ViewModel con `StateFlow` son
 FT00034.
 
 ```sh
@@ -85,16 +84,15 @@ Notas:
   `App()` de forma **temporal** y vuelve a `SAMPLE` antes de commitear. Los
   estados también quedan fijados por los tests y por las `@Preview`.
 - **Navegación feed → detalle → atrás**: la ruta de detalle (`detail/{publicationId}`)
-  monta un **placeholder** (la pantalla real de FT00033 se integrará después). El
+  monta la **pantalla real** (`DetailRoute`). El
   `FeedViewModel` se usa con `SharingStarted.Eagerly` a propósito: el feed
   conserva su estado al volver del detalle en vez de reejecutar la carga. El
   atrás funciona tanto con el botón de la UI como con el atrás del
   sistema/navegador (lo resuelve `navigation-compose`).
-- **Detalle**: para ver la pantalla real en local (aún no integrada en el grafo),
-  renderiza `DetailRoute` de forma **temporal** en `App()` con
-  `DetailStateHolder(id, GetPublicationDetail(InMemoryDetailRepository()))` y el
-  `id` de ejemplo (`BOE-A-2026-21002`); revierte `App()` antes de commitear. El
-  repositorio del detalle tiene los modos `SAMPLE`, `NOT_FOUND` y `UNAVAILABLE`.
+- **Detalle**: la pantalla se abre al pulsar una tarjeta del feed. Usa un
+  repositorio en memoria (`DetailStateHolder(id, GetPublicationDetail(InMemoryDetailRepository()))`)
+  con los modos `SAMPLE`, `NOT_FOUND` y `UNAVAILABLE`; el cliente HTTP del detalle
+  será una feature posterior.
 - **Backend y URL base (FT00035)**: para ver el **feed real**, arranca el backend
   (`./gradlew :backend:run`) en el puerto `8080`. La URL base se resuelve por
   plataforma: **Android** (emulador) usa `10.0.2.2` (el *loopback* del host) y

@@ -10,8 +10,10 @@
 # FT00030 activa el endurecimiento HTTP (CORS, rate limiting y errores tipados)
 # con tres plugins oficiales de Ktor. FT00034 activa el cliente de navegación y
 # ciclo de vida multiplataforma de JetBrains (navigation-compose + lifecycle) en
-# `:composeApp`. Las versiones restantes (coroutines) quedan predeclaradas para
-# que las features siguientes las activen sin tocar la raíz del build.
+# `:composeApp`. FT00035 activa el cliente HTTP real de `:composeApp` (Ktor +
+# serialización JSON) y sus motores por plataforma (OkHttp/CIO/Darwin/JS). Las
+# versiones restantes (coroutines) quedan predeclaradas para que las features
+# siguientes las activen sin tocar la raíz del build.
 
 [versions]
 kotlin = "2.1.20"
@@ -74,6 +76,13 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 # Doble de test del cliente Ktor: simula respuestas HTTP sin abrir sockets.
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+
+# Motores del cliente Ktor del cliente Compose Multiplatform (FT00035): cada
+# source set aporta el suyo (Android OkHttp, JVM CIO, iOS Darwin, Wasm JS). El
+# cliente común no fija motor: Ktor resuelve el del source set en runtime.
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 
 # Embeddings locales (FT00015): runtime ONNX (CPU) y tokenizador XLM-R de DJL.
 # `djl-api` trae las interfaces comunes (`NativeResource`, `NDManager`) que usa el

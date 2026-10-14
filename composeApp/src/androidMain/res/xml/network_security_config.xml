@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Permite tráfico claro (HTTP) SOLO a los hosts de desarrollo (FT00035): el
+  emulador de Android accede al host por 10.0.2.2 y JVM/iOS/Web por localhost.
+  Se evita `usesCleartextTraffic` global: el resto de destinos sigue exigiendo
+  HTTPS. Los valores de producción (HTTPS) son FT00038-FT00040.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

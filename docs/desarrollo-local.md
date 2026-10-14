@@ -46,11 +46,17 @@ tarjeta navega al detalle llevando el `id` de la publicación y el atrás (botó
 la UI o atrás del sistema/navegador) vuelve al feed **sin recargar** (conserva el
 estado ya cargado, sin volver a `Loading`).
 
-Los datos del feed siguen siendo **de ejemplo** (repositorio en memoria): el
-cliente HTTP real, la caché offline y el mapeo desde `:shared` son FT00035. El
-destino `detail` monta todavía un **placeholder** de navegación; la pantalla de
-detalle real (FT00033) existe pero aún **no** está integrada en el grafo (la
-integración de `DetailRoute` en `AppNavHost` es posterior).
+Los datos del **feed** los sirve el **cliente HTTP real** (`ktor-client`) desde
+FT00035: la capa común `core/network/` resuelve la **URL base por plataforma**
+(`expect/actual`) y la fecha del día, y `feature/feed/data/` añade los **DTOs de
+wire del cliente** (capa anti-corrupción), su **mapeo al dominio**, el cliente de
+la API (`GET /v1/feed?fecha=<ISO>`) y una **cache offline en memoria**: si la red
+falla y hay feed cacheado, el contenido sigue visible; si no hay cache, aparece el
+estado de error. El **detalle** sigue con un repositorio en memoria y el destino
+`detail` monta todavía un **placeholder**; la pantalla de detalle real (FT00033)
+existe pero aún **no** está integrada en el grafo (la integración de `DetailRoute`
+en `AppNavHost` es posterior). La navegación y el ViewModel con `StateFlow` son
+FT00034.
 
 ```sh
 # Android (APK de debug)
@@ -89,12 +95,23 @@ Notas:
   `DetailStateHolder(id, GetPublicationDetail(InMemoryDetailRepository()))` y el
   `id` de ejemplo (`BOE-A-2026-21002`); revierte `App()` antes de commitear. El
   repositorio del detalle tiene los modos `SAMPLE`, `NOT_FOUND` y `UNAVAILABLE`.
+- **Backend y URL base (FT00035)**: para ver el **feed real**, arranca el backend
+  (`./gradlew :backend:run`) en el puerto `8080`. La URL base se resuelve por
+  plataforma: **Android** (emulador) usa `10.0.2.2` (el *loopback* del host) y
+  **iOS/JVM/Wasm** usan `localhost`; el manifest de Android permite tráfico claro
+  **solo** a esos hosts (`network_security_config.xml`). Sin backend o sin red, la
+  app respalda a la **cache** o muestra el estado de error; el feed real puede
+  salir **vacío** (el pipeline de resumen no está cableado).
+- **Cache offline (FT00035)**: es **en memoria** (por sesión), sin datos
+  personales. Tras una carga con el backend accesible, si lo paras y pulsas
+  «Reintentar», se sigue mostrando el último feed; no persiste entre arranques.
+- **`:shared` aún no se cablea**: `:composeApp` define sus **propios DTOs de wire**
+  (`feature/feed/data/remote/`, capa anti-corrupción) y los mapea a sus modelos de
+  dominio, para no romper el gate SDK-free.
 - **Android**: el manifest declara `Theme.Material.Light.NoActionBar` y el
   contenido raíz se pinta con `safeDrawingPadding()`. Con `targetSdk 35` el modo
   *edge-to-edge* está forzado y un ActionBar de plataforma se superpone al
   contenido de Compose (ocultaría el encabezado del feed).
-- **`:shared` aún no se cablea**: `:composeApp` usa modelos de dominio propios
-  (el mapeo desde los DTOs llega con FT00035) para no romper el gate SDK-free.
 - El toolchain de Kotlin/JS-Wasm (Node, Yarn y Binaryen) se descarga a la caché
   de Gradle. Sus repositorios Ivy se declaran en `settings.gradle.kts`, que usa
   `PREFER_SETTINGS` porque el plugin los registra a nivel de proyecto.

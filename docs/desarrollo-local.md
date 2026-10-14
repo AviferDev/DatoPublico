@@ -70,8 +70,19 @@ efímero: no hay historial ni persistencia. El `ChatViewModel` expone el estado 
 sirve el **cliente HTTP real** (`POST /v1/chat`, `feature/chat/data/remote/`,
 inyectado en `App()`); el **repositorio en memoria**
 (`InMemoryChatRepository(mode = InMemoryChatMode.SAMPLE | UNAVAILABLE)`) queda para
-`@Preview` y tests (útil para ver el estado de error sin backend). El detalle real
-sigue pendiente de integrar (FT00033).
+`@Preview` y tests (útil para ver el estado de error sin backend).
+
+Desde FT00036 la app añade la **pantalla de búsqueda**
+(`feature/search/{domain,data,ui}`): campo de texto, filtros de **categoría** (las
+11 categorías curadas + «Todas») y de **rango de fechas** (`desde`/`hasta` ISO), y
+una lista de **resultados** con la tarjeta del feed, con los estados **inicial /
+carga / resultados / sin resultados / error**. El estado lo expone un
+**`SearchViewModel`** (`StateFlow<SearchUiState>`, UDF) y el destino `search` del
+grafo se alcanza desde el **icono de búsqueda del encabezado del feed**; abrir un
+resultado navega al detalle y el atrás vuelve a la búsqueda conservando su estado.
+Los resultados los sirve el **cliente HTTP real** (`GET /v1/buscar` sobre
+`core/network/`), con un repositorio en memoria (`InMemorySearchRepository`) para
+`@Preview` y tests.
 
 ```sh
 # Android (APK de debug)
@@ -109,6 +120,14 @@ Notas:
   repositorio en memoria (`DetailStateHolder(id, GetPublicationDetail(InMemoryDetailRepository()))`)
   con los modos `SAMPLE`, `NOT_FOUND` y `UNAVAILABLE`; el cliente HTTP del detalle
   será una feature posterior.
+- **Búsqueda (FT00036)**: la consulta en blanco **no** lanza ninguna petición (se
+  queda en el estado inicial) y una fecha que no es ISO (`aaaa-mm-dd`) se marca y
+  se **omite** sin enviarse; un rango invertido no es un error (el endpoint
+  devuelve lista vacía → estado «sin resultados»). Para ver en local el estado
+  «sin resultados» o el de error, construye
+  `InMemorySearchRepository(mode = InMemorySearchMode.EMPTY)` (o `UNAVAILABLE`) en
+  `App()` de forma **temporal**, como con el feed; los estados también quedan
+  fijados por los tests y las `@Preview`.
 - **Backend y URL base (FT00035)**: para ver el **feed real**, arranca el backend
   (`./gradlew :backend:run`) en el puerto `8080`. La URL base se resuelve por
   plataforma: **Android** (emulador) usa `10.0.2.2` (el *loopback* del host) y

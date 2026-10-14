@@ -100,4 +100,26 @@
     <string name="chat_error_message">Ha ocurrido un problema al consultar el BOE. Vuelve a intentarlo.</string>
     <string name="chat_retry">Reintentar</string>
     <string name="cd_chat_error">Error al consultar el BOE</string>
+
+    <!-- Búsqueda con filtros (FT00036) -->
+    <string name="search_title">Buscar en el BOE</string>
+    <string name="search_query_label">Término de búsqueda</string>
+    <string name="search_category_all">Todas</string>
+    <string name="search_from_date_label">Desde</string>
+    <string name="search_to_date_label">Hasta</string>
+    <string name="search_date_placeholder">aaaa-mm-dd</string>
+    <string name="search_date_error">Formato no válido (aaaa-mm-dd)</string>
+    <string name="search_submit">Buscar</string>
+    <string name="search_clear_filters">Limpiar filtros</string>
+    <string name="search_idle_title">¿Qué buscas en el BOE?</string>
+    <string name="search_idle_message">Escribe un término y acótalo por categoría o por rango de fechas.</string>
+    <string name="search_loading">Buscando en el BOE…</string>
+    <string name="search_empty_title">Sin resultados</string>
+    <string name="search_empty_message">No se ha encontrado ninguna publicación para esta búsqueda. Prueba con otros términos o filtros.</string>
+    <string name="search_error_title">No se ha podido completar la búsqueda</string>
+    <string name="search_error_message">Ha ocurrido un problema al buscar. Vuelve a intentarlo.</string>
+    <string name="search_retry">Reintentar</string>
+    <string name="cd_search">Buscar</string>
+    <string name="cd_search_empty">Sin resultados</string>
+    <string name="cd_search_error">Error en la búsqueda</string>
 </resources>

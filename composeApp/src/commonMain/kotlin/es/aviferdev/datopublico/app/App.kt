@@ -17,6 +17,10 @@ import es.aviferdev.datopublico.feature.feed.data.cache.InMemoryFeedCache
 import es.aviferdev.datopublico.feature.feed.data.remote.FeedApi
 import es.aviferdev.datopublico.feature.feed.domain.GetDailyFeed
 import es.aviferdev.datopublico.feature.feed.ui.feedViewModelFactory
+import es.aviferdev.datopublico.feature.search.data.HttpSearchRepository
+import es.aviferdev.datopublico.feature.search.data.remote.SearchApi
+import es.aviferdev.datopublico.feature.search.domain.SearchPublications
+import es.aviferdev.datopublico.feature.search.ui.searchViewModelFactory
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
@@ -24,14 +28,14 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * tema del cliente y monta el **grafo de navegación**.
  *
  * El *composition root* es **manual** (sin framework de DI): aquí se construye,
- * de forma **app-scoped**, el cliente HTTP común (`ktor-client`) y se inyectan las
- * *factories* de los ViewModels. Para el feed se construyen la API (`GET /v1/feed`),
- * la cache offline en memoria y el repositorio HTTP; para el chat, la API
- * (`POST /v1/chat`) y su repositorio HTTP ([HttpChatRepository]); los repositorios
- * **en memoria** quedan para `@Preview` y tests. La URL base la resuelve la
- * plataforma (`expect/actual`), no este código común. El grafo ya monta la pantalla
- * de detalle real (FT00033), que hoy lee de un repositorio en memoria (su cliente
- * HTTP es una feature posterior).
+ * de forma **app-scoped**, un único cliente HTTP común (`ktor-client`) compartido
+ * por las APIs del **feed** (FT00035), la **búsqueda** (FT00036) y el **chat**
+ * (FT00037), sus repositorios HTTP y las *factories* de sus ViewModels (vía
+ * `GetDailyFeed`, `SearchPublications` y `ChatViewModel`). Los repositorios **en
+ * memoria** quedan para `@Preview` y tests. La URL base la resuelve la plataforma
+ * (`expect/actual`), no este código común. El grafo ya monta la pantalla de detalle
+ * real (FT00033), que hoy lee de un repositorio en memoria (su cliente HTTP es una
+ * feature posterior).
  *
  * El contenido se pinta con `safeDrawingPadding()` para no quedar bajo las barras
  * del sistema (en Android el modo *edge-to-edge* está forzado por `targetSdk 35`).
@@ -41,9 +45,16 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun App() {
     val httpClient = remember { createDatoPublicoHttpClient() }
     val feedFactory = remember {
-        val feedApi = FeedApi(httpClient = httpClient)
-        val repository = HttpFeedRepository(feedApi = feedApi, cache = InMemoryFeedCache())
+        val repository = HttpFeedRepository(
+            feedApi = FeedApi(httpClient = httpClient),
+            cache = InMemoryFeedCache(),
+        )
         feedViewModelFactory(GetDailyFeed(repository))
+    }
+    val searchFactory = remember {
+        searchViewModelFactory(
+            SearchPublications(HttpSearchRepository(searchApi = SearchApi(httpClient = httpClient))),
+        )
     }
     val chatFactory = remember {
         ChatViewModel.factory(HttpChatRepository(ChatApi(httpClient = httpClient)))
@@ -52,6 +63,7 @@ fun App() {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             AppNavHost(
                 feedViewModelFactory = feedFactory,
+                searchViewModelFactory = searchFactory,
                 chatViewModelFactory = chatFactory,
                 modifier = Modifier.safeDrawingPadding(),
             )

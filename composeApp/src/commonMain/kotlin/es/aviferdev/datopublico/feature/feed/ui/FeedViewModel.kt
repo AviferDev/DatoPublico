@@ -88,13 +88,15 @@ class FeedViewModel(private val getDailyFeed: GetDailyFeed) : ViewModel() {
 
 /**
  * Factory **manual** del [FeedViewModel] (DI por constructor, sin framework):
- * construye el caso de uso sobre el repositorio en memoria de ejemplo.
+ * construye el caso de uso sobre el repositorio indicado. El *composition root*
+ * (`App()`) inyecta el repositorio HTTP real (FT00035); el valor por defecto
+ * (repositorio en memoria de ejemplo) sirve a `@Preview` y a los tests.
  *
- * La invoca el *composition root* (`App()`); el repositorio HTTP real y la caché
- * son FT00035.
- *
+ * @param getDailyFeed caso de uso del feed a usar; por defecto, datos de ejemplo.
  * @return factory lista para `viewModel(factory = …)`.
  */
-fun feedViewModelFactory(): ViewModelProvider.Factory = viewModelFactory {
-    initializer { FeedViewModel(GetDailyFeed(InMemoryFeedRepository())) }
+fun feedViewModelFactory(
+    getDailyFeed: GetDailyFeed = GetDailyFeed(InMemoryFeedRepository()),
+): ViewModelProvider.Factory = viewModelFactory {
+    initializer { FeedViewModel(getDailyFeed) }
 }

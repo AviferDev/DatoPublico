@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- El feed se sirve por HTTP desde la API pública (FT00035). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:label="DatoPublico"
         android:icon="@android:drawable/sym_def_app_icon"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:theme="@android:style/Theme.Material.Light.NoActionBar"
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name="es.aviferdev.datopublico.app.MainActivity"
             android:exported="true">

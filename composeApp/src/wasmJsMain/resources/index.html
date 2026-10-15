@@ -3,7 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DatoPublico</title>
+
+    <!-- Metadatos del shell (FT00039-PT1): son metadatos de página estáticos, no
+         textos de UI (el contenido lo pinta el cliente Wasm) y no hay SSR. El
+         dominio de `canonical`/`og:url`/`og:image` es un placeholder hasta que
+         FT00052-PT2 fije el hosting definitivo. -->
+    <title>DatoPublico — qué se ha publicado en el BOE, en lenguaje claro</title>
+    <meta name="description"
+          content="DatoPublico explica en lenguaje claro qué se ha publicado en el BOE: normas, empleo público, becas y subvenciones, con enlace siempre a la fuente oficial.">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://datopublico.example/">
+    <meta name="theme-color" content="#1A4D8F">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="DatoPublico">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:title" content="DatoPublico — qué se ha publicado en el BOE, en lenguaje claro">
+    <meta property="og:description"
+          content="Normas, empleo público, becas y subvenciones del BOE explicadas en lenguaje claro, con enlace siempre a la fuente oficial.">
+    <meta property="og:url" content="https://datopublico.example/">
+    <meta property="og:image" content="https://datopublico.example/og-image.png">
+
     <style>
         /* El viewport de Compose se monta en <body>: html/body deben ocupar toda
            la pantalla, sin márgenes ni scroll, o el contenido no llena la ventana

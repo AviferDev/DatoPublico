@@ -10,6 +10,57 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+// --- URL base de la API de la Web (FT00039-PT1) ---
+// La propiedad `-PapiBaseUrl=<url>` inyecta la URL de la API de **producción** en
+// la build de la Web (Wasm); sin ella se conserva el valor de desarrollo. La
+// constante se genera **solo** para `wasmJsMain`, así que Android, iOS y JVM no
+// cambian su URL base. El artefacto resultante es el que publica FT00052-PT2
+// (`composeApp/build/dist/wasmJs/productionExecutable/`).
+val defaultApiBaseUrl = "http://localhost:8080"
+
+/** URL base de la API ya normalizada (sin barra final y nunca vacía). */
+val apiBaseUrl: String = providers.gradleProperty("apiBaseUrl")
+    .getOrElse(defaultApiBaseUrl)
+    .trim()
+    .trimEnd('/')
+    .ifBlank {
+        throw GradleException(
+            "La propiedad `apiBaseUrl` está vacía: define la URL base de la API " +
+                "(p. ej. -PapiBaseUrl=https://datopublico.example).",
+        )
+    }
+
+/** Directorio de las fuentes generadas de la configuración de la Web. */
+val apiConfigDir: Provider<Directory> =
+    layout.buildDirectory.dir("generated/apiConfig/wasmJsMain")
+
+/** Tarea que escribe la constante `API_BASE_URL` de `wasmJsMain`. */
+val generateApiBaseUrlConfig = tasks.register("generateApiBaseUrlConfig") {
+    group = "build"
+    description = "Genera la constante con la URL base de la API para la Web (FT00039-PT1)."
+    inputs.property("apiBaseUrl", apiBaseUrl)
+    outputs.dir(apiConfigDir)
+    doLast {
+        val target = apiConfigDir.get()
+            .file("es/aviferdev/datopublico/core/network/ApiBaseUrlBuildConfig.kt")
+            .asFile
+        target.parentFile.mkdirs()
+        target.writeText(
+            """
+            |// Fichero **generado** por `generateApiBaseUrlConfig` (FT00039-PT1):
+            |// no se edita a mano ni se versiona.
+            |package es.aviferdev.datopublico.core.network
+            |
+            |/**
+            | * URL base de la API inyectada en la build de la Web (Wasm) con la
+            | * propiedad Gradle `apiBaseUrl`; sin ella, el valor de desarrollo.
+            | */
+            |internal const val API_BASE_URL: String = "$apiBaseUrl"
+            |""".trimMargin() + "\n",
+        )
+    }
+}
+
 kotlin {
     jvmToolchain(21)
 
@@ -78,6 +129,13 @@ kotlin {
         iosMain.dependencies {
             // Motor Darwin (NSURLSession) para iOS.
             implementation(libs.ktor.client.darwin)
+        }
+        wasmJsMain {
+            // La constante con la URL base de la API (FT00039-PT1) se genera en
+            // build time y se añade **solo** al source set de la Web; pasar el
+            // `TaskProvider` enlaza la dependencia de la tarea de generación, así
+            // que cualquier compilación de Wasm la regenera antes de compilar.
+            kotlin.srcDir(generateApiBaseUrlConfig)
         }
         wasmJsMain.dependencies {
             // Motor JS (fetch/XHR) para Web/Wasm.

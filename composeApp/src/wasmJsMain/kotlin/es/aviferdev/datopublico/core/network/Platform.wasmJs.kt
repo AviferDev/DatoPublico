@@ -5,10 +5,14 @@ import kotlin.js.js
 /**
  * `actual` de [platformApiBaseUrl] en Web/Wasm (FT00035).
  *
- * El backend de desarrollo corre en la máquina que sirve la app (`localhost`); el
- * CORS de la API pública lo resuelve el backend (FT00030).
+ * La URL base de la Web **no** está fija en el código: se inyecta en build time
+ * con la propiedad Gradle `apiBaseUrl` (`-PapiBaseUrl=<url>`), que genera la
+ * constante [API_BASE_URL] en `wasmJsMain` (FT00039-PT1). Sin la propiedad, la
+ * constante vale `http://localhost:8080` (el backend de desarrollo corre en la
+ * máquina que sirve la app); el CORS de la API pública lo resuelve el backend
+ * (FT00030).
  */
-actual fun platformApiBaseUrl(): String = WASM_BASE_URL
+actual fun platformApiBaseUrl(): String = API_BASE_URL
 
 /**
  * `actual` de [currentIsoDate] en Web/Wasm: el `Date` local del navegador,
@@ -34,5 +38,3 @@ private fun jsLocalIsoDate(): String = js(
         "})()"
 )
 
-/** URL base del backend en Web/Wasm (desarrollo local). */
-private const val WASM_BASE_URL = "http://localhost:8080"

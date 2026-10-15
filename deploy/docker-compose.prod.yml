@@ -35,6 +35,11 @@ services:
       start_period: 20s
 
   backend:
+    # Imagen publicada en GHCR por el workflow de release (FT00052): el servidor
+    # hace `docker compose pull backend`. El `build:` se conserva para el
+    # desarrollo local y el primer despliegue manual (mismo fichero de imagen).
+    # El release exporta `BACKEND_IMAGE`/`BACKEND_VERSION`; si faltan, `:latest`.
+    image: ${BACKEND_IMAGE:?define BACKEND_IMAGE en deploy/.env.production}:${BACKEND_VERSION:-latest}
     build:
       context: ..
       dockerfile: backend/Dockerfile

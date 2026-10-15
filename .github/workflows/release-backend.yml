@@ -1,0 +1,196 @@
+# Publicación del BACKEND (FT00052-PT1).
+#
+# Construye la imagen del backend (`backend/Dockerfile`) con Buildx, la publica en
+# **GHCR** (tags `<version>` y `latest`, con `GITHUB_TOKEN` y `packages: write`) y la
+# despliega en el servidor propio por **SSH** ejecutando `scripts/release/deploy-backend.sh`
+# (pull + Flyway + `up -d` + health-check; fail-fast).
+#
+# Disparo: `workflow_call` (desde el umbrella `release.yml`), `workflow_dispatch`
+# (manual) y `push` de tags `v*`. **Nunca** en `push` a `main`.
+#
+# Secretos y variables (inventario en `docs/release.md`): secretos `SSH_HOST`,
+# `SSH_USER`, `SSH_PRIVATE_KEY` y `SSH_KNOWN_HOSTS`; variables `SSH_PORT` y
+# `DEPLOY_PATH`. Los secretos del servidor (`POSTGRES_*`, `OPENCODE_API_KEY`…)
+# **no** viajan a GitHub: viven en `deploy/.env.production` del servidor.
+
+name: Release backend
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Versión a publicar sin la `v` inicial (p. ej. `0.7.0`). Por defecto, la del tag que dispara el workflow."
+        required: false
+        type: string
+      environment:
+        description: "GitHub Environment del despliegue. El backend solo se publica en `production`."
+        required: false
+        type: string
+        default: production
+    secrets:
+      # Declarados como inventario documentado; la comprobación real, con mensaje
+      # claro, la hace el job `deploy`. `secrets: inherit` (umbrella) los pasa tal
+      # cual, de modo que pueden estar acotados al Environment.
+      SSH_HOST:
+        required: false
+      SSH_USER:
+        required: false
+      SSH_PRIVATE_KEY:
+        required: false
+      SSH_KNOWN_HOSTS:
+        required: false
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versión a publicar sin la `v` inicial (p. ej. `0.7.0`). Por defecto, la del tag que dispara el workflow."
+        required: false
+        type: string
+      environment:
+        description: "GitHub Environment del despliegue."
+        required: false
+        type: choice
+        options:
+          - production
+        default: production
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+# Un despliegue no se cancela a medias: `cancel-in-progress: false` siempre.
+concurrency:
+  group: release-backend-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Resolver versión, imagen y entorno
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      image: ${{ steps.resolve.outputs.image }}
+      environment: ${{ steps.resolve.outputs.environment }}
+    steps:
+      - name: Resolver versión, imagen y entorno
+        id: resolve
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          set -euo pipefail
+          raw="$INPUT_VERSION"
+          if [ -z "$raw" ]; then
+            raw="${GITHUB_REF_NAME}"
+          fi
+          version="${raw#v}"
+          if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "ERROR: '$raw' no es una versión semver vMAJOR.MINOR.PATCH; usa un tag vX.Y.Z o indica 'version'." >&2
+            exit 1
+          fi
+          environment="${INPUT_ENVIRONMENT:-production}"
+          if [ "$environment" != "production" ]; then
+            echo "ERROR: el backend solo se publica en el entorno 'production' (recibido '$environment')." >&2
+            exit 1
+          fi
+          # GHCR exige el repositorio en minúsculas y `github.repository_owner`
+          # conserva las mayúsculas del propietario.
+          owner="$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          {
+            echo "version=$version"
+            echo "image=ghcr.io/$owner/datopublico-backend"
+            echo "environment=$environment"
+          } >> "$GITHUB_OUTPUT"
+
+  image:
+    name: Imagen (Buildx → GHCR)
+    needs: resolve
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Sin JDK/Gradle en el runner: `backend/Dockerfile` compila dentro de la
+      # imagen multi-stage (`installDist -PskipClient`).
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir y publicar la imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ needs.resolve.outputs.image }}:${{ needs.resolve.outputs.version }}
+            ${{ needs.resolve.outputs.image }}:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+  deploy:
+    name: Desplegar en el servidor (SSH)
+    needs: [ resolve, image ]
+    runs-on: ubuntu-latest
+    # Entorno con revisores obligatorios; los secretos pueden estar acotados a él.
+    environment: ${{ needs.resolve.outputs.environment }}
+    steps:
+      - name: Comprobar los secretos y variables requeridos
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          missing=""
+          for name in SSH_HOST SSH_USER SSH_PRIVATE_KEY SSH_KNOWN_HOSTS DEPLOY_PATH; do
+            if [ -z "${!name:-}" ]; then
+              missing="$missing $name"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "ERROR: faltan secretos/variables:$missing" >&2
+            echo "Consulta el inventario de 'docs/release.md' antes de publicar." >&2
+            exit 1
+          fi
+          echo "OK: secretos y variables presentes"
+
+      - name: Desplegar por SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          BACKEND_VERSION: ${{ needs.resolve.outputs.version }}
+          BACKEND_IMAGE: ${{ needs.resolve.outputs.image }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          port: ${{ vars.SSH_PORT || 22 }}
+          envs: DEPLOY_PATH,BACKEND_VERSION,BACKEND_IMAGE
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+            # Fija el checkout del servidor en el tag publicado (idempotente: el
+            # tag es inmutable y `--force` descarta cambios locales del checkout).
+            git fetch --tags --prune --force
+            git checkout --force "v${BACKEND_VERSION#v}"
+            # El script del propio tag es el que despliega: pull + Flyway + up + health.
+            if [ ! -x scripts/release/deploy-backend.sh ]; then
+              echo "ERROR: falta scripts/release/deploy-backend.sh en v${BACKEND_VERSION#v}." >&2
+              exit 1
+            fi
+            ./scripts/release/deploy-backend.sh

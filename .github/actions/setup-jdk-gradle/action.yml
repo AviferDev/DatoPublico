@@ -1,0 +1,26 @@
+# Acción compuesta de setup común de los workflows de publicación (FT00052-PT1).
+#
+# Instala JDK 21 (temurin) y configura Gradle con caché, el mismo setup que usa
+# `ci.yml`. El `actions/checkout` lo hace **cada job** por separado (así cada
+# workflow decide la profundidad del checkout que necesita).
+#
+# La usan los jobs que compilan en el runner (Wasm en PT2, AAB en PT3); el job de
+# la imagen del backend (PT1) no la necesita porque `backend/Dockerfile` compila
+# dentro de la imagen multi-stage.
+
+name: Setup JDK 21 y Gradle
+description: >-
+  Instala JDK 21 (temurin) y configura Gradle con caché para los workflows de
+  publicación.
+
+runs:
+  using: composite
+  steps:
+    - name: Set up JDK 21
+      uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: '21'
+
+    - name: Set up Gradle (with cache)
+      uses: gradle/actions/setup-gradle@v4

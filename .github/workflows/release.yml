@@ -1,0 +1,114 @@
+# Punto de entrada de publicación (FT00052).
+#
+# Un único botón manual reparte la publicación entre los workflows reutilizables:
+# en PT1 solo el **backend** (GHCR + SSH); PT2 (Web), PT3 (Android) y PT4 (iOS)
+# añaden sus jobs sobre este mismo fichero, de modo que siempre referencia
+# workflows que existen en el commit.
+#
+# Disparo: **solo** `workflow_dispatch` (nunca `push`; no hay auto-despliegue en
+# `main`). El disparo por tag `vX.Y.Z` lo hacen los workflows de cada destino.
+#
+# Entradas:
+#   - `targets`: destinos separados por comas (`backend`, `web`, `android`, `ios`)
+#     o `all`.
+#   - `version`: versión sin la `v` inicial; por defecto, la del tag.
+#   - `environment`: GitHub Environment (`production` para backend/Web, `internal`
+#     para las pistas de tienda).
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: "Destinos a publicar, separados por comas (backend, web, android, ios) o 'all'."
+        required: true
+        type: string
+        default: backend
+      version:
+        description: "Versión a publicar sin la `v` inicial (p. ej. `0.7.0`). Por defecto, la del tag que dispara el workflow."
+        required: false
+        type: string
+      environment:
+        description: "GitHub Environment del despliegue."
+        required: true
+        type: choice
+        options:
+          - production
+          - internal
+        default: production
+
+permissions:
+  contents: read
+
+# Un despliegue no se cancela a medias: `cancel-in-progress: false` siempre.
+concurrency:
+  group: release-umbrella
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan de publicación
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      environment: ${{ steps.plan.outputs.environment }}
+      backend: ${{ steps.plan.outputs.backend }}
+    steps:
+      - name: Normalizar destinos, versión y entorno
+        id: plan
+        env:
+          INPUT_TARGETS: ${{ inputs.targets }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          set -euo pipefail
+          targets="$(printf '%s' "$INPUT_TARGETS" | tr -d '[:space:]')"
+          if [ "$targets" = "all" ]; then
+            targets="backend,web,android,ios"
+          fi
+          if [ -z "$targets" ]; then
+            echo "ERROR: 'targets' está vacío; indica al menos un destino." >&2
+            exit 1
+          fi
+          for target in ${targets//,/ }; do
+            case "$target" in
+              backend | web | android | ios) ;;
+              *)
+                echo "ERROR: destino desconocido '$target' (backend, web, android, ios o 'all')." >&2
+                exit 1
+                ;;
+            esac
+          done
+          # Sin `version`, se toma la del ref que dispara el workflow (el tag).
+          version="$INPUT_VERSION"
+          if [ -z "$version" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          backend=false
+          case ",$targets," in
+            *',backend,'*) backend=true ;;
+          esac
+          {
+            echo "version=$version"
+            echo "environment=$INPUT_ENVIRONMENT"
+            echo "backend=$backend"
+          } >> "$GITHUB_OUTPUT"
+          echo "Plan: version=$version environment=$INPUT_ENVIRONMENT backend=$backend"
+
+  backend:
+    name: Backend (GHCR + SSH)
+    needs: plan
+    if: needs.plan.outputs.backend == 'true'
+    # Un workflow reutilizable solo puede *degradar* los permisos del caller: el job
+    # que lo invoca debe conceder `packages: write` para que el job `image` del
+    # callee pueda publicar en GHCR (si no, el run falla con «requesting
+    # 'packages: write', but is only allowed 'packages: none'»).
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/release-backend.yml
+    with:
+      version: ${{ needs.plan.outputs.version }}
+      environment: ${{ needs.plan.outputs.environment }}
+    secrets: inherit

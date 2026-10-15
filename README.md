@@ -60,6 +60,12 @@ Para levantar la base de datos y aplicar las migraciones, consulta
 El despliegue en el servidor propio (Docker Compose + Nginx + HTTPS, secretos por
 entorno) está documentado en [`deploy/README.md`](deploy/README.md).
 
+## Publicar una versión
+
+La publicación desde GitHub Actions (tag `vX.Y.Z` o manual), el inventario de
+secretos y variables, los entornos y el rollback están en
+[`docs/release.md`](docs/release.md).
+
 ## Contribuir
 
 Es un proyecto pequeño y en construcción. Si quieres proponer algo, abre una

@@ -18,7 +18,11 @@ despliegue del servidor (Docker, Nginx, TLS, secretos del servidor) está en
   versión pública. La versión vive en el **tag** (y en el tag de la imagen); no se
   duplica en ningún fichero.
 - **Permisos mínimos**: `contents: read` salvo el job de la imagen, que añade
-  `packages: write` para GHCR.
+  `packages: write` para GHCR. En el **umbrella**, el job que invoca el workflow
+  reutilizable del backend **también** declara `packages: write`: un workflow
+  reutilizable solo puede *degradar* los permisos del *caller*, así que si el
+  *umbrella* no lo concede, la publicación en GHCR se deniega (el disparo por tag
+  directo no pasa por el *umbrella* y no se ve afectado).
 - **La concurrencia no cancela despliegues** (`cancel-in-progress: false`): un
   despliegue en curso termina siempre.
 - **El gate no cambia**: `./gradlew build -PskipClient`, `./gradlew test`,

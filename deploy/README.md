@@ -109,6 +109,13 @@ La primera vez, `docker compose up -d` construye la imagen del backend
 (`docker build`), lo que **requiere red** (imagen base + dependencias de Gradle);
 queda **fuera del gate** y de la CI.
 
+> **Publicación automática (FT00052).** Este runbook es el camino **manual**. Para
+> publicar por **GitHub Actions** (tag `vX.Y.Z` o `workflow_dispatch`) —imagen a
+> **GHCR** y despliegue por **SSH**— sigue `docs/release.md`. El compose acepta
+> `BACKEND_IMAGE` y `BACKEND_VERSION`: si ya tenías un `deploy/.env.production` de
+> FT00041, **añádelos** (si no, `docker compose` falla con «define BACKEND_IMAGE»).
+> Sin ellos, el stack sigue construyendo en local con `build:`.
+
 ### 6. Comprobación HTTPS
 
 ```sh

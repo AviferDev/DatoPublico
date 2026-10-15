@@ -1,5 +1,13 @@
+// El fichero agrupa la pantalla del feed, sus sub-composables y una `@Preview`
+// por cada uno: la combinación de «una preview por composable» y «máximo 40
+// líneas por función» excede el umbral configurado de `TooManyFunctions` (15).
+// Se acota la excepción a este fichero.
+@file:Suppress("TooManyFunctions")
+
 package es.aviferdev.datopublico.feature.feed.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,19 +19,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,12 +44,13 @@ import es.aviferdev.datopublico.design.components.previewHighlightedPublication
 import es.aviferdev.datopublico.design.components.previewPublications
 import es.aviferdev.datopublico.design.theme.DatoPublicoTheme
 import es.aviferdev.datopublico.feature.feed.domain.DailyFeed
+import es.aviferdev.datopublico.feature.feed.domain.formatIsoDate
 import es.aviferdev.datopublico.resources.Res
-import es.aviferdev.datopublico.resources.app_title
 import es.aviferdev.datopublico.resources.cd_empty
 import es.aviferdev.datopublico.resources.cd_error
-import es.aviferdev.datopublico.resources.cd_search
-import es.aviferdev.datopublico.resources.chat_entry
+import es.aviferdev.datopublico.resources.feed_ai_callout_action
+import es.aviferdev.datopublico.resources.feed_ai_callout_message
+import es.aviferdev.datopublico.resources.feed_ai_callout_title
 import es.aviferdev.datopublico.resources.feed_empty_message
 import es.aviferdev.datopublico.resources.feed_empty_title
 import es.aviferdev.datopublico.resources.feed_error_message
@@ -47,19 +58,24 @@ import es.aviferdev.datopublico.resources.feed_error_title
 import es.aviferdev.datopublico.resources.feed_loading
 import es.aviferdev.datopublico.resources.feed_publications_title
 import es.aviferdev.datopublico.resources.feed_retry
+import es.aviferdev.datopublico.resources.feed_status_count
+import es.aviferdev.datopublico.resources.feed_status_edition
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * Pantalla **stateless** del feed diario: pinta el estado recibido y delega el
- * reintento en [onRetry]. No hace IO ni conoce el repositorio.
+ * Pantalla **stateless** del feed diario: pinta el estado recibido y delega las
+ * acciones. No hace IO ni conoce el repositorio.
+ *
+ * No pinta cabecera propia: la marca, el chat y la búsqueda viven en el chasis
+ * global (`AppChrome`). El chat se ofrece además como llamada a la acción al
+ * final de la lista.
  *
  * @param state estado actual de la pantalla.
  * @param onRetry acción a ejecutar al pulsar «Reintentar».
  * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
  *   publicación.
- * @param onOpenChat acción al pulsar la entrada de chat del encabezado.
- * @param onSearchClick acción al pulsar el icono de búsqueda del encabezado.
+ * @param onOpenChat acción al pulsar la llamada a la acción de chat.
  * @param modifier modificador de layout del llamante.
  */
 @Composable
@@ -68,108 +84,224 @@ fun FeedScreen(
     onRetry: () -> Unit,
     onPublicationClick: (String) -> Unit,
     onOpenChat: () -> Unit,
-    onSearchClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        FeedHeader(
-            onOpenChat = onOpenChat,
-            onSearchClick = onSearchClick,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
-        )
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (state) {
-                FeedUiState.Loading -> LoadingView()
-                is FeedUiState.Content -> FeedContent(
-                    feed = state.feed,
-                    onPublicationClick = onPublicationClick,
-                )
-                FeedUiState.Empty -> EmptyView()
-                FeedUiState.Error -> ErrorView(onRetry = onRetry)
-            }
-        }
-    }
-}
-
-/**
- * Encabezado del feed: título de la app, la acción de **chat** («Preguntar al
- * BOE») y la acción de **búsqueda**.
- *
- * Vive **fuera** de la rama de contenido, así que ambas entradas siguen
- * disponibles en los estados de carga, vacío y error (el feed real puede salir
- * vacío hasta que se cablee el pipeline de resumen).
- *
- * El chat usa una acción de **texto** (no un icono) porque el set
- * `material-icons-core` no incluye `Chat`/`Forum` y no se añade
- * `material-icons-extended`.
- *
- * @param onOpenChat acción al pulsar la entrada de chat.
- * @param onSearchClick acción al pulsar el icono de búsqueda.
- * @param modifier modificador de layout del llamante.
- */
-@Composable
-private fun FeedHeader(
-    onOpenChat: () -> Unit,
-    onSearchClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = stringResource(Res.string.app_title),
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.weight(1f),
-        )
-        TextButton(onClick = onOpenChat) {
-            Text(text = stringResource(Res.string.chat_entry))
-        }
-        IconButton(onClick = onSearchClick) {
-            Icon(
-                imageVector = Icons.Outlined.Search,
-                contentDescription = stringResource(Res.string.cd_search),
-                tint = MaterialTheme.colorScheme.primary,
+    Box(modifier = modifier.fillMaxSize()) {
+        when (state) {
+            FeedUiState.Loading -> LoadingView()
+            is FeedUiState.Content -> FeedContent(
+                feed = state.feed,
+                onPublicationClick = onPublicationClick,
+                onOpenChat = onOpenChat,
             )
+            FeedUiState.Empty -> EmptyView()
+            FeedUiState.Error -> ErrorView(onRetry = onRetry)
         }
     }
 }
 
 /**
- * Contenido del feed: bloque de destacados (si los hay) y lista de publicaciones
- * del día.
+ * Contenido del feed con scroll: tira de estado, bloque de destacados (si los
+ * hay), lista de publicaciones del día y llamada a la acción de chat.
  *
  * @param feed feed que se muestra.
  * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
  *   publicación.
+ * @param onOpenChat acción al pulsar la llamada a la acción de chat.
+ * @param modifier modificador de layout del llamante.
  */
 @Composable
 private fun FeedContent(
     feed: DailyFeed,
     onPublicationClick: (String) -> Unit,
+    onOpenChat: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        FeedStatusStrip(feed = feed)
         if (feed.highlights.isNotEmpty()) {
             HighlightsSection(highlights = feed.highlights, onPublicationClick = onPublicationClick)
         }
-        Text(
-            text = stringResource(Res.string.feed_publications_title),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        PublicationsHeader()
         feed.publications.forEach { publication ->
             PublicationCard(
                 publication = publication,
                 onClick = { onPublicationClick(publication.id) },
             )
         }
+        AiChatCallout(onOpenChat = onOpenChat)
+    }
+}
+
+/**
+ * Tira de estado del día: fecha y edición del BOE a la izquierda y el recuento
+ * de disposiciones en una pastilla a la derecha.
+ *
+ * @param feed feed del día; aporta la fecha y el número de publicaciones.
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun FeedStatusStrip(feed: DailyFeed, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.DateRange,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = formatIsoDate(feed.date) + " · " + stringResource(Res.string.feed_status_edition),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        StatusCountPill(count = feed.publications.size)
+    }
+}
+
+/**
+ * Pastilla con el recuento de disposiciones del día: punto de acento y cifra.
+ *
+ * @param count número de publicaciones del feed.
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun StatusCountPill(count: Int, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = MaterialTheme.colorScheme.primary,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(color = MaterialTheme.colorScheme.secondary, shape = CircleShape),
+            )
+            Text(
+                text = stringResource(Res.string.feed_status_count, count),
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+    }
+}
+
+/**
+ * Cabecera del bloque de publicaciones del día: icono y título de sección. No se
+ * ofrecen filtros: el feed no filtra, así que no se pintan controles muertos.
+ *
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun PublicationsHeader(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.List,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = stringResource(Res.string.feed_publications_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+/**
+ * Llamada a la acción de **ayuda con IA** al final del feed: círculo con icono,
+ * título, mensaje y enlace al chat.
+ *
+ * @param onOpenChat acción al pulsar el enlace de consulta.
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun AiChatCallout(onOpenChat: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Outlined.Email,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(Res.string.feed_ai_callout_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = stringResource(Res.string.feed_ai_callout_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                AiChatCalloutAction(onClick = onOpenChat)
+            }
+        }
+    }
+}
+
+/**
+ * Enlace de la llamada a la acción de chat: texto y flecha, clicable.
+ *
+ * @param onClick acción al pulsar el enlace.
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun AiChatCalloutAction(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.clickable(onClick = onClick).padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = stringResource(Res.string.feed_ai_callout_action),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
@@ -241,7 +373,7 @@ private fun ErrorView(onRetry: () -> Unit, modifier: Modifier = Modifier) {
             imageVector = Icons.Outlined.Warning,
             contentDescription = stringResource(Res.string.cd_error),
             modifier = Modifier.size(48.dp),
-            tint = MaterialTheme.colorScheme.tertiary,
+            tint = MaterialTheme.colorScheme.error,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -282,7 +414,6 @@ private fun FeedScreenLoadingPreview() {
                 onRetry = {},
                 onPublicationClick = {},
                 onOpenChat = {},
-                onSearchClick = {},
             )
         }
     }
@@ -299,7 +430,6 @@ private fun FeedScreenContentPreview() {
                 onRetry = {},
                 onPublicationClick = {},
                 onOpenChat = {},
-                onSearchClick = {},
             )
         }
     }
@@ -333,18 +463,66 @@ private fun ErrorViewPreview() {
 private fun FeedContentPreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            FeedContent(feed = previewDailyFeed(), onPublicationClick = {})
+            FeedContent(
+                feed = previewDailyFeed(),
+                onPublicationClick = {},
+                onOpenChat = {},
+            )
         }
     }
 }
 
-/** Previsualización del encabezado del feed con las acciones de chat y búsqueda. */
+/** Previsualización de la tira de estado del día. */
 @Preview
 @Composable
-private fun FeedHeaderPreview() {
+private fun FeedStatusStripPreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            FeedHeader(onOpenChat = {}, onSearchClick = {}, modifier = Modifier.padding(8.dp))
+            FeedStatusStrip(feed = previewDailyFeed(), modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización de la pastilla de recuento de disposiciones. */
+@Preview
+@Composable
+private fun StatusCountPillPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            StatusCountPill(count = 42, modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización de la cabecera del bloque de publicaciones. */
+@Preview
+@Composable
+private fun PublicationsHeaderPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            PublicationsHeader(modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización de la llamada a la acción de chat. */
+@Preview
+@Composable
+private fun AiChatCalloutPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            AiChatCallout(onOpenChat = {}, modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización del enlace de la llamada a la acción de chat. */
+@Preview
+@Composable
+private fun AiChatCalloutActionPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            AiChatCalloutAction(onClick = {}, modifier = Modifier.padding(8.dp))
         }
     }
 }

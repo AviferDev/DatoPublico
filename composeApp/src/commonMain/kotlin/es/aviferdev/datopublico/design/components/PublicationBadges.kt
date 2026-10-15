@@ -61,7 +61,7 @@ private fun Badge(
         contentColor = contentColor,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
@@ -70,14 +70,14 @@ private fun Badge(
                 contentDescription = iconContentDescription,
                 modifier = Modifier.size(14.dp),
             )
-            Text(text = text, style = MaterialTheme.typography.labelMedium)
+            Text(text = text, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
 
 /**
  * Badge de **destacado**: explica por qué la publicación está destacada con un
- * motivo objetivo.
+ * motivo objetivo. Usa el tono azul pastel (`primaryContainer`).
  *
  * @param reason motivo del destacado.
  * @param modifier modificador de layout del llamante.
@@ -96,7 +96,7 @@ fun HighlightBadge(reason: HighlightReason, modifier: Modifier = Modifier) {
 
 /**
  * Badge de **plazo**: muestra la fecha límite de una convocatoria en el tono de
- * atención de `DESIGN.md` (`tertiary`).
+ * atención del mockup (ámbar, `tertiaryContainer`).
  *
  * @param deadline plazo de solicitud de la convocatoria.
  * @param modifier modificador de layout del llamante.
@@ -107,8 +107,8 @@ fun DeadlineBadge(deadline: Deadline, modifier: Modifier = Modifier) {
         icon = Icons.Outlined.DateRange,
         iconContentDescription = stringResource(Res.string.cd_deadline),
         text = stringResource(Res.string.deadline_badge, formatIsoDate(deadline.limitDate)),
-        containerColor = MaterialTheme.colorScheme.tertiary,
-        contentColor = MaterialTheme.colorScheme.onTertiary,
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
         modifier = modifier,
     )
 }

@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -24,79 +27,189 @@ import es.aviferdev.datopublico.feature.chat.domain.ChatAnswer
 import es.aviferdev.datopublico.feature.chat.domain.ChatCitation
 import es.aviferdev.datopublico.feature.chat.domain.ChatStatus
 import es.aviferdev.datopublico.resources.Res
+import es.aviferdev.datopublico.resources.cd_chat_privacy
+import es.aviferdev.datopublico.resources.cd_chat_suggestion
+import es.aviferdev.datopublico.resources.chat_privacy_notice
 import es.aviferdev.datopublico.resources.chat_status_answered
 import es.aviferdev.datopublico.resources.chat_status_refuted
 import es.aviferdev.datopublico.resources.chat_status_unfounded
+import es.aviferdev.datopublico.resources.chat_synthesis_title
 import es.aviferdev.datopublico.resources.chat_unfounded_message
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * Tarjeta de la **respuesta** del chat: etiqueta de estado (icono + texto, **no**
- * sólo color) y el texto de la respuesta.
+ * Piezas del **bloque de respuesta** del chat: la tarjeta con la síntesis, el
+ * aviso de privacidad y las consultas frecuentes sugeridas. Todas leen sus colores
+ * de `MaterialTheme.colorScheme.*` y sus textos de recursos i18n.
  *
- * El tono del contenedor depende del estado: neutro para `respondida`
- * (`primaryContainer`), de atención/error para `refutada` (`errorContainer`) y
- * sobrio para `sin_fundamento` (`surfaceVariant`, que **no** es un error). El
- * estado `sin_fundamento` añade una nota que invita a reformular.
+ * La **tarjeta** muestra una pastilla de estado (icono + texto, **no** sólo color),
+ * el título de la síntesis en lenguaje claro y el texto de la respuesta. Si el
+ * estado es [ChatStatus.UNFOUNDED] añade una nota para reformular; **no** es un
+ * error.
  *
  * @param answer respuesta a mostrar.
  * @param modifier modificador de layout del llamante.
  */
 @Composable
 fun ChatAnswerCard(answer: ChatAnswer, modifier: Modifier = Modifier) {
-    val containerColor = when (answer.status) {
-        ChatStatus.ANSWERED -> MaterialTheme.colorScheme.primaryContainer
-        ChatStatus.REFUTED -> MaterialTheme.colorScheme.errorContainer
-        ChatStatus.UNFOUNDED -> MaterialTheme.colorScheme.surfaceVariant
-    }
-    val contentColor = when (answer.status) {
-        ChatStatus.ANSWERED -> MaterialTheme.colorScheme.onPrimaryContainer
-        ChatStatus.REFUTED -> MaterialTheme.colorScheme.onErrorContainer
-        ChatStatus.UNFOUNDED -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        color = containerColor,
-        contentColor = contentColor,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            ChatStatusLabel(status = answer.status)
-            Text(text = answer.text, style = MaterialTheme.typography.bodyLarge)
-            if (answer.status == ChatStatus.UNFOUNDED) {
-                Text(
-                    text = stringResource(Res.string.chat_unfounded_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
+            ChatStatusPill(status = answer.status)
+            ChatSynthesisBlock(
+                text = answer.text,
+                showUnfoundedMessage = answer.status == ChatStatus.UNFOUNDED,
+            )
         }
     }
 }
 
 /**
- * Etiqueta de estado: icono con `contentDescription` y texto de recurso.
+ * Pastilla de estado de la respuesta: el tono depende del estado (`primaryContainer`
+ * para `respondida`, `errorContainer` para `refutada` y `surfaceVariant` para
+ * `sin_fundamento`, que **no** es un error).
  *
  * @param status estado de la respuesta.
  * @param modifier modificador de layout del llamante.
  */
 @Composable
-private fun ChatStatusLabel(status: ChatStatus, modifier: Modifier = Modifier) {
-    Row(
+private fun ChatStatusPill(status: ChatStatus, modifier: Modifier = Modifier) {
+    val containerColor = when (status) {
+        ChatStatus.ANSWERED -> MaterialTheme.colorScheme.primaryContainer
+        ChatStatus.REFUTED -> MaterialTheme.colorScheme.errorContainer
+        ChatStatus.UNFOUNDED -> MaterialTheme.colorScheme.surfaceVariant
+    }
+    val contentColor = when (status) {
+        ChatStatus.ANSWERED -> MaterialTheme.colorScheme.onPrimaryContainer
+        ChatStatus.REFUTED -> MaterialTheme.colorScheme.onErrorContainer
+        ChatStatus.UNFOUNDED -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Surface(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        shape = CircleShape,
+        color = containerColor,
+        contentColor = contentColor,
     ) {
-        Icon(
-            imageVector = chatStatusIcon(status),
-            contentDescription = stringResource(chatStatusLabel(status)),
-            modifier = Modifier.size(20.dp),
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(
+                imageVector = chatStatusIcon(status),
+                contentDescription = stringResource(chatStatusLabel(status)),
+                modifier = Modifier.size(16.dp),
+            )
+            Text(text = stringResource(chatStatusLabel(status)), style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+/**
+ * Título «Síntesis en lenguaje claro» y el texto de la respuesta; añade la nota de
+ * reformulación cuando la respuesta no tiene fundamento en el BOE.
+ *
+ * @param text texto de la respuesta.
+ * @param showUnfoundedMessage `true` si procede mostrar la nota de `sin_fundamento`.
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun ChatSynthesisBlock(
+    text: String,
+    showUnfoundedMessage: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(Res.string.chat_synthesis_title),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
         )
-        Text(text = stringResource(chatStatusLabel(status)), style = MaterialTheme.typography.labelLarge)
+        Text(text = text, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+        if (showUnfoundedMessage) {
+            Text(
+                text = stringResource(Res.string.chat_unfounded_message),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/**
+ * Aviso de **privacidad** del chat: banda sobria que recuerda que no se almacena
+ * historial ni datos personales. Se comparte con la pantalla
+ * ([ChatScreen]) por eso es `internal` (la UI de la feature vive en el módulo).
+ *
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+internal fun ChatPrivacyNotice(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Lock,
+                contentDescription = stringResource(Res.string.cd_chat_privacy),
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.secondary,
+            )
+            Text(
+                text = stringResource(Res.string.chat_privacy_notice),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/**
+ * Consulta frecuente sugerida: superficie clicable que rellena el campo de entrada
+ * ([onClick] sólo cambia el texto; no envía la consulta). Se comparte con la
+ * pantalla ([ChatScreen]) por eso es `internal`.
+ *
+ * @param text texto de la consulta sugerida.
+ * @param onClick acción al pulsarla.
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+internal fun ChatSuggestionChip(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(text = text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = stringResource(Res.string.cd_chat_suggestion),
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.outline,
+            )
+        }
     }
 }
 
@@ -174,20 +287,28 @@ private fun ChatAnswerCardUnfoundedPreview() {
     }
 }
 
-/** Previsualización de la etiqueta de estado en sus tres variantes. */
+/** Previsualización del aviso de privacidad del chat. */
 @Preview
 @Composable
-private fun ChatStatusLabelPreview() {
+private fun ChatPrivacyNoticePreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            Column(
+            ChatPrivacyNotice(modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización de una consulta frecuente sugerida. */
+@Preview
+@Composable
+private fun ChatSuggestionChipPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ChatSuggestionChip(
+                text = "¿Se han publicado ayudas o subvenciones para placas solares?",
+                onClick = {},
                 modifier = Modifier.padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                ChatStatusLabel(status = ChatStatus.ANSWERED)
-                ChatStatusLabel(status = ChatStatus.REFUTED)
-                ChatStatusLabel(status = ChatStatus.UNFOUNDED)
-            }
+            )
         }
     }
 }

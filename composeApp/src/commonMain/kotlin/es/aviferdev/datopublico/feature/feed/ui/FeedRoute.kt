@@ -15,14 +15,14 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * [FeedViewModel] y delega en [FeedScreen].
  *
  * Es el único composable con dependencia del ViewModel; [FeedScreen] y sus
- * vistas siguen siendo **stateless** (reciben estado y lambdas). El estado lo
- * dispara el propio ViewModel (no hay `LaunchedEffect` de carga aquí) y la UI lo
- * recolecta con `collectAsStateWithLifecycle()`.
+ * vistas siguen siendo **stateless** (reciben estado y lambdas). La búsqueda la
+ * gestiona el chasis global, así que la ruta ya no expone un `onSearchClick`. El
+ * estado lo dispara el propio ViewModel (no hay `LaunchedEffect` de carga aquí)
+ * y la UI lo recolecta con `collectAsStateWithLifecycle()`.
  *
  * @param onPublicationClick acción al pulsar una tarjeta; recibe el `id` de la
  *   publicación para navegar a su detalle.
- * @param onOpenChat acción al pulsar la entrada de chat del encabezado.
- * @param onSearchClick acción al pulsar el icono de búsqueda del encabezado.
+ * @param onOpenChat acción al pulsar la llamada a la acción de chat.
  * @param viewModel ViewModel del feed; por defecto se obtiene de la factory
  *   manual (DI por constructor).
  * @param modifier modificador de layout del llamante.
@@ -31,7 +31,6 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun FeedRoute(
     onPublicationClick: (String) -> Unit,
     onOpenChat: () -> Unit,
-    onSearchClick: () -> Unit,
     viewModel: FeedViewModel = viewModel(factory = feedViewModelFactory()),
     modifier: Modifier = Modifier,
 ) {
@@ -41,7 +40,6 @@ fun FeedRoute(
         onRetry = viewModel::onRetry,
         onPublicationClick = onPublicationClick,
         onOpenChat = onOpenChat,
-        onSearchClick = onSearchClick,
         modifier = modifier,
     )
 }
@@ -54,7 +52,6 @@ private fun FeedRoutePreview() {
         FeedRoute(
             onPublicationClick = {},
             onOpenChat = {},
-            onSearchClick = {},
             viewModel = FeedViewModel(GetDailyFeed(InMemoryFeedRepository(latencyMillis = 0))),
         )
     }

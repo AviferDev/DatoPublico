@@ -28,18 +28,18 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * Tono visual de una etiqueta de categoría según `DESIGN.md`: sólo existen tres
- * tonos (no hay un color por categoría) y se resuelven **siempre** desde el
- * esquema de color del tema, nunca con literales.
+ * Tono visual de una etiqueta de categoría según el mockup: sólo existen tres
+ * tonos pastel (no hay un color por categoría) y se resuelven **siempre** desde
+ * las ranuras `*Container` del esquema de color, nunca con literales.
  */
 private enum class CategoryTone {
-    /** Lo normativo → `primary`. */
+    /** Lo normativo → azul pastel (`primaryContainer`). */
     NORMATIVE,
 
-    /** Lo informativo/administrativo → `secondary`. */
+    /** Lo informativo/administrativo → verde azulado pastel (`secondaryContainer`). */
     INFORMATIVE,
 
-    /** Lo que implica plazo o atención (convocatorias y ayudas) → `tertiary`. */
+    /** Lo que implica plazo o atención (convocatorias y ayudas) → ámbar (`tertiaryContainer`). */
     URGENT;
 
     /**
@@ -48,9 +48,9 @@ private enum class CategoryTone {
      * @param scheme esquema de color activo del tema.
      */
     fun background(scheme: ColorScheme): Color = when (this) {
-        NORMATIVE -> scheme.primary
-        INFORMATIVE -> scheme.secondary
-        URGENT -> scheme.tertiary
+        NORMATIVE -> scheme.primaryContainer
+        INFORMATIVE -> scheme.secondaryContainer
+        URGENT -> scheme.tertiaryContainer
     }
 
     /**
@@ -59,18 +59,18 @@ private enum class CategoryTone {
      * @param scheme esquema de color activo del tema.
      */
     fun content(scheme: ColorScheme): Color = when (this) {
-        NORMATIVE -> scheme.onPrimary
-        INFORMATIVE -> scheme.onSecondary
-        URGENT -> scheme.onTertiary
+        NORMATIVE -> scheme.onPrimaryContainer
+        INFORMATIVE -> scheme.onSecondaryContainer
+        URGENT -> scheme.onTertiaryContainer
     }
 }
 
 /**
- * Etiqueta sobria de categoría: pastilla con el texto localizado y el tono de
- * `DESIGN.md`.
+ * Etiqueta sobria de categoría: pastilla pastel con el texto localizado y el
+ * tono del mockup.
  *
- * La categoría se recibe como valor de **dominio**; el texto sale de recursos i18n
- * y el color únicamente de `MaterialTheme.colorScheme`.
+ * La categoría se recibe como valor de **dominio**; el texto sale de recursos
+ * i18n y el color únicamente de `MaterialTheme.colorScheme`.
  *
  * @param category categoría curada de la publicación.
  * @param modifier modificador de layout del llamante.
@@ -87,19 +87,14 @@ fun CategoryLabel(category: PublicationCategory, modifier: Modifier = Modifier) 
         Text(
             text = stringResource(category.labelResource()),
             style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         )
     }
 }
 
 /**
- * Tono de la categoría según `DESIGN.md`.
- *
- * `DESIGN.md` asigna `secondary` a «Empleo público» y el tono de acento a «Becas y
- * subvenciones», pero su regla de agrupación es la operativa para las etiquetas
- * («`accent` para lo que implica plazo o atención (convocatorias y ayudas)»). Se
- * aplica la agrupación: las **dos** categorías que exigen plazo (empleo público y
- * becas/subvenciones) comparten el tono de atención.
+ * Tono de la categoría según el mockup: lo normativo en azul, la atención
+ * (convocatorias y ayudas) en ámbar y el resto en verde azulado.
  */
 private fun PublicationCategory.tone(): CategoryTone = when (this) {
     PublicationCategory.NORMATIVE_REGULATION -> CategoryTone.NORMATIVE
@@ -120,8 +115,8 @@ private fun PublicationCategory.tone(): CategoryTone = when (this) {
 /**
  * Texto localizado de la categoría.
  *
- * Es `internal` para que otras features (p. ej. los chips de categoría de la
- * búsqueda, FT00036) reutilicen el mismo texto en vez de duplicar el mapeo.
+ * Es `internal` para que otras features (p. ej. los chips de categoría del feed
+ * y de la búsqueda) reutilicen el mismo texto en vez de duplicar el mapeo.
  *
  * @return el recurso i18n con la etiqueta de la categoría.
  */
@@ -141,7 +136,7 @@ internal fun PublicationCategory.labelResource(): StringResource = when (this) {
         Res.string.category_other_provisions_and_announcements
 }
 
-/** Previsualización del tono normativo (`primary`). */
+/** Previsualización del tono normativo (`primaryContainer`). */
 @Preview
 @Composable
 private fun CategoryLabelNormativePreview() {
@@ -155,7 +150,7 @@ private fun CategoryLabelNormativePreview() {
     }
 }
 
-/** Previsualización del tono informativo/administrativo (`secondary`). */
+/** Previsualización del tono informativo/administrativo (`secondaryContainer`). */
 @Preview
 @Composable
 private fun CategoryLabelInformativePreview() {
@@ -169,7 +164,7 @@ private fun CategoryLabelInformativePreview() {
     }
 }
 
-/** Previsualización del tono de plazo/atención (`tertiary`). */
+/** Previsualización del tono de plazo/atención (`tertiaryContainer`). */
 @Preview
 @Composable
 private fun CategoryLabelUrgentPreview() {

@@ -7,16 +7,31 @@
   `stringResource(Res.string.*)`. Solo se admiten literales en `@Preview` y
   símbolos tipográficos.
 
-  Este fichero es la única fuente de textos de la UI del feed (FT00032) y del
-  detalle (FT00033): títulos, etiquetas de las 11 categorías, motivos de
-  destacado, plazo, bloques del resumen, estados y `contentDescription` de los
-  iconos con significado.
+  Este fichero es la única fuente de textos de la UI: identidad y chasis, feed
+  (FT00032), detalle (FT00033), búsqueda (FT00036), chat (FT00037) y el
+  rediseño (FT00053).
 -->
 <resources>
+    <!-- Chasis: barra superior e inferior -->
+    <string name="brand_tagline">Portal Cívico BOE</string>
+    <string name="nav_feed">Boletín</string>
+    <string name="nav_search">Búsqueda</string>
+    <string name="nav_chat">RAG Chat</string>
+
     <!-- Identidad y pantalla del feed -->
     <string name="app_title">DatoPublico</string>
     <string name="feed_highlights_title">Destacados del día</string>
     <string name="feed_publications_title">Publicaciones del día</string>
+    <string name="feed_status_edition">Edición ordinaria BOE</string>
+    <string name="feed_status_count">%1$d disposiciones</string>
+    <string name="feed_highlights_priority">Prioridad cívica</string>
+    <string name="feed_filters">Filtros</string>
+    <string name="feed_category_all">Todas (%1$d)</string>
+    <string name="feed_card_source_link">Ver texto íntegro</string>
+    <string name="feed_highlight_card_link">Consultar bases y requisitos</string>
+    <string name="feed_ai_callout_title">¿Dudas con las convocatorias de hoy?</string>
+    <string name="feed_ai_callout_message">Nuestro asistente sintetiza los requisitos oficiales y plazos en lenguaje claro y accesible.</string>
+    <string name="feed_ai_callout_action">Hacer una consulta rápida</string>
 
     <!-- Plazo de una convocatoria: se rellena con la fecha límite formateada -->
     <string name="deadline_badge">Plazo: %1$s</string>
@@ -35,9 +50,8 @@
     <string name="feed_retry">Reintentar</string>
     <string name="cd_error">Error al cargar</string>
 
-    <!-- Atrás del detalle (FT00034); el resto de textos del detalle real (FT00033)
-         están en el bloque «Detalle de publicación (FT00033)». -->
-    <string name="cd_back">Volver al feed</string>
+    <!-- Navegación de vuelta (detalle y subcabeceras); el chasis lo pinta arriba -->
+    <string name="cd_back">Volver</string>
 
     <!-- Motivos de destacado (vocabulario objetivo del ranker) -->
     <string name="cd_highlight">Publicación destacada</string>
@@ -53,9 +67,12 @@
     <string name="detail_what_changes">¿Qué cambia?</string>
     <string name="detail_who_is_affected">¿A quién afecta?</string>
     <string name="detail_key_figures">Cifras clave</string>
-    <string name="detail_deadline_title">Plazo de solicitud</string>
-    <string name="detail_official_source">Consultar la fuente oficial</string>
+    <string name="detail_deadline_title">Plazo de solicitud en curso</string>
+    <string name="detail_official_source">Consultar la fuente oficial en BOE.es</string>
     <string name="detail_ai_notice">Resumen generado con inteligencia artificial. Comprueba siempre la fuente oficial.</string>
+    <string name="detail_ai_notice_title">Síntesis automatizada</string>
+    <string name="detail_copy_url">Copiar enlace</string>
+    <string name="detail_copied_url">Copiado</string>
     <string name="detail_not_found_title">Publicación no encontrada</string>
     <string name="detail_not_found_message">No existe o ya no está disponible la publicación solicitada.</string>
     <string name="detail_error_title">No se ha podido cargar el detalle</string>
@@ -79,23 +96,39 @@
     <string name="category_public_information_and_concessions">Información pública y concesiones</string>
     <string name="category_other_provisions_and_announcements">Otras disposiciones y anuncios</string>
 
-    <!-- Chat RAG (FT00037): entrada desde el feed, pantalla, estados y citas -->
+    <!-- Chat RAG (FT00037) -->
     <string name="chat_entry">Preguntar al BOE</string>
     <string name="chat_title">Preguntar al BOE</string>
-    <string name="chat_question_label">Tu pregunta o afirmación</string>
-    <string name="chat_question_placeholder">Escribe una pregunta o pega una afirmación para comprobarla…</string>
+    <string name="chat_back">Volver al Boletín</string>
+    <string name="chat_subtitle">Verificación y consultas con fuentes oficiales del Estado</string>
+    <string name="chat_rag_active">RAG Activo</string>
+    <string name="chat_question_label">Escribe tu pregunta ciudadana sobre cualquier norma o convocatoria:</string>
+    <string name="chat_question_placeholder">Escribe aquí tu consulta…</string>
+    <string name="chat_char_counter">%1$d / 1.000</string>
+    <string name="chat_clear">Limpiar</string>
+    <string name="chat_submit">Preguntar</string>
     <string name="cd_chat_send">Enviar la consulta</string>
+    <string name="cd_chat_clear">Limpiar la consulta</string>
     <string name="cd_chat_intro">Consultar el BOE</string>
     <string name="chat_intro">Pregunta al BOE o pega una afirmación para comprobar si es cierta. Te responderé con las fuentes oficiales.</string>
     <string name="chat_loading">Buscando en el BOE…</string>
     <string name="chat_question_sent">Tu consulta</string>
-    <string name="chat_status_answered">Respondida</string>
+    <string name="chat_status_answered">Respondida con fuente oficial</string>
     <string name="chat_status_refuted">Refutada</string>
     <string name="chat_status_unfounded">Sin fundamento</string>
+    <string name="chat_synthesis_title">Síntesis en lenguaje claro</string>
     <string name="chat_unfounded_message">El BOE no permite confirmar ni refutar esta consulta. Puedes reformularla.</string>
-    <string name="chat_citations_title">Fuentes oficiales</string>
+    <string name="chat_citations_title">Citas y fuentes oficiales del BOE</string>
+    <string name="chat_citations_title_count">Citas y fuentes oficiales del BOE (%1$d)</string>
+    <string name="chat_citations_validated">Validado</string>
     <string name="chat_citation_source">Fuente oficial</string>
-    <string name="chat_ai_notice">Respuesta generada con inteligencia artificial a partir del BOE. Comprueba siempre la fuente oficial.</string>
+    <string name="chat_ai_notice">Respuesta generada con inteligencia artificial a partir del BOE. Comprueba siempre la fuente oficial vinculada.</string>
+    <string name="chat_privacy_notice">El chat no almacena historial ni datos personales. Cada consulta es efímera e independiente.</string>
+    <string name="chat_suggested_title">Consultas frecuentes en el BOE de hoy</string>
+    <string name="chat_suggested_solar">¿Se han publicado ayudas o subvenciones para placas solares?</string>
+    <string name="chat_suggested_grants">¿Qué modificaciones introduce el nuevo Real Decreto de becas?</string>
+    <string name="cd_chat_suggestion">Usar esta consulta</string>
+    <string name="cd_chat_privacy">Privacidad del chat</string>
     <string name="chat_error_title">No se ha podido obtener la respuesta</string>
     <string name="chat_error_message">Ha ocurrido un problema al consultar el BOE. Vuelve a intentarlo.</string>
     <string name="chat_retry">Reintentar</string>
@@ -103,14 +136,30 @@
 
     <!-- Búsqueda con filtros (FT00036) -->
     <string name="search_title">Buscar en el BOE</string>
-    <string name="search_query_label">Término de búsqueda</string>
+    <string name="search_back">Volver</string>
+    <string name="search_subtitle">Búsqueda avanzada oficial</string>
+    <string name="search_api_badge">BOE-API v2.4</string>
+    <string name="search_query_label">Término o palabra clave</string>
+    <string name="search_query_helper">Coincidencia literal</string>
+    <string name="search_query_placeholder">Escribe un término (ej. becas, vivienda, oposiciones…)</string>
+    <string name="cd_search_clear">Borrar texto</string>
+    <string name="search_categories_label">Categorías temáticas</string>
     <string name="search_category_all">Todas</string>
+    <string name="search_date_range_label">Rango de publicación</string>
     <string name="search_from_date_label">Desde</string>
     <string name="search_to_date_label">Hasta</string>
     <string name="search_date_placeholder">aaaa-mm-dd</string>
+    <string name="search_date_format_hint">Formato ISO requerido: aaaa-mm-dd</string>
     <string name="search_date_error">Formato no válido (aaaa-mm-dd)</string>
     <string name="search_submit">Buscar</string>
     <string name="search_clear_filters">Limpiar filtros</string>
+    <string name="search_results_summary">%1$d publicaciones encontradas</string>
+    <string name="search_results_for">para «%1$s»</string>
+    <string name="search_sort_recent">Recientes</string>
+    <string name="search_card_link">Ver documento</string>
+    <string name="search_trust_title">Garantía de Fe Pública y Autenticidad</string>
+    <string name="search_trust_message">Los extractos provienen del Sistema de Difusión Electrónica del BOE (Agencia Estatal Boletín Oficial del Estado). Para trámites formales, consulte el texto íntegro en PDF con Código Seguro de Verificación (CSV).</string>
+    <string name="cd_search_trust">Garantía de autenticidad</string>
     <string name="search_idle_title">¿Qué buscas en el BOE?</string>
     <string name="search_idle_message">Escribe un término y acótalo por categoría o por rango de fechas.</string>
     <string name="search_loading">Buscando en el BOE…</string>

@@ -93,6 +93,8 @@ Los resultados los sirve el **cliente HTTP real** (`GET /v1/buscar` sobre
 ./gradlew :composeApp:wasmJsBrowserDistribution
 # → composeApp/build/dist/wasmJs/productionExecutable/ (index.html + *.wasm);
 #   sirve ese directorio con un servidor estático y ábrelo en el navegador.
+#   Con -PapiBaseUrl="<url>" se inyecta la URL de la API de producción
+#   (véase «Web (Wasm): URL de la API y servido estático»).
 
 # iOS (solo macOS)
 ./gradlew :composeApp:compileKotlinIosSimulatorArm64
@@ -132,7 +134,9 @@ Notas:
   (`./gradlew :backend:run`) en el puerto `8080`. La URL base se resuelve por
   plataforma: **Android** (emulador) usa `10.0.2.2` (el *loopback* del host) y
   **iOS/JVM/Wasm** usan `localhost`; el manifest de Android permite tráfico claro
-  **solo** a esos hosts (`network_security_config.xml`). Sin backend o sin red, la
+  **solo** a esos hosts (`network_security_config.xml`). En la **Web**, esa URL
+  base se puede sustituir en build time con `-PapiBaseUrl` (FT00039-PT1; véase
+  «Web (Wasm): URL de la API y servido estático»). Sin backend o sin red, la
   app respalda a la **cache** o muestra el estado de error; el feed real puede
   salir **vacío** (el pipeline de resumen no está cableado).
 - **Cache offline (FT00035)**: es **en memoria** (por sesión), sin datos
@@ -153,6 +157,70 @@ Notas:
   `iosSimulatorArm64Test`. No hace falta Chrome instalado.
 - El gate (`./gradlew build`, `./gradlew test`, `.harness/init.sh`) no requiere
   Xcode ni navegador: en hosts no-Apple los targets iOS se ignoran.
+
+## Web (Wasm): URL de la API y servido estático (FT00039-PT1)
+
+La URL base de la API en la **Web** **no** está fija en el código: se inyecta en
+**build time** con la propiedad Gradle `apiBaseUrl`, que genera la constante
+`API_BASE_URL` **solo** para `wasmJsMain`
+(`composeApp/build/generated/apiConfig/wasmJsMain/es/aviferdev/datopublico/core/network/ApiBaseUrlBuildConfig.kt`,
+**no versionada**). Android, iOS y JVM conservan sus `actual` de desarrollo.
+
+```sh
+# Build de producción con la URL de la API real
+./gradlew :composeApp:wasmJsBrowserDistribution -PapiBaseUrl="https://datopublico.example"
+# → composeApp/build/dist/wasmJs/productionExecutable/
+#   (index.html + composeApp.js + *.wasm + favicon.svg + composeResources/)
+
+# Sin la propiedad, la Web conserva el valor de desarrollo
+./gradlew :composeApp:wasmJsBrowserDistribution
+# → API_BASE_URL = http://localhost:8080
+```
+
+Reglas de la propiedad:
+
+- Se recorta la **barra final** (`https://x/` → `https://x`).
+- Una propiedad **vacía** (`-PapiBaseUrl=`) aborta la build con un mensaje claro
+  (*fail-fast*); no hay valor por defecto silencioso.
+- La tarea `:composeApp:generateApiBaseUrlConfig` escribe la constante y se
+  ejecuta automáticamente antes de cualquier compilación de Wasm (está enlazada
+  al *source set* `wasmJsMain`).
+
+### Servir el estático en local
+
+```sh
+cd composeApp/build/dist/wasmJs/productionExecutable
+python3 -m http.server 8123        # vale cualquier servidor estático
+# abre http://localhost:8123/
+```
+
+El servidor estático debe servir `*.wasm` con `Content-Type: application/wasm` y
+**no** necesita reescrituras de ruta. Con el backend arrancado
+(`./gradlew :backend:run`) y el CORS permisivo por defecto, la app carga el feed
+desde la URL inyectada; sin backend arranca igual y muestra el estado de error (o
+la caché). Para apuntar a un backend en otro puerto (p. ej. el `8090`), basta
+`-PapiBaseUrl="http://localhost:8090"`.
+
+### Contrato para el despliegue Web (FT00052-PT2)
+
+El pipeline de publicación de la Web (`FT00052-PT2`) **consume** este mecanismo;
+aquí solo se fija el contrato:
+
+- **Artefacto**: `composeApp/build/dist/wasmJs/productionExecutable/`
+  (`index.html`, `composeApp.js`, `*.wasm`, `favicon.svg` y `composeResources/`).
+- **Invocación**:
+  `./gradlew :composeApp:wasmJsBrowserDistribution -PapiBaseUrl="$PROD_API_BASE_URL"`.
+- **Servido**: Nginx publica ese directorio como **estático** en su *webroot*
+  (`WEB_ROOT`) con *fallback* SPA (`try_files … /index.html`) y **conserva** el
+  proxy de `/v1/*`, `/health` y `/openapi.json` hacia el backend. El `deploy/`
+  actual (FT00041) **solo** hace proxy: servir el estático es FT00052-PT2.
+
+Los metadatos SEO del shell (`index.html`: `title`, `description`, `canonical`,
+`robots`, Open Graph y `theme-color`) son **estáticos** y comunes a todas las
+rutas: el contenido lo pinta el cliente Wasm y no hay SSR. El dominio de
+`canonical`/`og:url`/`og:image` (`https://datopublico.example/`, el mismo
+placeholder que `deploy/.env.production.example`) y el propio `og:image` son
+**placeholders** hasta que FT00052-PT2 fije el hosting.
 
 ## Arranque del backend
 

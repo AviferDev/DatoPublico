@@ -1,14 +1,20 @@
 package es.aviferdev.datopublico.feature.search.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
@@ -35,15 +41,85 @@ import es.aviferdev.datopublico.resources.search_error_title
 import es.aviferdev.datopublico.resources.search_idle_message
 import es.aviferdev.datopublico.resources.search_idle_title
 import es.aviferdev.datopublico.resources.search_loading
+import es.aviferdev.datopublico.resources.search_results_for
+import es.aviferdev.datopublico.resources.search_results_summary
 import es.aviferdev.datopublico.resources.search_retry
+import es.aviferdev.datopublico.resources.search_sort_recent
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
  * Vistas de los estados **no** de contenido de la búsqueda (inicial, carga, «sin
- * resultados» y error). Son **stateless** y comparten la composición de mensaje
- * ([SearchStateMessage]); cada una tiene su `@Preview`.
+ * resultados» y error) y las piezas de encabezado del **contenido** (tira de
+ * resumen e indicador de orden). Son **stateless** y comparten la composición de
+ * mensaje ([SearchStateMessage]); cada una tiene su `@Preview`.
  */
+
+/**
+ * Tira de resumen editorial: punto `secondary`, recuento sobre `onSurface`, eco
+ * de la consulta en `primary` y, a la derecha, el indicador de orden.
+ *
+ * @param count número de publicaciones encontradas.
+ * @param query consulta enviada (eco).
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+internal fun SearchResultsSummary(count: Int, query: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .background(MaterialTheme.colorScheme.secondary, CircleShape),
+            )
+            Text(
+                text = stringResource(Res.string.search_results_summary, count),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = stringResource(Res.string.search_results_for, query),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        SearchSortIndicator()
+    }
+}
+
+/**
+ * Indicador de orden de los resultados (icono y «Recientes»).
+ *
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun SearchSortIndicator(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.KeyboardArrowDown,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = stringResource(Res.string.search_sort_recent),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
 
 /**
  * Vista del **estado inicial**: invita a buscar antes de haber enviado nada.
@@ -172,6 +248,32 @@ private fun SearchStateMessage(
         if (action != null) {
             Spacer(modifier = Modifier.height(24.dp))
             action()
+        }
+    }
+}
+
+/** Previsualización de la tira de resumen de resultados. */
+@Preview
+@Composable
+private fun SearchResultsSummaryPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SearchResultsSummary(
+                count = 3,
+                query = "becas para jóvenes",
+                modifier = Modifier.padding(8.dp),
+            )
+        }
+    }
+}
+
+/** Previsualización del indicador de orden. */
+@Preview
+@Composable
+private fun SearchSortIndicatorPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SearchSortIndicator(modifier = Modifier.padding(8.dp))
         }
     }
 }

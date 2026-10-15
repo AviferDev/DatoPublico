@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material3.Icon
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import es.aviferdev.datopublico.design.theme.DatoPublicoTheme
 import es.aviferdev.datopublico.resources.Res
@@ -27,7 +29,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
  * Enlace **destacado** a la fuente oficial del BOE (`DESIGN.md`, «Enlace de
- * fuente oficial: siempre visible y claro»).
+ * fuente oficial: siempre visible y claro»): botón principal a ancho completo.
  *
  * Es una regla MUST del producto que la fuente oficial esté siempre a un toque
  * (ver `CONSTRAINTS.md` §«Producto y datos»). Abre la URL con
@@ -46,23 +48,24 @@ fun OfficialSourceLink(url: String, modifier: Modifier = Modifier) {
         onClick = { uriHandler.openUri(url) },
         enabled = isOpenable,
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
+        shape = CircleShape,
         color = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            Text(
+                text = stringResource(Res.string.detail_official_source),
+                style = MaterialTheme.typography.titleSmall,
+                textAlign = TextAlign.Center,
+            )
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.ExitToApp,
                 contentDescription = stringResource(Res.string.cd_official_source),
                 modifier = Modifier.size(20.dp),
-            )
-            Text(
-                text = stringResource(Res.string.detail_official_source),
-                style = MaterialTheme.typography.labelLarge,
             )
         }
     }
@@ -73,7 +76,7 @@ fun OfficialSourceLink(url: String, modifier: Modifier = Modifier) {
  *
  * Es una función **pura**: evita abrir esquemas inesperados y, por tanto, un
  * *crash* del `UriHandler` de la plataforma. Es `internal` para que el chat
- * (FT00037) reutilice la misma guarda en sus citas.
+ * reutilice la misma guarda en sus citas.
  *
  * @param url URL a comprobar.
  * @return `true` si la URL empieza por `http://` o `https://`.

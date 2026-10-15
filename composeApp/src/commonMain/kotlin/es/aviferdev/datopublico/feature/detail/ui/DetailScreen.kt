@@ -3,11 +3,14 @@ package es.aviferdev.datopublico.feature.detail.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Search
@@ -15,10 +18,10 @@ import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,8 +47,10 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * y delega el reintento y el «volver» en [onRetry]/[onBack]. No hace IO ni conoce
  * el repositorio.
  *
- * El botón de volver vive aquí (siempre visible, encima del contenido) y no se
- * duplica en cada estado.
+ * El botón de atrás **de la barra superior** lo aporta el chasis global
+ * (`AppChrome`), así que aquí no se duplica; sí se conserva la **sub-barra de
+ * contenido** del mockup («Volver» + identificador), que comparte [onBack] y es
+ * visible en todos los estados para no dejar al usuario atrapado.
  *
  * @param state estado actual de la pantalla.
  * @param onRetry acción a ejecutar al pulsar «Reintentar».
@@ -60,19 +65,71 @@ fun DetailScreen(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
-        IconButton(onClick = onBack) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                contentDescription = stringResource(Res.string.cd_back),
-                tint = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-        Box(modifier = Modifier.fillMaxSize()) {
+        ContentSubBar(publicationId = state.publicationIdOrNull(), onBack = onBack)
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when (state) {
                 DetailUiState.Loading -> LoadingView()
                 is DetailUiState.Content -> DetailContent(detail = state.detail)
                 DetailUiState.NotFound -> NotFoundView()
                 DetailUiState.Error -> ErrorView(onRetry = onRetry)
+            }
+        }
+    }
+}
+
+/**
+ * Identificador de la publicación si el estado lleva contenido; `null` en el
+ * resto de estados (carga, no encontrada y error), donde aún no hay un id.
+ *
+ * @return el id oficial de la publicación, o `null` si no hay contenido.
+ */
+private fun DetailUiState.publicationIdOrNull(): String? = when (this) {
+    is DetailUiState.Content -> detail.id
+    else -> null
+}
+
+/**
+ * Sub-barra de contenido del mockup: «Volver» a la izquierda (icono + texto) y el
+ * identificador de la publicación a la derecha, sobre `surfaceContainerLow`.
+ *
+ * @param publicationId id oficial de la publicación; `null` si no hay contenido.
+ * @param onBack acción a ejecutar al pulsar «Volver».
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun ContentSubBar(
+    publicationId: String?,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(Res.string.cd_back),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            publicationId?.let { id ->
+                Text(
+                    text = id,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(end = 8.dp),
+                )
             }
         }
     }
@@ -91,7 +148,7 @@ private fun LoadingView(modifier: Modifier = Modifier) {
         Text(
             text = stringResource(Res.string.detail_loading),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
     }
@@ -115,7 +172,7 @@ private fun NotFoundView(modifier: Modifier = Modifier) {
         Text(
             text = stringResource(Res.string.detail_not_found_title),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -146,13 +203,13 @@ private fun ErrorView(onRetry: () -> Unit, modifier: Modifier = Modifier) {
             imageVector = Icons.Outlined.Warning,
             contentDescription = stringResource(Res.string.cd_detail_error),
             modifier = Modifier.size(48.dp),
-            tint = MaterialTheme.colorScheme.tertiary,
+            tint = MaterialTheme.colorScheme.error,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = stringResource(Res.string.detail_error_title),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -180,6 +237,28 @@ private fun DetailScreenContentPreview() {
                 onRetry = {},
                 onBack = {},
             )
+        }
+    }
+}
+
+/** Previsualización de la sub-barra de contenido con su identificador. */
+@Preview
+@Composable
+private fun ContentSubBarPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ContentSubBar(publicationId = "BOE-A-2026-21002", onBack = {})
+        }
+    }
+}
+
+/** Previsualización de la sub-barra de contenido sin identificador (estado de carga). */
+@Preview
+@Composable
+private fun ContentSubBarWithoutIdPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ContentSubBar(publicationId = null, onBack = {})
         }
     }
 }

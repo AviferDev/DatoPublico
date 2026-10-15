@@ -1,13 +1,20 @@
 package es.aviferdev.datopublico.design.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import es.aviferdev.datopublico.design.theme.DatoPublicoTheme
@@ -18,13 +25,13 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * Bloque de sección del detalle (`DESIGN.md`, «Bloque de sección: etiqueta +
- * contenido»): una **etiqueta** de sección y su **contenido**.
+ * Bloque de sección del detalle (mockup, «etiqueta + contenido»): una **barra
+ * acentuada** y la **etiqueta** de la sección, seguidas de su **contenido**.
  *
  * Es un componente reutilizable: lo usan los tres bloques del resumen ciudadano
- * («¿Qué cambia?», «¿A quién afecta?» y «Cifras clave») y lo podrán reutilizar las
- * features siguientes (búsqueda, chat). La etiqueta llega como recurso i18n y el
- * contenido como *slot*, para no acoplar el componente a ningún modelo.
+ * («¿Qué cambia?», «¿A quién afecta?» y «Cifras clave»). La etiqueta llega como
+ * recurso i18n y el contenido como *slot*, para no acoplar el componente a
+ * ningún modelo.
  *
  * @param label etiqueta de la sección (recurso i18n, resuelto aquí).
  * @param modifier modificador de layout del llamante.
@@ -38,13 +45,24 @@ fun SectionBlock(
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text(
-            text = stringResource(label),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(20.dp)
+                    .background(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(2.dp)),
+            )
+            Text(
+                text = stringResource(label),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
         content()
     }
 }
@@ -62,7 +80,7 @@ private fun SectionBlockPreview() {
                 Text(
                     text = "Contenido de ejemplo del bloque de sección.",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }

@@ -1,6 +1,7 @@
 package es.aviferdev.datopublico.design.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -8,12 +9,17 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ExitToApp
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import es.aviferdev.datopublico.design.theme.DatoPublicoTheme
@@ -22,50 +28,60 @@ import es.aviferdev.datopublico.feature.feed.domain.HighlightReason
 import es.aviferdev.datopublico.feature.feed.domain.Publication
 import es.aviferdev.datopublico.feature.feed.domain.PublicationCategory
 import es.aviferdev.datopublico.feature.feed.domain.formatIsoDate
+import es.aviferdev.datopublico.resources.Res
+import es.aviferdev.datopublico.resources.cd_official_source
+import es.aviferdev.datopublico.resources.feed_card_source_link
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * Tarjeta de publicación del feed: **título**, **etiqueta de categoría**,
- * **fecha**, **resumen corto** y los badges de **destacado** y **plazo**.
+ * Tarjeta de publicación del feed y de la búsqueda, según el mockup: fila de
+ * **identificador + fecha**, **etiqueta de categoría**, badges de **destacado** y
+ * **plazo**, **título**, **resumen corto** y enlace a la **fuente oficial**.
  *
- * Sigue `DESIGN.md`: superficie `surface` con radio `md` y borde sutil. Es
- * **clicable** (FT00034): al pulsarla navega al detalle de la publicación. Todos
- * los colores se leen del tema.
+ * Sigue el mockup: superficie blanca con radio `md` y borde sutil. Es
+ * **clicable** (al pulsarla navega al detalle) y el enlace inferior abre la
+ * fuente oficial. Todos los colores se leen del tema.
  *
  * @param publication publicación a mostrar.
  * @param onClick acción al pulsar la tarjeta.
  * @param modifier modificador de layout del llamante.
+ * @param sourceLinkLabel etiqueta del enlace a la fuente (la búsqueda usa otra).
  */
 @Composable
 fun PublicationCard(
     publication: Publication,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    sourceLinkLabel: StringResource = Res.string.feed_card_source_link,
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        PublicationCardContent(publication = publication)
+        PublicationCardContent(publication = publication, sourceLinkLabel = sourceLinkLabel)
     }
 }
 
 /**
- * Contenido de la tarjeta: una idea por tarjeta, con jerarquía título → metadatos
- * → resumen → badges.
+ * Contenido de la tarjeta: metadatos → título → resumen → badges → enlace a la
+ * fuente, con la jerarquía del mockup.
  *
  * @param publication publicación a mostrar.
+ * @param sourceLinkLabel etiqueta del enlace a la fuente oficial.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PublicationCardContent(publication: Publication) {
+private fun PublicationCardContent(publication: Publication, sourceLinkLabel: StringResource) {
     Column(
         modifier = Modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        PublicationMetaRow(publication = publication)
         Text(
             text = publication.title,
             style = MaterialTheme.typography.titleMedium,
@@ -73,17 +89,6 @@ private fun PublicationCardContent(publication: Publication) {
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
         )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            CategoryLabel(category = publication.category)
-            Text(
-                text = formatIsoDate(publication.publishedDate),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
         Text(
             text = publication.shortSummary,
             style = MaterialTheme.typography.bodyMedium,
@@ -92,28 +97,93 @@ private fun PublicationCardContent(publication: Publication) {
             overflow = TextOverflow.Ellipsis,
         )
         PublicationBadgesRow(publication = publication)
+        SourceTextLink(url = publication.officialUrl, label = sourceLinkLabel)
     }
 }
 
 /**
- * Fila de badges de la tarjeta: los motivos del destacado y, si aplica, el plazo.
- *
- * Se reparten en varias líneas (`FlowRow`) para que no desborden la tarjeta en
- * pantallas estrechas. Si no hay ningún badge no se pinta nada.
+ * Fila de metadatos: identificador oficial (`BOE-A-…`) a la izquierda y fecha de
+ * publicación (`dd/mm/aaaa`) a la derecha.
  *
  * @param publication publicación a mostrar.
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun PublicationMetaRow(publication: Publication, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = publication.id,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = formatIsoDate(publication.publishedDate),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * Fila de badges de la tarjeta: etiqueta de categoría, motivos del destacado y,
+ * si aplica, el plazo.
+ *
+ * Se reparten en varias líneas (`FlowRow`) para que no desborden la tarjeta en
+ * pantallas estrechas.
+ *
+ * @param publication publicación a mostrar.
+ * @param modifier modificador de layout del llamante.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PublicationBadgesRow(publication: Publication) {
-    if (publication.highlightReasons.isNotEmpty() || publication.deadline != null) {
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            publication.highlightReasons.forEach { reason -> HighlightBadge(reason = reason) }
-            publication.deadline?.let { deadline -> DeadlineBadge(deadline = deadline) }
-        }
+private fun PublicationBadgesRow(publication: Publication, modifier: Modifier = Modifier) {
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        CategoryLabel(category = publication.category)
+        publication.highlightReasons.forEach { reason -> HighlightBadge(reason = reason) }
+        publication.deadline?.let { deadline -> DeadlineBadge(deadline = deadline) }
+    }
+}
+
+/**
+ * Enlace sobrio a la fuente oficial: texto en `primary` con icono de enlace
+ * externo. Abre la URL con [LocalUriHandler]; una URL no `http(s)://` deja el
+ * enlace **deshabilitado** sin provocar ningún *crash*.
+ *
+ * @param url URL oficial de la publicación.
+ * @param label etiqueta localizada del enlace.
+ * @param modifier modificador de layout del llamante.
+ */
+@Composable
+private fun SourceTextLink(url: String, label: StringResource, modifier: Modifier = Modifier) {
+    val uriHandler = LocalUriHandler.current
+    val isOpenable = isHttpUrl(url)
+    Row(
+        modifier = modifier.clickable(enabled = isOpenable) { uriHandler.openUri(url) },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = stringResource(label),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.ExitToApp,
+            contentDescription = stringResource(Res.string.cd_official_source),
+            modifier = Modifier.size(18.dp),
+            tint = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
@@ -144,7 +214,7 @@ internal fun previewPlainPublication(): Publication = Publication(
     officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-21004",
 )
 
-/** Publicaciones de ejemplo para las `@Preview` de la pantalla del feed. */
+/** Publicaciones de ejemplo para las `@Preview` de las pantallas. */
 internal fun previewPublications(): List<Publication> =
     listOf(previewHighlightedPublication(), previewPlainPublication())
 
@@ -186,19 +256,7 @@ private fun PublicationCardContentPreview() {
         Surface(color = MaterialTheme.colorScheme.background) {
             PublicationCardContent(
                 publication = previewHighlightedPublication(),
-            )
-        }
-    }
-}
-
-/** Previsualización de la fila de badges con motivo y plazo. */
-@Preview
-@Composable
-private fun PublicationBadgesRowPreview() {
-    DatoPublicoTheme {
-        Surface(color = MaterialTheme.colorScheme.background) {
-            PublicationBadgesRow(
-                publication = previewHighlightedPublication(),
+                sourceLinkLabel = Res.string.feed_card_source_link,
             )
         }
     }

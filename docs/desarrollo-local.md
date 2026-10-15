@@ -190,6 +190,10 @@ un mensaje claro):
 - `CORS_ALLOWED_ORIGINS` (por defecto: sin allowlist ⇒ cualquier origen).
 - `RATE_LIMIT_REQUESTS`/`RATE_LIMIT_WINDOW_SECONDS` (por defecto `60`/`60`).
 - `CHAT_RATE_LIMIT_REQUESTS`/`CHAT_RATE_LIMIT_WINDOW_SECONDS` (por defecto `6`/`60`).
+- `TRUST_PROXY_HEADERS` (por defecto `false`): confía en las cabeceras
+  `X-Forwarded-*` de un proxy (Nginx en producción). **Opt-in**: con `true`, el
+  rate limiting por IP usa la IP real del cliente; solo es seguro si el backend no
+  publica puerto (lo garantiza el compose de producción, FT00041).
 
 (El endurecimiento HTTP —CORS, rate limiting y errores tipados— se detalla en
 «Endurecimiento HTTP».)
@@ -1230,6 +1234,37 @@ gate:
 DB_LIVE_TEST=1 ./gradlew :backend:test --tests '*BackfillLiveTest'
 docker compose down -v
 ```
+
+## Despliegue en producción
+
+El despliegue en el **servidor propio** (Intel N100, 8 GB) con **Docker Compose +
+Nginx + HTTPS** está documentado en [`deploy/README.md`](../deploy/README.md). En
+resumen (FT00041):
+
+- **Imagen del backend** multi-stage (`backend/Dockerfile`): `installDist
+  -PskipClient` (sin Android SDK), usuario no-root, **sin** secretos ni modelo.
+- **Compose de producción** (`deploy/docker-compose.prod.yml`): `postgres` en
+  **loopback** (para aplicar Flyway desde el host), `backend` **sin** puerto
+  publicado y `nginx` como **única** entrada (80/443), todos con
+  `restart: unless-stopped` y healthchecks.
+- **Nginx** termina TLS, redirige HTTP→HTTPS y reenvía `X-Forwarded-*`; el backend
+  confía en ellas con `TRUST_PROXY_HEADERS=true` (opt-in) para que el rate limiting
+  por IP vea la IP real del cliente.
+- **Secretos solo por entorno**: `deploy/.env.production` (ignorado por git) se
+  copia de `deploy/.env.production.example` (solo *placeholders*); `POSTGRES_PASSWORD`
+  y `OPENCODE_API_KEY` son **fail-fast**.
+- La **ingesta** es el **scheduler interno** (09:30 + 18:00; ADR 0004), **sin cron
+  externo**.
+- **Puertos configurables** (`HTTP_PORT`/`HTTPS_PORT`, por defecto 80/443): si el
+  VPS ya usa 80/443 para otro servicio, `deploy/README.md` documenta las
+  alternativas —detrás de un proxy existente, o publicar el backend directamente
+  sin Nginx para pruebas (`deploy/docker-compose.backend-direct.yml`, **sin**
+  HTTPS).
+
+`docker build`, `docker compose`, el *lint* de Nginx y `:backend:flywayMigrate` son
+**opt-in**: el gate estándar (`./gradlew build -PskipClient`/`test`/`detekt` e
+`.harness/init.sh`) sigue **sin Docker, red ni BD**. La verificación offline opt-in
+es `./deploy/verify-deploy.sh`.
 
 ## Variables de entorno
 

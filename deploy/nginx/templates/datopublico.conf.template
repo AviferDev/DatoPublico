@@ -1,0 +1,57 @@
+# Plantilla de Nginx del backend DatoPublico (FT00041).
+#
+# La imagen oficial de Nginx la procesa con `envsubst` al arrancar (solo sustituye
+# las variables de entorno definidas, aquí `${DOMAIN}`; las variables propias de
+# Nginx —`$host`, `$request_uri`, `$scheme`…— se conservan). Nginx termina TLS y
+# hace de proxy al backend; el backend **no** publica puerto.
+
+# Bloque 80: challenge ACME (certbot) y redirección permanente a HTTPS.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+
+    # Webroot del challenge HTTP-01 de Let's Encrypt.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# Bloque 443: termina TLS y hace proxy al backend por la red interna de Compose.
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name ${DOMAIN};
+
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+
+    server_tokens off;
+    client_max_body_size 1m;
+
+    # Cabeceras de seguridad.
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options DENY always;
+    add_header Referrer-Policy no-referrer always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    location / {
+        proxy_pass http://backend:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        # Añade la IP del cliente al FRENTE de X-Forwarded-For (política
+        # `useFirstProxy()` del backend).
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_read_timeout 60s;
+    }
+}

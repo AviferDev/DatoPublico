@@ -4,9 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DatoPublico</title>
+    <style>
+        /* El viewport de Compose se monta en <body>: html/body deben ocupar toda
+           la pantalla, sin márgenes ni scroll, o el contenido no llena la ventana
+           y las listas (LazyColumn) colapsan. */
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
 </head>
 <body>
-<div id="root"></div>
 <script src="composeApp.js"></script>
 </body>
 </html>

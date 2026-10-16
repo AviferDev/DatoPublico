@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.sumario
 
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.time.LocalDate
 
 /**
@@ -43,7 +43,7 @@ private fun BoeSeccionDto.entradas(fechaIso: String): List<EntradaSumario> =
 
 private fun BoeDepartamentoDto.entradas(
     fechaIso: String,
-    section: SeccionBoeDto,
+    section: BoeSectionDto,
 ): List<EntradaSumario> = buildList {
     item.forEach { add(it.toEntrada(fechaIso, section, issuingBody = nombre, heading = null)) }
     heading.forEach { epigrafeDto ->
@@ -58,7 +58,7 @@ private fun BoeDepartamentoDto.entradas(
 
 private fun BoeSumarioItemDto.toEntrada(
     fechaIso: String,
-    section: SeccionBoeDto,
+    section: BoeSectionDto,
     issuingBody: String?,
     heading: String?,
 ): EntradaSumario = EntradaSumario(
@@ -75,14 +75,14 @@ private fun BoeSumarioItemDto.toEntrada(
 )
 
 /** Mapea el código de sección del BOE a la sección del contrato; `null` si es ajeno. */
-private fun seccionBoeDe(codigo: String?): SeccionBoeDto? = when (codigo) {
-    "1" -> SeccionBoeDto.I
-    "2A" -> SeccionBoeDto.II_A
-    "2B" -> SeccionBoeDto.II_B
-    "3" -> SeccionBoeDto.III
-    "4" -> SeccionBoeDto.IV
-    "5A" -> SeccionBoeDto.V_A
-    "5B" -> SeccionBoeDto.V_B
-    "5C" -> SeccionBoeDto.V_C
+private fun seccionBoeDe(codigo: String?): BoeSectionDto? = when (codigo) {
+    "1" -> BoeSectionDto.I
+    "2A" -> BoeSectionDto.II_A
+    "2B" -> BoeSectionDto.II_B
+    "3" -> BoeSectionDto.III
+    "4" -> BoeSectionDto.IV
+    "5A" -> BoeSectionDto.V_A
+    "5B" -> BoeSectionDto.V_B
+    "5C" -> BoeSectionDto.V_C
     else -> null // un código ajeno al sumario del BOE no es corpus.
 }

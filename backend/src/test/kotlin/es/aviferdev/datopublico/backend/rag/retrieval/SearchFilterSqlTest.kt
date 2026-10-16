@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.rag.retrieval
 
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -25,18 +25,18 @@ class SearchFilterSqlTest {
 
     @Test
     fun `a category filter compares the enum name`() {
-        val filter = SearchFilter(category = CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO)
+        val filter = SearchFilter(category = CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS)
 
         assertEquals(" AND p.categoria = ?", SearchFilterSql.whereClause(filter))
-        assertEquals(listOf(CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO.name), SearchFilterSql.parameters(filter))
+        assertEquals(listOf(CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS.name), SearchFilterSql.parameters(filter))
     }
 
     @Test
     fun `a section filter compares the enum name`() {
-        val filter = SearchFilter(section = SeccionBoeDto.II_B)
+        val filter = SearchFilter(section = BoeSectionDto.II_B)
 
         assertEquals(" AND p.seccion = ?", SearchFilterSql.whereClause(filter))
-        assertEquals(listOf(SeccionBoeDto.II_B.name), SearchFilterSql.parameters(filter))
+        assertEquals(listOf(BoeSectionDto.II_B.name), SearchFilterSql.parameters(filter))
     }
 
     @Test
@@ -63,8 +63,8 @@ class SearchFilterSqlTest {
         val filter = SearchFilter(
             publishedFrom = "2026-10-01",
             publishedTo = "2026-10-31",
-            category = CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
-            section = SeccionBoeDto.II_B,
+            category = CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
+            section = BoeSectionDto.II_B,
             organization = "Ministerio de Hacienda",
         )
 
@@ -83,8 +83,8 @@ class SearchFilterSqlTest {
             listOf(
                 "2026-10-01",
                 "2026-10-31",
-                CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO.name,
-                SeccionBoeDto.II_B.name,
+                CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS.name,
+                BoeSectionDto.II_B.name,
                 "Ministerio de Hacienda",
             ),
             parameters,

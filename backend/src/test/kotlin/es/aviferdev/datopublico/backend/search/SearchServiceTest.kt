@@ -10,9 +10,9 @@ import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,8 +28,8 @@ import kotlin.test.assertTrue
  */
 class SearchServiceTest {
 
-    private val becas = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS
-    private val normas = CategoriaDto.NORMAS_Y_LEGISLACION
+    private val becas = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID
+    private val normas = CategoryDto.NORMS_AND_LEGISLATION
 
     @Test
     fun `category filter returns only that category with published summaries`() = runTest {
@@ -152,16 +152,16 @@ class SearchServiceTest {
             feedRepository = InMemoryFeedRepository(items),
         )
 
-    private fun spec(publicationId: String, category: CategoriaDto, date: String): FragmentSpec =
+    private fun spec(publicationId: String, category: CategoryDto, date: String): FragmentSpec =
         FragmentSpec(publicationId, category, date)
 
-    private fun published(publicationId: String, category: CategoriaDto, date: String): FeedItem = FeedItem(
+    private fun published(publicationId: String, category: CategoryDto, date: String): FeedItem = FeedItem(
         publication = Publicacion(
             id = publicationId,
             title = "Publicación $publicationId",
             publicationDate = date,
             issuingBody = "Ministerio de prueba",
-            section = SeccionBoeDto.I,
+            section = BoeSectionDto.I,
             heading = null,
             texto = null,
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$publicationId",
@@ -181,7 +181,7 @@ class SearchServiceTest {
     )
 
     /** Ficha de metadatos usada por el doble para aplicar el filtro de recuperación. */
-    private data class FragmentSpec(val publicationId: String, val category: CategoriaDto, val date: String)
+    private data class FragmentSpec(val publicationId: String, val category: CategoryDto, val date: String)
 
     /** Doble de [FragmentRepository] que aplica el [SearchFilter] sobre las fichas. */
     private class InMemoryFragmentRepository(private val specs: List<FragmentSpec>) : FragmentRepository {

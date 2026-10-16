@@ -5,9 +5,9 @@ import es.aviferdev.datopublico.backend.persistence.PublicationRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.persistence.SummaryRepository
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -37,9 +37,9 @@ class PublicationDetailServiceTest {
         assertEquals("Convocatoria de prueba", detail.title)
         assertEquals(DATE, detail.publicationDate)
         assertEquals("Ministerio de prueba", detail.issuingBody)
-        assertEquals(SeccionBoeDto.II_B, detail.section)
+        assertEquals(BoeSectionDto.II_B, detail.section)
         assertEquals("Becas y ayudas", detail.heading)
-        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, detail.category)
+        assertEquals(CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID, detail.category)
         assertEquals("https://www.boe.es/diario_boe/txt.php?id=$PUBLISHED_ID", detail.officialUrl)
         assertEquals(DeadlineDto("2026-10-30", "20 días hábiles"), detail.deadline)
         val summary = detail.summary
@@ -128,13 +128,13 @@ class PublicationDetailServiceTest {
 
     private fun publication(
         id: String,
-        category: CategoriaDto? = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category: CategoryDto? = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
     ): Publicacion = Publicacion(
         id = id,
         title = "Convocatoria de prueba",
         publicationDate = DATE,
         issuingBody = "Ministerio de prueba",
-        section = SeccionBoeDto.II_B,
+        section = BoeSectionDto.II_B,
         heading = "Becas y ayudas",
         texto = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",

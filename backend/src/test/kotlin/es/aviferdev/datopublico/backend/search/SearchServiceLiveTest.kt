@@ -13,8 +13,8 @@ import es.aviferdev.datopublico.backend.rag.embeddings.E5EmbeddingProvider
 import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingConfig
 import es.aviferdev.datopublico.backend.rag.indexing.FragmentIndexer
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -94,10 +94,10 @@ class SearchServiceLiveTest {
     /** El filtro de categoría incluye la publicación y excluye una categoría distinta. */
     private fun checkCategoryFilter(service: SearchService) {
         val included = runBlocking {
-            service.search(QUERY, category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS)
+            service.search(QUERY, category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID)
         }
         val excluded = runBlocking {
-            service.search(QUERY, category = CategoriaDto.NORMAS_Y_LEGISLACION)
+            service.search(QUERY, category = CategoryDto.NORMS_AND_LEGISLATION)
         }
 
         assertEquals(1, included.results.size, "la categoría de la publicación debe incluirla")
@@ -126,14 +126,14 @@ class SearchServiceLiveTest {
         title = "Convocatoria de ayudas para prácticas formativas",
         publicationDate = DATE,
         issuingBody = "Ministerio de Universidades",
-        section = SeccionBoeDto.III,
+        section = BoeSectionDto.III,
         heading = null,
         texto = RELEVANT_ARTICLE + "\n" + UNRELATED_ARTICLE,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
     )
 
     /** Resumen ciudadano publicado de la publicación de prueba. */

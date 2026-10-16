@@ -2,8 +2,8 @@ package es.aviferdev.datopublico.backend.rag.evaluation
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.rag.summary.SummaryGenerationDto
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import java.nio.file.Files
 import java.nio.file.Path
@@ -149,8 +149,8 @@ data class SummaryGoldenSetEntryDto(
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("date") val date: String,
-    @SerialName("section") val section: SeccionBoeDto,
-    @SerialName("category") val category: CategoriaDto,
+    @SerialName("section") val section: BoeSectionDto,
+    @SerialName("category") val category: CategoryDto,
     @SerialName("organization") val organization: String? = null,
     @SerialName("text") val text: String,
     @SerialName("reference") val reference: SummaryGenerationDto,

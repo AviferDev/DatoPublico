@@ -9,7 +9,7 @@ import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.executeUpdate
 import es.aviferdev.datopublico.backend.persistence.queryRows
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.io.File
 import java.time.Instant
 import java.time.LocalDate
@@ -98,7 +98,7 @@ class IngestionJobLiveTest {
         control = null,
         title = "Publicación de prueba $id",
         publicationDate = DATE.toString(),
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         issuingBody = "MINISTERIO DE PRUEBA",
         heading = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",

@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.validation
 
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.SummaryDto
 import kotlin.test.Test
@@ -22,7 +22,7 @@ class CitizenSummaryValidatorTest {
     fun blankOfficialSourceFails() {
         val summary = validSummary.copy(officialSource = "   ")
 
-        val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
+        val result = CitizenSummaryValidator.validate(summary, CategoryDto.NORMS_AND_LEGISLATION)
 
         assertFalse(result.isValid)
         assertEquals(listOf(CitizenSummaryViolation.MISSING_OFFICIAL_SOURCE), result.violations)
@@ -32,7 +32,7 @@ class CitizenSummaryValidatorTest {
     fun sourceWithoutAbsoluteSchemeFails() {
         val summary = validSummary.copy(officialSource = "www.boe.es/diario_boe/txt.php?id=BOE-B-2026-1234")
 
-        val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
+        val result = CitizenSummaryValidator.validate(summary, CategoryDto.NORMS_AND_LEGISLATION)
 
         assertEquals(listOf(CitizenSummaryViolation.MISSING_OFFICIAL_SOURCE), result.violations)
     }
@@ -41,7 +41,7 @@ class CitizenSummaryValidatorTest {
     fun employmentSummaryWithoutDeadlineFails() {
         val summary = validSummary.copy(deadline = null)
 
-        val result = CitizenSummaryValidator.validate(summary, CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO)
+        val result = CitizenSummaryValidator.validate(summary, CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS)
 
         assertFalse(result.isValid)
         assertEquals(listOf(CitizenSummaryViolation.MISSING_DEADLINE), result.violations)
@@ -51,7 +51,7 @@ class CitizenSummaryValidatorTest {
     fun scholarshipSummaryWithBlankDeadlineFails() {
         val summary = validSummary.copy(deadline = DeadlineDto(deadlineDate = "  "))
 
-        val result = CitizenSummaryValidator.validate(summary, CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS)
+        val result = CitizenSummaryValidator.validate(summary, CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID)
 
         assertEquals(listOf(CitizenSummaryViolation.MISSING_DEADLINE), result.violations)
     }
@@ -60,7 +60,7 @@ class CitizenSummaryValidatorTest {
     fun generalNormWithoutDeadlineIsValid() {
         val summary = validSummary.copy(deadline = null)
 
-        val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
+        val result = CitizenSummaryValidator.validate(summary, CategoryDto.NORMS_AND_LEGISLATION)
 
         assertTrue(result.isValid)
         assertEquals(emptyList(), result.violations)
@@ -70,7 +70,7 @@ class CitizenSummaryValidatorTest {
     fun blankWhatChangesFails() {
         val summary = validSummary.copy(whatChanges = "")
 
-        val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
+        val result = CitizenSummaryValidator.validate(summary, CategoryDto.NORMS_AND_LEGISLATION)
 
         assertEquals(listOf(CitizenSummaryViolation.MISSING_WHAT_CHANGES), result.violations)
     }
@@ -79,7 +79,7 @@ class CitizenSummaryValidatorTest {
     fun blankWhoIsAffectedFails() {
         val summary = validSummary.copy(whoIsAffected = "   ")
 
-        val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
+        val result = CitizenSummaryValidator.validate(summary, CategoryDto.NORMS_AND_LEGISLATION)
 
         assertEquals(listOf(CitizenSummaryViolation.MISSING_WHO_IS_AFFECTED), result.violations)
     }
@@ -88,7 +88,7 @@ class CitizenSummaryValidatorTest {
     fun blankKeyFigureFails() {
         val summary = validSummary.copy(keyFigures = listOf("120 plazas", ""))
 
-        val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
+        val result = CitizenSummaryValidator.validate(summary, CategoryDto.NORMS_AND_LEGISLATION)
 
         assertEquals(listOf(CitizenSummaryViolation.BLANK_KEY_FIGURE), result.violations)
     }
@@ -97,7 +97,7 @@ class CitizenSummaryValidatorTest {
     fun emptyKeyFiguresAreAllowed() {
         val summary = validSummary.copy(keyFigures = emptyList())
 
-        val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
+        val result = CitizenSummaryValidator.validate(summary, CategoryDto.NORMS_AND_LEGISLATION)
 
         assertTrue(result.isValid)
     }
@@ -106,7 +106,7 @@ class CitizenSummaryValidatorTest {
     fun violationsAccumulate() {
         val summary = validSummary.copy(whatChanges = "", whoIsAffected = "", officialSource = "")
 
-        val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
+        val result = CitizenSummaryValidator.validate(summary, CategoryDto.NORMS_AND_LEGISLATION)
 
         assertEquals(
             listOf(
@@ -121,8 +121,8 @@ class CitizenSummaryValidatorTest {
     @Test
     fun employmentAndScholarshipUseDeadlineVariant() {
         val categories = listOf(
-            CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
-            CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+            CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
+            CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
         )
 
         val variants = categories.map { category -> CitizenSummaryVariantResolver.variantFor(category) }
@@ -139,11 +139,11 @@ class CitizenSummaryValidatorTest {
     @Test
     fun remainingCategoriesUseGeneralVariant() {
         val deadlineCategories = setOf(
-            CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
-            CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+            CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
+            CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
         )
 
-        val variants = (CategoriaDto.entries - deadlineCategories)
+        val variants = (CategoryDto.entries - deadlineCategories)
             .map { category -> CitizenSummaryVariantResolver.variantFor(category) }
 
         assertTrue(variants.all { variant -> variant == CitizenSummaryVariant.GENERAL })

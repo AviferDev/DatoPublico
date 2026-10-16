@@ -3,8 +3,8 @@ package es.aviferdev.datopublico.backend.ingesta.categorizacion
 import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioResponseDto
 import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
 import es.aviferdev.datopublico.backend.ingesta.sumario.toEntradasSumario
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import java.time.LocalDate
 import kotlin.test.Test
@@ -52,7 +52,7 @@ class PublicationClassifierTest {
             val entrada = assertNotNull(entradas[identificador], "sin entrada de sumario para $identificador")
             assertNull(entrada.heading, "$identificador: sin epígrafe")
             assertEquals(
-                CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
+                CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
                 classifier.classify(entrada.section, entrada.heading, entrada.title),
                 "$identificador",
             )
@@ -61,7 +61,7 @@ class PublicationClassifierTest {
 
     @Test
     fun `los casos ambiguos sin palabras clave usan la category por defecto de la section`() {
-        SeccionBoeDto.entries.forEach { section ->
+        BoeSectionDto.entries.forEach { section ->
             val actual = classifier.classify(section, null, "Anuncio sin palabras clave reconocibles")
             assertEquals(DEFAULTS_POR_SECCION[section], actual, "sección $section")
         }
@@ -69,10 +69,10 @@ class PublicationClassifierTest {
 
     @Test
     fun `ante varias reglas aplicables gana la primera del orden documentado`() {
-        // «Ayudas» (BECAS) precede en el orden a «premios» (PREMIOS).
-        val actual = classifier.classify(SeccionBoeDto.I, "Ayudas y premios", "Título de la publicación")
+        // «Ayudas» (BECAS) precede en el orden a «premios» (AWARDS).
+        val actual = classifier.classify(BoeSectionDto.I, "Ayudas y premios", "Título de la publicación")
 
-        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, actual)
+        assertEquals(CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID, actual)
     }
 
     @Test
@@ -103,15 +103,15 @@ class PublicationClassifierTest {
 
     private companion object {
         /** Identificador real → categoría curada esperada (escenario 1 del spec). */
-        val EXPECTED_CATEGORIES: Map<String, CategoriaDto> = mapOf(
-            "BOE-A-2026-20979" to CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
-            "BOE-A-2024-87" to CategoriaDto.NOMBRAMIENTOS_Y_CESES,
-            "BOE-A-2024-93" to CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
-            "BOE-A-2024-117" to CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
-            "BOE-B-2024-1" to CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
-            "BOE-B-2024-25" to CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
-            "BOE-B-2024-76" to CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
-            "BOE-B-2024-92" to CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
+        val EXPECTED_CATEGORIES: Map<String, CategoryDto> = mapOf(
+            "BOE-A-2026-20979" to CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
+            "BOE-A-2024-87" to CategoryDto.APPOINTMENTS_AND_DISMISSALS,
+            "BOE-A-2024-93" to CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
+            "BOE-A-2024-117" to CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
+            "BOE-B-2024-1" to CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
+            "BOE-B-2024-25" to CategoryDto.PUBLIC_INFORMATION_AND_CONCESSIONS,
+            "BOE-B-2024-76" to CategoryDto.PUBLIC_INFORMATION_AND_CONCESSIONS,
+            "BOE-B-2024-92" to CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
         )
 
         /** Identificador real → epígrafe del sumario (puede ser `null`). */
@@ -127,15 +127,15 @@ class PublicationClassifierTest {
         )
 
         /** Categoría por defecto por sección (misma tabla que el clasificador). */
-        val DEFAULTS_POR_SECCION: Map<SeccionBoeDto, CategoriaDto> = mapOf(
-            SeccionBoeDto.I to CategoriaDto.NORMAS_Y_LEGISLACION,
-            SeccionBoeDto.II_A to CategoriaDto.NOMBRAMIENTOS_Y_CESES,
-            SeccionBoeDto.II_B to CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
-            SeccionBoeDto.III to CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
-            SeccionBoeDto.IV to CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
-            SeccionBoeDto.V_A to CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
-            SeccionBoeDto.V_B to CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
-            SeccionBoeDto.V_C to CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
+        val DEFAULTS_POR_SECCION: Map<BoeSectionDto, CategoryDto> = mapOf(
+            BoeSectionDto.I to CategoryDto.NORMS_AND_LEGISLATION,
+            BoeSectionDto.II_A to CategoryDto.APPOINTMENTS_AND_DISMISSALS,
+            BoeSectionDto.II_B to CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
+            BoeSectionDto.III to CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
+            BoeSectionDto.IV to CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
+            BoeSectionDto.V_A to CategoryDto.PUBLIC_INFORMATION_AND_CONCESSIONS,
+            BoeSectionDto.V_B to CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
+            BoeSectionDto.V_C to CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
         )
     }
 }

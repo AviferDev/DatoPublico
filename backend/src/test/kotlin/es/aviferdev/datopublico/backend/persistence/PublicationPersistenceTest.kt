@@ -1,9 +1,9 @@
 package es.aviferdev.datopublico.backend.persistence
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -31,7 +31,7 @@ class PublicationPersistenceTest {
         val entity = fullPublication().toPublicationEntity()
 
         assertEquals("II_A", entity.section)
-        assertEquals("BECAS_SUBVENCIONES_Y_AYUDAS", entity.category)
+        assertEquals("SCHOLARSHIPS_GRANTS_AND_AID", entity.category)
     }
 
     @Test
@@ -49,7 +49,7 @@ class PublicationPersistenceTest {
             title = "Resolución de 21 de diciembre de 2023",
             publicationDate = "2024-01-02",
             issuingBody = null,
-            section = SeccionBoeDto.II_A,
+            section = BoeSectionDto.II_A,
             heading = null,
             texto = null,
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-87",
@@ -86,14 +86,14 @@ class PublicationPersistenceTest {
         title = "Resolución de 8 de octubre de 2026",
         publicationDate = "2026-10-09",
         issuingBody = "MINISTERIO DE EDUCACIÓN",
-        section = SeccionBoeDto.II_A,
+        section = BoeSectionDto.II_A,
         heading = "Becas y subvenciones",
         texto = "Primero. Convocar...\nSegundo. El plazo...",
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-20979",
         urlXml = "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-20979",
         urlPdf = "https://www.boe.es/boe/dias/2026/10/09/pdfs/A00001-00002.pdf",
         rango = "Resolución",
-        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
         deadline = DeadlineDto(deadlineDate = "2026-11-30", description = "Diez días hábiles"),
     )
 }

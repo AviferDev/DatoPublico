@@ -2,7 +2,7 @@ package es.aviferdev.datopublico.backend.plugins
 
 import es.aviferdev.datopublico.model.ApiErrorCodeDto
 import es.aviferdev.datopublico.model.ApiErrorDto
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.ChatCitationDto
 import es.aviferdev.datopublico.model.ChatRequestDto
 import es.aviferdev.datopublico.model.ChatResponseDto
@@ -14,7 +14,7 @@ import es.aviferdev.datopublico.model.PublicationDto
 import es.aviferdev.datopublico.model.DailySummaryDto
 import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.model.SearchResultsDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -106,8 +106,8 @@ private val SCHEMA_SERIALIZERS: Map<String, KSerializer<*>> = mapOf(
 
 /** Enums de wire del documento y el enum de `:shared` cuyos tokens espejan. */
 private val ENUM_SERIALIZERS: Map<String, KSerializer<*>> = mapOf(
-    "CategoriaDto" to CategoriaDto.serializer(),
-    "SeccionBoeDto" to SeccionBoeDto.serializer(),
+    "CategoryDto" to CategoryDto.serializer(),
+    "BoeSectionDto" to BoeSectionDto.serializer(),
     "HighlightReasonDto" to HighlightReasonDto.serializer(),
     "ChatStatusDto" to ChatStatusDto.serializer(),
     "ApiErrorCodeDto" to ApiErrorCodeDto.serializer(),

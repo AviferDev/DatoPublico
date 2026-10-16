@@ -10,7 +10,7 @@ import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.executeUpdate
 import es.aviferdev.datopublico.backend.persistence.queryRows
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -162,7 +162,7 @@ private class LiveSummaryClient : BoeSumarioClient {
                 control = null,
                 title = "Publicación de prueba $date",
                 publicationDate = date.toString(),
-                section = SeccionBoeDto.I,
+                section = BoeSectionDto.I,
                 issuingBody = "MINISTERIO DE PRUEBA",
                 heading = null,
                 officialUrl = "https://www.boe.es/diario_boe/txt.php?id=FT00011-LIVE-$date",

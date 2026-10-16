@@ -2,8 +2,8 @@ package es.aviferdev.datopublico.backend.chat
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -39,14 +39,14 @@ class PublicationCitationResolverTest {
         title = "Real Decreto de prueba",
         publicationDate = "2026-10-11",
         issuingBody = null,
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         heading = null,
         texto = null,
         officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        category = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoryDto.NORMS_AND_LEGISLATION,
     )
 
     /** Doble en memoria de [PublicationRepository] para el gate. */

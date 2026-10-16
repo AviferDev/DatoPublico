@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  *
  * Cada valor declara su `@SerialName` en `snake_case` **sin acentos ni espacios**:
  * es el token de wire compartido entre backend y cliente y no debe renombrarse sin
- * una migración (mismo criterio que [CategoriaDto]).
+ * una migración (mismo criterio que [CategoryDto]).
  */
 @Serializable
 enum class HighlightReasonDto {

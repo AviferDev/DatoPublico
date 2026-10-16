@@ -3,8 +3,8 @@ package es.aviferdev.datopublico.backend.ingesta.publicacion
 import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioResponseDto
 import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
 import es.aviferdev.datopublico.backend.ingesta.sumario.toEntradasSumario
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -64,7 +64,7 @@ class BoePublicacionParserTest {
             .map { parser.parsear(it).section }
             .toSet()
 
-        assertEquals(SeccionBoeDto.entries.toSet(), secciones)
+        assertEquals(BoeSectionDto.entries.toSet(), secciones)
     }
 
     @Test
@@ -91,7 +91,7 @@ class BoePublicacionParserTest {
         assertNull(publicacion.texto)
         assertNull(publicacion.rango)
         assertEquals("BOE-A-1", publicacion.id)
-        assertEquals(SeccionBoeDto.I, publicacion.section)
+        assertEquals(BoeSectionDto.I, publicacion.section)
     }
 
     private fun entradasDelSumario(): Map<String, EntradaSumario> =
@@ -132,7 +132,7 @@ class BoePublicacionParserTest {
         control = "2026/1",
         title = "Título de prueba",
         publicationDate = "2026-10-09",
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         issuingBody = issuingBody,
         heading = "Epígrafe",
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",
@@ -174,15 +174,15 @@ class BoePublicacionParserTest {
         )
 
         /** Categoría curada esperada por identificador (FT00012, escenario 1). */
-        val CATEGORIAS_POR_ID: Map<String, CategoriaDto> = mapOf(
-            "BOE-A-2026-20979" to CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
-            "BOE-A-2024-87" to CategoriaDto.NOMBRAMIENTOS_Y_CESES,
-            "BOE-A-2024-93" to CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
-            "BOE-A-2024-117" to CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
-            "BOE-B-2024-1" to CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
-            "BOE-B-2024-25" to CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
-            "BOE-B-2024-76" to CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
-            "BOE-B-2024-92" to CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
+        val CATEGORIAS_POR_ID: Map<String, CategoryDto> = mapOf(
+            "BOE-A-2026-20979" to CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
+            "BOE-A-2024-87" to CategoryDto.APPOINTMENTS_AND_DISMISSALS,
+            "BOE-A-2024-93" to CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
+            "BOE-A-2024-117" to CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
+            "BOE-B-2024-1" to CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
+            "BOE-B-2024-25" to CategoryDto.PUBLIC_INFORMATION_AND_CONCESSIONS,
+            "BOE-B-2024-76" to CategoryDto.PUBLIC_INFORMATION_AND_CONCESSIONS,
+            "BOE-B-2024-92" to CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
         )
 
         /** Fecha límite esperada por identificador (FT00012, escenarios 2 y 3). */

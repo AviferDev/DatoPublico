@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.plugins
 
 import es.aviferdev.datopublico.backend.search.SearchService
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
@@ -17,7 +17,7 @@ import java.time.LocalDate
  * Devuelve las publicaciones más relevantes para la consulta (con su resumen
  * publicado), deduplicadas y ordenadas por similitud semántica. `q` es
  * **obligatoria** y no vacía; `categoria` es el **token de wire** de
- * [CategoriaDto] (p. ej. `becas_subvenciones_y_ayudas`, no el nombre del enum);
+ * [CategoryDto] (p. ej. `becas_subvenciones_y_ayudas`, no el nombre del enum);
  * `desde`/`hasta` son fechas ISO-8601 (`YYYY-MM-DD`) **inclusivas** y `limite`
  * (default [SearchService.DEFAULT_LIMIT], máx [SearchService.MAX_LIMIT]) debe ser
  * un entero en rango. Un parámetro inválido responde `400` **sin cuerpo tipado**
@@ -51,7 +51,7 @@ fun Route.searchRoutes(service: SearchService) {
  */
 internal data class SearchRequest(
     val query: String,
-    val category: CategoriaDto?,
+    val category: CategoryDto?,
     val publishedFrom: String?,
     val publishedTo: String?,
     val limit: Int,
@@ -99,10 +99,10 @@ private fun anyInvalid(vararg parameters: OptionalParam<*>): Boolean =
 private fun <T> optional(raw: String?, parse: (String) -> T?): OptionalParam<T> =
     OptionalParam(present = raw != null, value = raw?.let(parse))
 
-/** Resuelve el token de wire de [CategoriaDto] (snake_case) por su contrato de serialización. */
-private fun categoryOrNull(token: String): CategoriaDto? =
+/** Resuelve el token de wire de [CategoryDto] (snake_case) por su contrato de serialización. */
+private fun categoryOrNull(token: String): CategoryDto? =
     runCatching {
-        DatoPublicoJson.decodeFromString(CategoriaDto.serializer(), "\"$token\"")
+        DatoPublicoJson.decodeFromString(CategoryDto.serializer(), "\"$token\"")
     }.getOrNull()
 
 /** Fecha ISO-8601 `YYYY-MM-DD` con 2 dígitos por campo. */

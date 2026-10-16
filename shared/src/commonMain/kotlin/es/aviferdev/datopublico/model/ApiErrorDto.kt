@@ -34,7 +34,7 @@ data class ApiErrorDto(
  * Cada valor se corresponde con un estado HTTP estable: `solicitud_invalida`
  * (`400`), `no_encontrado` (`404`), `demasiadas_peticiones` (`429`),
  * `error_interno` (`500`) y `servicio_no_disponible` (`502`). Son tokens
- * **estables y localizables** (como `ChatStatusDto`/`CategoriaDto`): **no** deben
+ * **estables y localizables** (como `ChatStatusDto`/`CategoryDto`): **no** deben
  * renombrarse sin una migración de contrato.
  */
 @Serializable

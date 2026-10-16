@@ -1,9 +1,9 @@
 package es.aviferdev.datopublico.backend.persistence
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Types
@@ -84,14 +84,14 @@ internal fun PublicationEntity.toDomain(): Publicacion = Publicacion(
     title = title,
     publicationDate = publicationDate,
     issuingBody = organization,
-    section = SeccionBoeDto.valueOf(section),
+    section = BoeSectionDto.valueOf(section),
     heading = heading,
     texto = body,
     officialUrl = officialUrl,
     urlXml = xmlUrl,
     urlPdf = pdfUrl,
     rango = rank,
-    category = category?.let(CategoriaDto::valueOf),
+    category = category?.let(CategoryDto::valueOf),
     deadline = deadlineDate?.let { deadlineDate ->
         DeadlineDto(deadlineDate = deadlineDate, description = deadlineDescription)
     },

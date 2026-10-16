@@ -11,9 +11,9 @@ import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
 import es.aviferdev.datopublico.backend.search.SearchService
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.SearchResultsDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -46,7 +46,7 @@ class SearchRouteTest {
         assertEquals("becas", results.query)
         assertEquals(listOf("BOE-A-1"), results.results.map { publication -> publication.id })
         assertTrue(results.results.first().summary != null)
-        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, results.results.first().category)
+        assertEquals(CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID, results.results.first().category)
     }
 
     @Test
@@ -124,14 +124,14 @@ class SearchRouteTest {
             title = "Publicación $id",
             publicationDate = DATE,
             issuingBody = "Ministerio de prueba",
-            section = SeccionBoeDto.I,
+            section = BoeSectionDto.I,
             heading = null,
             texto = null,
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
             urlXml = null,
             urlPdf = null,
             rango = null,
-            category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+            category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
         ),
         summary = SummaryEntity(
             publicationId = id,

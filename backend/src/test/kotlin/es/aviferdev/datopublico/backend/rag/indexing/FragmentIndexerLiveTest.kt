@@ -10,8 +10,8 @@ import es.aviferdev.datopublico.backend.rag.embeddings.E5EmbeddingProvider
 import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingConfig
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -104,8 +104,8 @@ class FragmentIndexerLiveTest {
     /** El filtro de categoría incluye la publicación y excluye una categoría distinta. */
     private fun checkMetadataFilter(provider: E5EmbeddingProvider, repository: FragmentRepositoryJdbc) {
         val search = HybridSearch(provider, repository)
-        val included = search.search(QUERY, SearchFilter(category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS), limit = 10)
-        val excluded = search.search(QUERY, SearchFilter(category = CategoriaDto.NORMAS_Y_LEGISLACION), limit = 10)
+        val included = search.search(QUERY, SearchFilter(category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID), limit = 10)
+        val excluded = search.search(QUERY, SearchFilter(category = CategoryDto.NORMS_AND_LEGISLATION), limit = 10)
 
         assertEquals(2, included.size, "la categoría de la publicación debe incluirla")
         assertTrue(excluded.isEmpty(), "otra categoría no debe devolverla")
@@ -124,14 +124,14 @@ class FragmentIndexerLiveTest {
         title = "Convocatoria de ayudas para prácticas formativas",
         publicationDate = DATE,
         issuingBody = "Ministerio de Universidades",
-        section = SeccionBoeDto.III,
+        section = BoeSectionDto.III,
         heading = null,
         texto = RELEVANT_ARTICLE + "\n" + UNRELATED_ARTICLE,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
     )
 
     /** Resuelve las rutas del modelo/tokenizador desde el entorno o el directorio por defecto. */

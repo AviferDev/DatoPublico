@@ -25,11 +25,11 @@ data class PublicationDto(
     @SerialName("organismo")
     val issuingBody: String?,
     @SerialName("seccion")
-    val section: SeccionBoeDto,
+    val section: BoeSectionDto,
     @SerialName("epigrafe")
     val heading: String?,
     @SerialName("categoria")
-    val category: CategoriaDto,
+    val category: CategoryDto,
     @SerialName("urlOficial")
     val officialUrl: String,
     @SerialName("resumen")

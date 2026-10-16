@@ -8,7 +8,7 @@ import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioClient
 import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.nio.file.Path
 import java.time.LocalDate
 import java.util.concurrent.Executors
@@ -154,7 +154,7 @@ class BackfillRunnerTest {
         val repository = InMemoryPublicationRepository()
         val runner = BackfillRunner(
             job = realJob(repository) { date ->
-                SeccionBoeDto.values().map { section -> entry("BOE-${section.name}-$date", date, section) }
+                BoeSectionDto.values().map { section -> entry("BOE-${section.name}-$date", date, section) }
             },
             store = RecordingCheckpointStore(),
         )
@@ -164,7 +164,7 @@ class BackfillRunnerTest {
         assertEquals(8, result.saved)
         assertEquals(8, repository.saved.size)
         assertEquals(
-            SeccionBoeDto.values().map { section -> section.name }.toSet(),
+            BoeSectionDto.values().map { section -> section.name }.toSet(),
             repository.saved.values.map { publication -> publication.section.name }.toSet(),
         )
     }
@@ -197,7 +197,7 @@ class BackfillRunnerTest {
     private fun days(first: Long, last: Long): List<LocalDate> =
         (first..last).map { offset -> D0.plusDays(offset) }
 
-    private fun entry(id: String, date: LocalDate, section: SeccionBoeDto = SeccionBoeDto.I) =
+    private fun entry(id: String, date: LocalDate, section: BoeSectionDto = BoeSectionDto.I) =
         EntradaSumario(
             identificador = id,
             control = null,

@@ -5,7 +5,7 @@ import es.aviferdev.datopublico.backend.persistence.FeedItem
 import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.PublicationDto
 import es.aviferdev.datopublico.model.SearchResultsDto
 import kotlinx.coroutines.Dispatchers
@@ -53,7 +53,7 @@ class SearchService(
      */
     suspend fun search(
         query: String,
-        category: CategoriaDto? = null,
+        category: CategoryDto? = null,
         publishedFrom: String? = null,
         publishedTo: String? = null,
         limit: Int = DEFAULT_LIMIT,

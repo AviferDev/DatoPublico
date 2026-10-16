@@ -1,8 +1,8 @@
 package es.aviferdev.datopublico.backend.relevance
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.text.Normalizer
 
 /**
@@ -64,7 +64,7 @@ class HighlightRanker {
      * cada razón devuelta, así que puntuación y explicación no pueden divergir.
      */
     private fun reasonsOf(publication: Publicacion): List<HighlightReason> = buildList {
-        if (publication.section == SeccionBoeDto.I) {
+        if (publication.section == BoeSectionDto.I) {
             add(HighlightReason.NORMATIVE_SECTION)
         }
         if (rankScoreOf(publication.rango) > NO_WEIGHT) {
@@ -181,9 +181,9 @@ class HighlightRanker {
 
         /** Categorías curadas (FT00012) que activan [THEMATIC_WEIGHT]. */
         val THEMATIC_CATEGORIES = setOf(
-            CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
-            CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
-            CategoriaDto.PREMIOS,
+            CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
+            CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
+            CategoryDto.AWARDS,
         )
 
         /**

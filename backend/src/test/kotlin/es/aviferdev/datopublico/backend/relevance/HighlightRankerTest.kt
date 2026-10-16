@@ -1,9 +1,9 @@
 package es.aviferdev.datopublico.backend.relevance
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -100,8 +100,8 @@ class HighlightRankerTest {
             listOf(
                 publication(
                     id = "BOE-A-2026-1",
-                    section = SeccionBoeDto.V_C,
-                    category = CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
+                    section = BoeSectionDto.V_C,
+                    category = CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
                     body = "Jefatura del Estado",
                 ),
             ),
@@ -119,8 +119,8 @@ class HighlightRankerTest {
                     notice(id = "BOE-B-2026-20"),
                     publication(
                         id = "BOE-B-2026-21",
-                        section = SeccionBoeDto.III,
-                        category = CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
+                        section = BoeSectionDto.III,
+                        category = CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
                     ),
                 ),
             ).isEmpty(),
@@ -165,9 +165,9 @@ class HighlightRankerTest {
     /** Publicación de prueba con señales por defecto neutras. */
     private fun publication(
         id: String,
-        section: SeccionBoeDto = SeccionBoeDto.I,
+        section: BoeSectionDto = BoeSectionDto.I,
         rank: String? = null,
-        category: CategoriaDto? = null,
+        category: CategoryDto? = null,
         deadline: DeadlineDto? = null,
         body: String? = null,
     ): Publicacion = Publicacion(
@@ -187,27 +187,27 @@ class HighlightRankerTest {
     )
 
     private fun organicLaw(id: String): Publicacion =
-        publication(id = id, section = SeccionBoeDto.I, rank = "Ley Orgánica")
+        publication(id = id, section = BoeSectionDto.I, rank = "Ley Orgánica")
 
     private fun realDecree(id: String): Publicacion =
-        publication(id = id, section = SeccionBoeDto.I, rank = "Real Decreto")
+        publication(id = id, section = BoeSectionDto.I, rank = "Real Decreto")
 
     private fun order(id: String): Publicacion =
-        publication(id = id, section = SeccionBoeDto.I, rank = "Orden")
+        publication(id = id, section = BoeSectionDto.I, rank = "Orden")
 
     private fun publicSectorCall(id: String): Publicacion =
         publication(
             id = id,
-            section = SeccionBoeDto.II_B,
-            category = CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
+            section = BoeSectionDto.II_B,
+            category = CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
             deadline = DEADLINE,
         )
 
     private fun notice(id: String): Publicacion =
         publication(
             id = id,
-            section = SeccionBoeDto.V_C,
-            category = CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
+            section = BoeSectionDto.V_C,
+            category = CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
         )
 
     private companion object {

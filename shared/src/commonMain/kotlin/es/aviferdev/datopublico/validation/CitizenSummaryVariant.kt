@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.validation
 
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 
 /**
  * Variante del contrato del resumen ciudadano.
@@ -25,15 +25,15 @@ object CitizenSummaryVariantResolver {
     /**
      * Devuelve la variante del resumen para [category].
      *
-     * `OPOSICIONES_Y_EMPLEO_PUBLICO` y `BECAS_SUBVENCIONES_Y_AYUDAS` usan la
+     * `PUBLIC_EMPLOYMENT_AND_JOB_OFFERS` y `SCHOLARSHIPS_GRANTS_AND_AID` usan la
      * variante que exige plazo; el resto de categorías usan la variante general.
      *
      * @param category categoría curada de la publicación de origen.
      * @return la variante del contrato del resumen ciudadano.
      */
-    fun variantFor(category: CategoriaDto): CitizenSummaryVariant = when (category) {
-        CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO,
-        CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS -> CitizenSummaryVariant.EMPLOYMENT_OR_SCHOLARSHIP
+    fun variantFor(category: CategoryDto): CitizenSummaryVariant = when (category) {
+        CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
+        CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID -> CitizenSummaryVariant.EMPLOYMENT_OR_SCHOLARSHIP
         else -> CitizenSummaryVariant.GENERAL
     }
 }

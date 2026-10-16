@@ -6,10 +6,10 @@ import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.persistence.SummaryRepository
 import es.aviferdev.datopublico.backend.publication.PublicationDetailService
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.PublicationDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -45,7 +45,7 @@ class PublicationDetailRouteTest {
         assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
         val detail = DatoPublicoJson.decodeFromString<PublicationDto>(response.bodyAsText())
         assertEquals(PUBLISHED_ID, detail.id)
-        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, detail.category)
+        assertEquals(CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID, detail.category)
         assertEquals("https://www.boe.es/diario_boe/txt.php?id=$PUBLISHED_ID", detail.officialUrl)
         assertEquals(DeadlineDto("2026-10-30", "20 días hábiles"), detail.deadline)
         val summary = detail.summary
@@ -111,14 +111,14 @@ class PublicationDetailRouteTest {
         title = "Convocatoria de prueba",
         publicationDate = DATE,
         issuingBody = "Ministerio de prueba",
-        section = SeccionBoeDto.II_B,
+        section = BoeSectionDto.II_B,
         heading = "Becas y ayudas",
         texto = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = "Resolución",
-        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
         deadline = DeadlineDto("2026-10-30", "20 días hábiles"),
     )
 

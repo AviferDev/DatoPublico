@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.ingesta.publicacion
 
 import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -46,7 +46,7 @@ class BoePublicacionLiveTest {
         control = "2023/3417",
         title = "Resolución de 21 de diciembre de 2023, de la Subsecretaría",
         publicationDate = "2024-01-02",
-        section = SeccionBoeDto.II_A,
+        section = BoeSectionDto.II_A,
         issuingBody = "MINISTERIO DE ASUNTOS EXTERIORES, UNIÓN EUROPEA Y COOPERACIÓN",
         heading = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$IDENTIFICADOR",

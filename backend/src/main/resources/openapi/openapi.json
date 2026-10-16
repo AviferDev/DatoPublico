@@ -155,8 +155,8 @@
             "name": "categoria",
             "in": "query",
             "required": false,
-            "description": "Token de wire de `CategoriaDto` (p. ej. `becas_subvenciones_y_ayudas`).",
-            "schema": { "$ref": "#/components/schemas/CategoriaDto" }
+            "description": "Token de wire de `CategoryDto` (p. ej. `becas_subvenciones_y_ayudas`).",
+            "schema": { "$ref": "#/components/schemas/CategoryDto" }
           },
           {
             "name": "desde",
@@ -317,7 +317,7 @@
   },
   "components": {
     "schemas": {
-      "CategoriaDto": {
+      "CategoryDto": {
         "type": "string",
         "description": "Familia curada de la publicación (token de wire en `snake_case`).",
         "enum": [
@@ -334,7 +334,7 @@
           "otras_disposiciones_y_anuncios"
         ]
       },
-      "SeccionBoeDto": {
+      "BoeSectionDto": {
         "type": "string",
         "description": "Sección del BOE de la que procede la publicación (notación oficial).",
         "enum": ["I", "II.A", "II.B", "III", "IV", "V.A", "V.B", "V.C"]
@@ -407,9 +407,9 @@
           "titulo": { "type": "string" },
           "fechaPublicacion": { "type": "string", "format": "date" },
           "organismo": { "type": ["string", "null"] },
-          "seccion": { "$ref": "#/components/schemas/SeccionBoeDto" },
+          "seccion": { "$ref": "#/components/schemas/BoeSectionDto" },
           "epigrafe": { "type": ["string", "null"] },
-          "categoria": { "$ref": "#/components/schemas/CategoriaDto" },
+          "categoria": { "$ref": "#/components/schemas/CategoryDto" },
           "urlOficial": { "type": "string", "format": "uri" },
           "resumen": {
             "anyOf": [{ "$ref": "#/components/schemas/SummaryDto" }, { "type": "null" }]

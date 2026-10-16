@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * contrato entre backend y cliente.
  */
 @Serializable
-enum class SeccionBoeDto {
+enum class BoeSectionDto {
     @SerialName("I")
     I,
 

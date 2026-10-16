@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.sumario
 
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import java.time.LocalDate
 import kotlin.test.Test
@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
  * `20261009` incluye la Sección V.A y `item` en ambas formas; `20240102` incluye
  * las Secciones IV (Justicia) y V.C (envoltura `departamento.texto.item`) y
  * `departamento` como objeto. Ambos se parsean sin descartar ninguna sección y su
- * **unión** cubre las ocho del BOE (test explícito `SeccionBoeDto.entries`).
+ * **unión** cubre las ocho del BOE (test explícito `BoeSectionDto.entries`).
  */
 class SumarioParsingTest {
 
@@ -24,12 +24,12 @@ class SumarioParsingTest {
 
         assertEquals(
             setOf(
-                SeccionBoeDto.I,
-                SeccionBoeDto.II_A,
-                SeccionBoeDto.II_B,
-                SeccionBoeDto.III,
-                SeccionBoeDto.V_A,
-                SeccionBoeDto.V_B,
+                BoeSectionDto.I,
+                BoeSectionDto.II_A,
+                BoeSectionDto.II_B,
+                BoeSectionDto.III,
+                BoeSectionDto.V_A,
+                BoeSectionDto.V_B,
             ),
             entradas.map { it.section }.toSet(),
         )
@@ -44,7 +44,7 @@ class SumarioParsingTest {
         val entrada = parse("sumario-20261009.json", LocalDate.of(2026, 10, 9))
             .first { it.identificador == "BOE-A-2026-20976" }
 
-        assertEquals(SeccionBoeDto.I, entrada.section)
+        assertEquals(BoeSectionDto.I, entrada.section)
         assertEquals("2026/15317", entrada.control)
         assertEquals("MINISTERIO DE ASUNTOS EXTERIORES, UNIÓN EUROPEA Y COOPERACIÓN", entrada.issuingBody)
         assertEquals("Acuerdos internacionales administrativos", entrada.heading)
@@ -63,13 +63,13 @@ class SumarioParsingTest {
 
         assertEquals(
             setOf(
-                SeccionBoeDto.II_A,
-                SeccionBoeDto.II_B,
-                SeccionBoeDto.III,
-                SeccionBoeDto.IV,
-                SeccionBoeDto.V_A,
-                SeccionBoeDto.V_B,
-                SeccionBoeDto.V_C,
+                BoeSectionDto.II_A,
+                BoeSectionDto.II_B,
+                BoeSectionDto.III,
+                BoeSectionDto.IV,
+                BoeSectionDto.V_A,
+                BoeSectionDto.V_B,
+                BoeSectionDto.V_C,
             ),
             entradas.map { it.section }.toSet(),
         )
@@ -87,7 +87,7 @@ class SumarioParsingTest {
         val entrada = parse("sumario-20240102.json", LocalDate.of(2024, 1, 2))
             .first { it.identificador == "BOE-B-2024-1" }
 
-        assertEquals(SeccionBoeDto.IV, entrada.section)
+        assertEquals(BoeSectionDto.IV, entrada.section)
         assertEquals("ALMERIA", entrada.title)
         assertEquals("JUZGADOS DE PRIMERA INSTANCIA E INSTRUCCIÓN", entrada.issuingBody)
         assertNull(entrada.control)
@@ -107,7 +107,7 @@ class SumarioParsingTest {
         ).flatMap { entradas -> entradas.map { it.section } }.toSet()
 
         assertEquals(
-            SeccionBoeDto.entries.toSet(),
+            BoeSectionDto.entries.toSet(),
             secciones,
             "Ningún fixture trae las 8 secciones por separado; su unión debe cubrirlas.",
         )

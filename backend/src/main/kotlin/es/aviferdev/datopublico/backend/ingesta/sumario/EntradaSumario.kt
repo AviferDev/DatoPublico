@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.sumario
 
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 
 /**
  * Entrada del sumario del BOE ya traducida al modelo **interno** del backend.
@@ -22,7 +22,7 @@ data class EntradaSumario(
     val control: String?,
     val title: String,
     val publicationDate: String,
-    val section: SeccionBoeDto,
+    val section: BoeSectionDto,
     val issuingBody: String?,
     val heading: String?,
     val officialUrl: String,

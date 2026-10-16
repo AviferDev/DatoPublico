@@ -1,6 +1,6 @@
-package es.aviferdev.datopublico.backend.ingesta.publicacion
+package es.aviferdev.datopublico.backend.ingesta.publication
 
-import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
+import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,19 +20,19 @@ import kotlinx.coroutines.test.runTest
 class BoePublicacionLiveTest {
 
     @Test
-    fun `descarga una publicacion real del BOE y produce texto no vacio`() = runTest {
+    fun `descarga una publication real del BOE y produce texto no vacio`() = runTest {
         if (System.getenv("BOE_LIVE_TEST") != "1") {
             println("BoePublicacionLiveTest omitido: exporta BOE_LIVE_TEST=1 para el test real.")
         } else {
             val httpClient = boeTextoHttpClient()
             try {
-                val publicacion = BoePublicacionHttpParser(BoeTextoHttpClient(httpClient))
+                val publication = BoePublicacionHttpParser(BoeTextoHttpClient(httpClient))
                     .parsear(entradaReal())
 
-                assertEquals(IDENTIFICADOR, publicacion.id)
-                assertEquals("Resolución", publicacion.rango)
+                assertEquals(IDENTIFICADOR, publication.id)
+                assertEquals("Resolución", publication.rango)
                 assertTrue(
-                    publicacion.texto?.isNotBlank() == true,
+                    publication.texto?.isNotBlank() == true,
                     "la publicación real no trajo texto",
                 )
             } finally {
@@ -41,8 +41,8 @@ class BoePublicacionLiveTest {
         }
     }
 
-    private fun entradaReal(): EntradaSumario = EntradaSumario(
-        identificador = IDENTIFICADOR,
+    private fun entradaReal(): SummaryEntry = SummaryEntry(
+        identifier = IDENTIFICADOR,
         control = "2023/3417",
         title = "Resolución de 21 de diciembre de 2023, de la Subsecretaría",
         publicationDate = "2024-01-02",

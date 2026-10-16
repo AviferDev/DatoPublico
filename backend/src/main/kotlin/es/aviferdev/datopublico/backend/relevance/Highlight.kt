@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.relevance
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 
 /**
  * Motivo **objetivo** por el que una publicación del BOE se considera destacada.

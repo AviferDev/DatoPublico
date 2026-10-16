@@ -3,10 +3,10 @@ package es.aviferdev.datopublico.backend.ingesta.backfill
 import es.aviferdev.datopublico.backend.ingesta.job.DailyIngestionJob
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionJob
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionResult
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoePublicacionParser
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
-import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioClient
-import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
+import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionParser
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryClient
+import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
 import es.aviferdev.datopublico.model.BoeSectionDto
 import java.nio.file.Path
@@ -184,10 +184,10 @@ class BackfillRunnerTest {
 
     private fun realJob(
         repository: PublicationRepository,
-        entriesFor: (LocalDate) -> List<EntradaSumario>,
+        entriesFor: (LocalDate) -> List<SummaryEntry>,
     ): DailyIngestionJob = DailyIngestionJob(
-        summaryClient = object : BoeSumarioClient {
-            override suspend fun obtenerSumario(date: LocalDate): List<EntradaSumario> =
+        summaryClient = object : BoeSummaryClient {
+            override suspend fun fetchSummary(date: LocalDate): List<SummaryEntry> =
                 entriesFor(date)
         },
         publicationParser = TestParser(),
@@ -198,8 +198,8 @@ class BackfillRunnerTest {
         (first..last).map { offset -> D0.plusDays(offset) }
 
     private fun entry(id: String, date: LocalDate, section: BoeSectionDto = BoeSectionDto.I) =
-        EntradaSumario(
-            identificador = id,
+        SummaryEntry(
+            identifier = id,
             control = null,
             title = "Título $id",
             publicationDate = date.toString(),
@@ -265,17 +265,17 @@ private class InMemoryPublicationRepository : PublicationRepository {
 
 /** Parser de prueba: proyecta la entrada a una publicación sin red. */
 private class TestParser : BoePublicacionParser {
-    override suspend fun parsear(entrada: EntradaSumario): Publicacion = Publicacion(
-        id = entrada.identificador,
-        title = entrada.title,
-        publicationDate = entrada.publicationDate,
-        issuingBody = entrada.issuingBody,
-        section = entrada.section,
-        heading = entrada.heading,
-        texto = "texto de ${entrada.identificador}",
-        officialUrl = entrada.officialUrl,
-        urlXml = entrada.urlXml,
-        urlPdf = entrada.urlPdf,
+    override suspend fun parsear(entry: SummaryEntry): Publicacion = Publicacion(
+        id = entry.identifier,
+        title = entry.title,
+        publicationDate = entry.publicationDate,
+        issuingBody = entry.issuingBody,
+        section = entry.section,
+        heading = entry.heading,
+        texto = "texto de ${entry.identifier}",
+        officialUrl = entry.officialUrl,
+        urlXml = entry.urlXml,
+        urlPdf = entry.urlPdf,
         rango = null,
     )
 }

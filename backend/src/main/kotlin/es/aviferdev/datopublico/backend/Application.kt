@@ -15,11 +15,11 @@ import es.aviferdev.datopublico.backend.ingesta.job.IngestionRunState
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionSchedule
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionScheduler
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionWatchdog
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoePublicacionHttpParser
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoeTextoHttpClient
-import es.aviferdev.datopublico.backend.ingesta.publicacion.boeTextoHttpClient
-import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioHttpClient
-import es.aviferdev.datopublico.backend.ingesta.sumario.boeSumarioHttpClient
+import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionHttpParser
+import es.aviferdev.datopublico.backend.ingesta.publication.BoeTextoHttpClient
+import es.aviferdev.datopublico.backend.ingesta.publication.boeTextoHttpClient
+import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryHttpClient
+import es.aviferdev.datopublico.backend.ingestion.summary.boeSummaryHttpClient
 import es.aviferdev.datopublico.backend.persistence.FeedRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.FragmentRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
@@ -289,7 +289,7 @@ private fun Application.createIngestionRuntime(
     config: IngestionConfig,
     dataSource: DataSource,
 ): IngestionRuntime {
-    val summaryHttp = boeSumarioHttpClient()
+    val summaryHttp = boeSummaryHttpClient()
     val textHttp = boeTextoHttpClient()
     return try {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -298,7 +298,7 @@ private fun Application.createIngestionRuntime(
         val scheduler = IngestionScheduler(
             schedule = schedule,
             job = DailyIngestionJob(
-                summaryClient = BoeSumarioHttpClient(summaryHttp),
+                summaryClient = BoeSummaryHttpClient(summaryHttp),
                 publicationParser = BoePublicacionHttpParser(BoeTextoHttpClient(textHttp)),
                 repository = PublicationRepositoryJdbc(dataSource),
             ),

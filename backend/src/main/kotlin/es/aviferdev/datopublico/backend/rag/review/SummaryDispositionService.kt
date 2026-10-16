@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.review
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.persistence.ReviewQueueEntity
 import es.aviferdev.datopublico.backend.persistence.ReviewQueueRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity

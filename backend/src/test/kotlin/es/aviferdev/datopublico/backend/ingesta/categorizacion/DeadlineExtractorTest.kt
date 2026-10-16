@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.categorizacion
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoeXmlParser
+import es.aviferdev.datopublico.backend.ingesta.publication.BoeXmlParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -104,7 +104,7 @@ class DeadlineExtractorTest {
     }
 
     @Test
-    fun `es determinista para la misma entrada`() {
+    fun `es determinista para la misma entry`() {
         val texto = texto("texto-IIB-2024-93.xml")
 
         val primera = extractor.extract(texto, PUBLISHED_2024_01_02)

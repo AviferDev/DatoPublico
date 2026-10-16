@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.sumario
+package es.aviferdev.datopublico.backend.ingestion.summary
 
 import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
@@ -26,7 +26,7 @@ import kotlinx.coroutines.test.runTest
  * spec — URL y cabecera, inclusión de todas las secciones, `item` objeto/array,
  * `404` y errores tipados.
  */
-class BoeSumarioClientTest {
+class BoeSummaryClientTest {
 
     private val date = LocalDate.of(2026, 10, 9)
 
@@ -42,8 +42,8 @@ class BoeSumarioClientTest {
             )
         })
 
-        val entradas = BoeSumarioHttpClient(client, baseUrl = "https://www.boe.es/datosabiertos/api")
-            .obtenerSumario(date)
+        val entries = BoeSummaryHttpClient(client, baseUrl = "https://www.boe.es/datosabiertos/api")
+            .fetchSummary(date)
 
         val request = checkNotNull(capturada)
         assertEquals(HttpMethod.Get, request.method)
@@ -52,7 +52,7 @@ class BoeSumarioClientTest {
             request.url.toString(),
         )
         assertEquals("application/json", request.headers[HttpHeaders.Accept])
-        assertEquals(237, entradas.size)
+        assertEquals(237, entries.size)
         assertEquals(
             setOf(
                 BoeSectionDto.I,
@@ -62,15 +62,15 @@ class BoeSumarioClientTest {
                 BoeSectionDto.V_A,
                 BoeSectionDto.V_B,
             ),
-            entradas.map { it.section }.toSet(),
+            entries.map { it.section }.toSet(),
         )
-        assertTrue(entradas.any { it.identificador == "BOE-B-2026-32742" }) // Sección V.A (32 en la fuente)
+        assertTrue(entries.any { it.identifier == "BOE-B-2026-32742" }) // Sección V.A (32 en la fuente)
     }
 
     @Test
-    fun `item como objeto o como array produce las mismas entradas`() = runTest {
-        val entrada = EntradaSumario(
-            identificador = "BOE-A-1",
+    fun `item como objeto o como array produce las mismas entries`() = runTest {
+        val entry = SummaryEntry(
+            identifier = "BOE-A-1",
             control = "2026/1",
             title = "T",
             publicationDate = "2026-10-09",
@@ -83,13 +83,13 @@ class BoeSumarioClientTest {
         )
 
         val conObjeto = clientCon(engineDeTexto(SUMARIO_ITEM_OBJETO)).let {
-            BoeSumarioHttpClient(it).obtenerSumario(date)
+            BoeSummaryHttpClient(it).fetchSummary(date)
         }
         val conArray = clientCon(engineDeTexto(SUMARIO_ITEM_ARRAY)).let {
-            BoeSumarioHttpClient(it).obtenerSumario(date)
+            BoeSummaryHttpClient(it).fetchSummary(date)
         }
 
-        assertEquals(listOf(entrada), conObjeto)
+        assertEquals(listOf(entry), conObjeto)
         assertEquals(conObjeto, conArray)
     }
 
@@ -97,17 +97,17 @@ class BoeSumarioClientTest {
     fun `un 404 devuelve lista vacia`() = runTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.NotFound, "<error>No hay BOE</error>") })
 
-        val entradas = BoeSumarioHttpClient(client).obtenerSumario(date)
+        val entries = BoeSummaryHttpClient(client).fetchSummary(date)
 
-        assertTrue(entradas.isEmpty())
+        assertTrue(entries.isEmpty())
     }
 
     @Test
-    fun `un estado distinto de 200 y 404 lanza BoeSumarioException`() = runTest {
+    fun `un estado distinto de 200 y 404 lanza BoeSummaryException`() = runTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.InternalServerError, "boom") })
 
-        val error = assertFailsWith<BoeSumarioException> {
-            BoeSumarioHttpClient(client).obtenerSumario(date)
+        val error = assertFailsWith<BoeSummaryException> {
+            BoeSummaryHttpClient(client).fetchSummary(date)
         }
 
         assertTrue(error.message!!.contains("500"), error.message!!)
@@ -115,11 +115,11 @@ class BoeSumarioClientTest {
     }
 
     @Test
-    fun `un fallo de red lanza BoeSumarioException`() = runTest {
+    fun `un fallo de red lanza BoeSummaryException`() = runTest {
         val client = clientCon(MockEngine { throw IOException("sin conexión") })
 
-        val error = assertFailsWith<BoeSumarioException> {
-            BoeSumarioHttpClient(client).obtenerSumario(date)
+        val error = assertFailsWith<BoeSummaryException> {
+            BoeSummaryHttpClient(client).fetchSummary(date)
         }
 
         assertTrue(error.message!!.contains("2026-10-09"), error.message!!)
@@ -131,9 +131,9 @@ class BoeSumarioClientTest {
         install(ContentNegotiation) { json(DatoPublicoJson) }
     }
 
-    private fun engineDeTexto(texto: String): MockEngine = MockEngine {
+    private fun engineDeTexto(text: String): MockEngine = MockEngine {
         respond(
-            content = texto,
+            content = text,
             status = HttpStatusCode.OK,
             headers = headersOf(HttpHeaders.ContentType, "application/json"),
         )

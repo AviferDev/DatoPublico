@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publicacion
+package es.aviferdev.datopublico.backend.ingesta.publication
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -44,7 +44,7 @@ class BoeTextoClientTest {
         assertEquals(HttpMethod.Get, request.method)
         assertEquals(URL_XML, request.url.toString())
         assertEquals("application/xml", request.headers[HttpHeaders.Accept])
-        assertEquals("JUZGADOS DE PRIMERA INSTANCIA E INSTRUCCIÓN", documento.metadatos.departamento)
+        assertEquals("JUZGADOS DE PRIMERA INSTANCIA E INSTRUCCIÓN", documento.metadata.department)
         assertNotNull(documento.texto)
     }
 

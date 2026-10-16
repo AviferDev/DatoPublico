@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.sumario
+package es.aviferdev.datopublico.backend.ingestion.summary
 
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.client.HttpClient
@@ -19,50 +19,50 @@ import java.time.format.DateTimeFormatter
 import kotlin.coroutines.cancellation.CancellationException
 
 /** Base de la API de datos abiertos del BOE. */
-const val BOE_SUMARIO_BASE_URL: String = "https://www.boe.es/datosabiertos/api"
+const val BOE_SUMMARY_BASE_URL: String = "https://www.boe.es/datosabiertos/api"
 
 /**
- * Implementación Ktor de [BoeSumarioClient] con `HttpClient` **inyectado**.
+ * Implementación Ktor de [BoeSummaryClient] con `HttpClient` **inyectado**.
  *
  * La URL de la petición es `GET {baseUrl}/boe/sumario/{YYYYMMDD}` con cabecera
  * `Accept: application/json`. `404` se traduce a lista vacía (ese día no hay
- * sumario); cualquier otro estado o fallo de red lanza [BoeSumarioException].
+ * sumario); cualquier otro estado o fallo de red lanza [BoeSummaryException].
  */
-class BoeSumarioHttpClient(
+class BoeSummaryHttpClient(
     private val httpClient: HttpClient,
-    private val baseUrl: String = BOE_SUMARIO_BASE_URL,
-) : BoeSumarioClient {
+    private val baseUrl: String = BOE_SUMMARY_BASE_URL,
+) : BoeSummaryClient {
 
-    override suspend fun obtenerSumario(date: LocalDate): List<EntradaSumario> {
+    override suspend fun fetchSummary(date: LocalDate): List<SummaryEntry> {
         val response = execute(date)
         return when (response.status) {
             HttpStatusCode.OK -> decode(date, response)
             HttpStatusCode.NotFound -> emptyList()
-            else -> throw BoeSumarioException(
+            else -> throw BoeSummaryException(
                 "El BOE respondió ${response.status.value} al pedir el sumario de $date"
             )
         }
     }
 
     private suspend fun execute(date: LocalDate): HttpResponse = try {
-        httpClient.get(urlDe(date)) {
+        httpClient.get(urlFor(date)) {
             header(HttpHeaders.Accept, ContentType.Application.Json.toString())
         }
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {
-        throw BoeSumarioException("No se pudo consultar el sumario del BOE para $date", error)
+        throw BoeSummaryException("No se pudo consultar el sumario del BOE para $date", error)
     }
 
-    private suspend fun decode(date: LocalDate, response: HttpResponse): List<EntradaSumario> = try {
-        response.body<BoeSumarioResponseDto>().toEntradasSumario(date)
+    private suspend fun decode(date: LocalDate, response: HttpResponse): List<SummaryEntry> = try {
+        response.body<BoeSummaryResponseDto>().toSummaryEntries(date)
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {
-        throw BoeSumarioException("Respuesta ilegible del sumario del BOE para $date", error)
+        throw BoeSummaryException("Respuesta ilegible del sumario del BOE para $date", error)
     }
 
-    private fun urlDe(date: LocalDate): String =
+    private fun urlFor(date: LocalDate): String =
         "$baseUrl/boe/sumario/${date.format(DateTimeFormatter.BASIC_ISO_DATE)}"
 }
 
@@ -75,7 +75,7 @@ class BoeSumarioHttpClient(
  *
  * @param baseUrl base de la API de datos abiertos del BOE.
  */
-fun boeSumarioHttpClient(baseUrl: String = BOE_SUMARIO_BASE_URL): HttpClient =
+fun boeSummaryHttpClient(baseUrl: String = BOE_SUMMARY_BASE_URL): HttpClient =
     HttpClient(CIO) {
         expectSuccess = false
         install(HttpTimeout) {

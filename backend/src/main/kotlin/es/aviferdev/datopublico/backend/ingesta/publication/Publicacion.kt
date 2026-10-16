@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publicacion
+package es.aviferdev.datopublico.backend.ingesta.publication
 
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
@@ -13,7 +13,7 @@ import es.aviferdev.datopublico.model.BoeSectionDto
  * añade el texto completo, las URLs xml/pdf y el rango.
  *
  * [fechaPublicacion] es una fecha ISO-8601 (`2026-10-09`) como `String`, coherente
- * con `EntradaSumario` y `PublicationDto`. [organismo], [epigrafe], [texto],
+ * con `SummaryEntry` y `PublicationDto`. [organismo], [epigrafe], [texto],
  * [urlXml], [urlPdf] y [rango] son opcionales porque la estructura del BOE varía
  * entre secciones y hay publicaciones sin texto XML disponible (imagen/PDF).
  *

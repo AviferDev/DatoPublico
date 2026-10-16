@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.rag.chunking
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoeXmlParser
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.BoeXmlParser
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.persistence.toEntity
 import es.aviferdev.datopublico.backend.rag.Fragment

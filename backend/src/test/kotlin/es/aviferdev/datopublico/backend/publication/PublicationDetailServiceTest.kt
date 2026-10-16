@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.publication
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.persistence.SummaryRepository
@@ -24,7 +24,7 @@ import kotlin.test.assertTrue
 class PublicationDetailServiceTest {
 
     @Test
-    fun `a published summary is served as a full publicacion dto`() = runTest {
+    fun `a published summary is served as a full publication dto`() = runTest {
         val service = service(
             publications = listOf(publication(PUBLISHED_ID)),
             summaries = listOf(summary(PUBLISHED_ID, SummaryState.PUBLISHED.persistedValue)),

@@ -3,11 +3,11 @@ package es.aviferdev.datopublico.backend.ingesta.backfill
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.backend.ingesta.job.DailyIngestionJob
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoePublicacionHttpParser
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoeTextoHttpClient
-import es.aviferdev.datopublico.backend.ingesta.publicacion.boeTextoHttpClient
-import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioHttpClient
-import es.aviferdev.datopublico.backend.ingesta.sumario.boeSumarioHttpClient
+import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionHttpParser
+import es.aviferdev.datopublico.backend.ingesta.publication.BoeTextoHttpClient
+import es.aviferdev.datopublico.backend.ingesta.publication.boeTextoHttpClient
+import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryHttpClient
+import es.aviferdev.datopublico.backend.ingestion.summary.boeSummaryHttpClient
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
 import io.ktor.client.HttpClient
 import javax.sql.DataSource
@@ -44,7 +44,7 @@ fun main() {
  */
 private suspend fun executeBackfill(config: BackfillConfig) {
     val dataSource = Database.createDataSource(DatabaseConfig.fromEnv())
-    val summaryHttp = boeSumarioHttpClient()
+    val summaryHttp = boeSummaryHttpClient()
     val textHttp = boeTextoHttpClient()
     try {
         val runner = BackfillRunner(
@@ -65,7 +65,7 @@ private fun createIngestionJob(
     summaryHttp: HttpClient,
     textHttp: HttpClient,
 ): DailyIngestionJob = DailyIngestionJob(
-    summaryClient = BoeSumarioHttpClient(summaryHttp),
+    summaryClient = BoeSummaryHttpClient(summaryHttp),
     publicationParser = BoePublicacionHttpParser(BoeTextoHttpClient(textHttp)),
     repository = PublicationRepositoryJdbc(dataSource),
 )

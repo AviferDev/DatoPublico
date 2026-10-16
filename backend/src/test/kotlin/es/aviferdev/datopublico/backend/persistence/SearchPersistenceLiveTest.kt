@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.persistence
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
@@ -67,18 +67,18 @@ class SearchPersistenceLiveTest {
         println("SearchPersistenceLiveTest: solo el resumen publicado del lote se sirve OK")
     }
 
-    private fun publication(id: String): Publicacion = Publicacion(
+    private fun publication(id: String): Publication = Publication(
         id = id,
         title = "Publicación de prueba de la búsqueda",
         publicationDate = DATE,
         issuingBody = null,
         section = BoeSectionDto.II_A,
         heading = null,
-        texto = null,
+        body = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-        urlXml = null,
-        urlPdf = null,
-        rango = null,
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = null,
         category = CategoryDto.PUBLIC_INFORMATION_AND_CONCESSIONS,
     )
 

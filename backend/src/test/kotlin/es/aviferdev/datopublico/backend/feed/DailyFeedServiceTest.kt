@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.feed
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FeedItem
 import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
@@ -121,18 +121,18 @@ class DailyFeedServiceTest {
         rank: String? = null,
         deadline: DeadlineDto? = null,
     ): FeedItem = FeedItem(
-        publication = Publicacion(
+        publication = Publication(
             id = id,
             title = "Publicación $id",
             publicationDate = DATE,
             issuingBody = null,
             section = section,
             heading = null,
-            texto = null,
+            body = null,
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-            urlXml = null,
-            urlPdf = null,
-            rango = rank,
+            xmlUrl = null,
+            pdfUrl = null,
+            rank = rank,
             category = CategoryDto.PUBLIC_INFORMATION_AND_CONCESSIONS,
             deadline = deadline,
         ),

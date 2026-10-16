@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.categorizacion
 
-import es.aviferdev.datopublico.backend.ingesta.publication.BoeXmlParser
+import es.aviferdev.datopublico.backend.ingestion.publication.BoeXmlParser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -21,7 +21,7 @@ class DeadlineExtractorTest {
     @Test
     fun `extrae el deadline de dias habiles de la convocatoria real de II_B`() {
         val deadline = assertNotNull(
-            extractor.extract(texto("texto-IIB-2024-93.xml"), PUBLISHED_2024_01_02),
+            extractor.extract(body("texto-IIB-2024-93.xml"), PUBLISHED_2024_01_02),
             "la convocatoria de II.B debe exponer plazo",
         )
 
@@ -32,7 +32,7 @@ class DeadlineExtractorTest {
     @Test
     fun `extrae el deadline de dias habiles de la convocatoria real de III`() {
         val deadline = assertNotNull(
-            extractor.extract(texto("texto-III-2024-117.xml"), PUBLISHED_2024_01_02),
+            extractor.extract(body("texto-III-2024-117.xml"), PUBLISHED_2024_01_02),
             "la convocatoria de III debe exponer plazo",
         )
 
@@ -41,21 +41,21 @@ class DeadlineExtractorTest {
 
     @Test
     fun `no extrae deadline de la disposicion real de I`() {
-        assertNull(extractor.extract(texto("texto-I-2026-20979.xml"), "2026-10-09"))
+        assertNull(extractor.extract(body("texto-I-2026-20979.xml"), "2026-10-09"))
     }
 
     @Test
     fun `no extrae deadline de la resolucion real de II_A`() {
-        assertNull(extractor.extract(texto("texto-IIA-2024-87.xml"), PUBLISHED_2024_01_02))
+        assertNull(extractor.extract(body("texto-IIA-2024-87.xml"), PUBLISHED_2024_01_02))
     }
 
     @Test
     fun `no extrae deadline de la informacion publica real de V_B`() {
-        assertNull(extractor.extract(texto("texto-VB-2024-76.xml"), PUBLISHED_2024_01_02))
+        assertNull(extractor.extract(body("texto-VB-2024-76.xml"), PUBLISHED_2024_01_02))
     }
 
     @Test
-    fun `sin texto devuelve un deadline vacio`() {
+    fun `sin body devuelve un deadline vacio`() {
         assertNull(extractor.extract(null, PUBLISHED_2024_01_02))
         assertNull(extractor.extract("   ", PUBLISHED_2024_01_02))
     }
@@ -105,17 +105,17 @@ class DeadlineExtractorTest {
 
     @Test
     fun `es determinista para la misma entry`() {
-        val texto = texto("texto-IIB-2024-93.xml")
+        val body = body("texto-IIB-2024-93.xml")
 
-        val primera = extractor.extract(texto, PUBLISHED_2024_01_02)
-        val segunda = extractor.extract(texto, PUBLISHED_2024_01_02)
+        val primera = extractor.extract(body, PUBLISHED_2024_01_02)
+        val segunda = extractor.extract(body, PUBLISHED_2024_01_02)
 
         assertEquals(primera, segunda)
     }
 
     /** Texto normalizado del fixture real, parseado con el parser puro del XML. */
-    private fun texto(fixture: String): String =
-        assertNotNull(BoeXmlParser().parse(recurso(fixture)).texto, "$fixture sin texto")
+    private fun body(fixture: String): String =
+        assertNotNull(BoeXmlParser().parse(recurso(fixture)).body, "$fixture sin texto")
 
     /** Lee un recurso de `src/test/resources/boe` como texto UTF-8. */
     private fun recurso(ruta: String): String =

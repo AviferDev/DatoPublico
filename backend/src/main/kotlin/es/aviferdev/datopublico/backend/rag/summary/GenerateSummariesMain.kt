@@ -2,7 +2,7 @@ package es.aviferdev.datopublico.backend.rag.summary
 
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
 import es.aviferdev.datopublico.backend.rag.generation.OpenCodeConfig
 import es.aviferdev.datopublico.backend.rag.generation.openCodeHttpClient
@@ -135,7 +135,7 @@ private suspend fun processDates(
 
 /** Procesa las publicaciones de una fecha hasta agotar el tope; devuelve el restante. */
 private suspend fun processPublications(
-    publications: List<Publicacion>,
+    publications: List<Publication>,
     pipeline: SummaryGenerationPipeline,
     remaining: Int,
     config: GenerateSummariesConfig,
@@ -154,7 +154,7 @@ private suspend fun processPublications(
 /** Procesa una publicación; descuenta tope solo si realmente se genera (no si ya existe). */
 private suspend fun processOne(
     pipeline: SummaryGenerationPipeline,
-    publication: Publicacion,
+    publication: Publication,
     remaining: Int,
     tally: GenerationTally,
     logger: Logger,
@@ -172,7 +172,7 @@ private suspend fun processOne(
 /** Ejecuta el pipeline capturando fallos por publicación (no abortan la ejecución). */
 private suspend fun attempt(
     pipeline: SummaryGenerationPipeline,
-    publication: Publicacion,
+    publication: Publication,
     logger: Logger,
 ): SummaryOutcome {
     val outcome = try {

@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.summary
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.persistence.FragmentMatch
 import es.aviferdev.datopublico.backend.persistence.FragmentRepository
@@ -69,18 +69,18 @@ class CitizenSummaryGeneratorLiveTest {
         }
     }
 
-    private fun publication(): Publicacion = Publicacion(
+    private fun publication(): Publication = Publication(
         id = "BOE-A-2026-1",
         title = "Real Decreto de prueba sobre el régimen de ayudas",
         publicationDate = "2026-10-10",
         issuingBody = "MINISTERIO DE PRUEBA",
         section = BoeSectionDto.I,
         heading = "Disposiciones generales",
-        texto = CONTEXT,
+        body = CONTEXT,
         officialUrl = URL,
-        urlXml = null,
-        urlPdf = null,
-        rango = "Real Decreto",
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = "Real Decreto",
         category = CategoryDto.NORMS_AND_LEGISLATION,
     )
 

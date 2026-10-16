@@ -37,7 +37,7 @@ class BoeSummaryLiveTest {
                     entries.map { it.section }.toSet(),
                 )
                 assertTrue(entries.all { it.identifier.isNotBlank() && it.officialUrl.isNotBlank() })
-                assertTrue(entries.all { it.urlPdf != null })
+                assertTrue(entries.all { it.pdfUrl != null })
             } finally {
                 httpClient.close()
             }

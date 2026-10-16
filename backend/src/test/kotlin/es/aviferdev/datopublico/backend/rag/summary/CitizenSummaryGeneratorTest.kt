@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.summary
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.persistence.FragmentMatch
 import es.aviferdev.datopublico.backend.persistence.FragmentRepository
@@ -121,7 +121,7 @@ class CitizenSummaryGeneratorTest {
 
     private fun generatorCon(
         provider: TextGenerationProvider,
-        publication: Publicacion,
+        publication: Publication,
     ): CitizenSummaryGenerator {
         val matches = listOf(
             FragmentMatch(
@@ -140,18 +140,18 @@ class CitizenSummaryGeneratorTest {
         )
     }
 
-    private fun publication(category: CategoryDto?): Publicacion = Publicacion(
+    private fun publication(category: CategoryDto?): Publication = Publication(
         id = "BOE-A-2026-1",
         title = "Real Decreto de prueba",
         publicationDate = "2026-10-10",
         issuingBody = "MINISTERIO DE PRUEBA",
         section = BoeSectionDto.I,
         heading = "Disposiciones generales",
-        texto = "texto",
+        body = "texto",
         officialUrl = url,
-        urlXml = null,
-        urlPdf = null,
-        rango = "Real Decreto",
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = "Real Decreto",
         category = category,
     )
 

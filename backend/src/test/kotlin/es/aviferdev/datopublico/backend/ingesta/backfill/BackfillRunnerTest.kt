@@ -3,8 +3,8 @@ package es.aviferdev.datopublico.backend.ingesta.backfill
 import es.aviferdev.datopublico.backend.ingesta.job.DailyIngestionJob
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionJob
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionResult
-import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionParser
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.BoePublicationParser
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryClient
 import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
@@ -207,8 +207,8 @@ class BackfillRunnerTest {
             issuingBody = "MINISTERIO X",
             heading = null,
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-            urlXml = "https://www.boe.es/diario_boe/xml.php?id=$id",
-            urlPdf = null,
+            xmlUrl = "https://www.boe.es/diario_boe/xml.php?id=$id",
+            pdfUrl = null,
         )
 
     private companion object {
@@ -250,32 +250,32 @@ private class RecordingCheckpointStore(
 
 /** Repositorio en memoria con *upsert* por `id`. */
 private class InMemoryPublicationRepository : PublicationRepository {
-    val saved = linkedMapOf<String, Publicacion>()
+    val saved = linkedMapOf<String, Publication>()
 
-    override fun save(publication: Publicacion): Publicacion {
+    override fun save(publication: Publication): Publication {
         saved[publication.id] = publication
         return publication
     }
 
-    override fun findById(id: String): Publicacion? = saved[id]
+    override fun findById(id: String): Publication? = saved[id]
 
-    override fun listByDate(publicationDate: String): List<Publicacion> =
+    override fun listByDate(publicationDate: String): List<Publication> =
         saved.values.filter { publication -> publication.publicationDate == publicationDate }
 }
 
 /** Parser de prueba: proyecta la entrada a una publicación sin red. */
-private class TestParser : BoePublicacionParser {
-    override suspend fun parsear(entry: SummaryEntry): Publicacion = Publicacion(
+private class TestParser : BoePublicationParser {
+    override suspend fun parse(entry: SummaryEntry): Publication = Publication(
         id = entry.identifier,
         title = entry.title,
         publicationDate = entry.publicationDate,
         issuingBody = entry.issuingBody,
         section = entry.section,
         heading = entry.heading,
-        texto = "texto de ${entry.identifier}",
+        body = "texto de ${entry.identifier}",
         officialUrl = entry.officialUrl,
-        urlXml = entry.urlXml,
-        urlPdf = entry.urlPdf,
-        rango = null,
+        xmlUrl = entry.xmlUrl,
+        pdfUrl = entry.pdfUrl,
+        rank = null,
     )
 }

@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publication
+package es.aviferdev.datopublico.backend.ingestion.publication
 
 import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 import es.aviferdev.datopublico.model.BoeSectionDto
@@ -14,25 +14,25 @@ import kotlinx.coroutines.test.runTest
  * hagan llamadas de red. Para ejecutarla:
  *
  * ```
- * BOE_LIVE_TEST=1 ./gradlew :backend:test --tests '*BoePublicacionLiveTest'
+ * BOE_LIVE_TEST=1 ./gradlew :backend:test --tests '*BoePublicationLiveTest'
  * ```
  */
-class BoePublicacionLiveTest {
+class BoePublicationLiveTest {
 
     @Test
-    fun `descarga una publication real del BOE y produce texto no vacio`() = runTest {
+    fun `descarga una publication real del BOE y produce body no vacio`() = runTest {
         if (System.getenv("BOE_LIVE_TEST") != "1") {
             println("BoePublicacionLiveTest omitido: exporta BOE_LIVE_TEST=1 para el test real.")
         } else {
-            val httpClient = boeTextoHttpClient()
+            val httpClient = boeTextHttpClient()
             try {
-                val publication = BoePublicacionHttpParser(BoeTextoHttpClient(httpClient))
-                    .parsear(entradaReal())
+                val publication = BoePublicationHttpParser(BoeTextHttpClient(httpClient))
+                    .parse(entradaReal())
 
                 assertEquals(IDENTIFICADOR, publication.id)
-                assertEquals("Resolución", publication.rango)
+                assertEquals("Resolución", publication.rank)
                 assertTrue(
-                    publication.texto?.isNotBlank() == true,
+                    publication.body?.isNotBlank() == true,
                     "la publicación real no trajo texto",
                 )
             } finally {
@@ -50,8 +50,8 @@ class BoePublicacionLiveTest {
         issuingBody = "MINISTERIO DE ASUNTOS EXTERIORES, UNIÓN EUROPEA Y COOPERACIÓN",
         heading = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$IDENTIFICADOR",
-        urlXml = "https://www.boe.es/diario_boe/xml.php?id=$IDENTIFICADOR",
-        urlPdf = null,
+        xmlUrl = "https://www.boe.es/diario_boe/xml.php?id=$IDENTIFICADOR",
+        pdfUrl = null,
     )
 
     private companion object {

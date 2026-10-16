@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.indexing
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.persistence.FragmentMatch
 import es.aviferdev.datopublico.backend.persistence.FragmentRepository
@@ -21,18 +21,18 @@ import kotlin.test.assertTrue
  */
 class FragmentIndexerTest {
 
-    private val publication = Publicacion(
+    private val publication = Publication(
         id = "BOE-A-2026-0001",
         title = "Resolución de prueba",
         publicationDate = "2026-10-09",
         issuingBody = null,
         section = BoeSectionDto.I,
         heading = null,
-        texto = "Artículo 1\nContenido uno.\nArtículo 2\nContenido dos.",
+        body = "Artículo 1\nContenido uno.\nArtículo 2\nContenido dos.",
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-0001",
-        urlXml = null,
-        urlPdf = null,
-        rango = null,
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = null,
     )
 
     @Test
@@ -75,7 +75,7 @@ class FragmentIndexerTest {
         val repository = RecordingFragmentRepository()
         val indexer = FragmentIndexer(provider, repository, ArticleChunker())
 
-        val count = indexer.index(publication.copy(texto = null))
+        val count = indexer.index(publication.copy(body = null))
 
         assertEquals(0, count)
         assertTrue(repository.savedFragments.isEmpty(), "no debe guardar fragmentos sin texto")

@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.persistence
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.BoeSectionDto
@@ -44,18 +44,18 @@ class PublicationPersistenceTest {
 
     @Test
     fun `keeps the nulls from the parser before FT00012`() {
-        val publication = Publicacion(
+        val publication = Publication(
             id = "BOE-A-2024-87",
             title = "Resolución de 21 de diciembre de 2023",
             publicationDate = "2024-01-02",
             issuingBody = null,
             section = BoeSectionDto.II_A,
             heading = null,
-            texto = null,
+            body = null,
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-87",
-            urlXml = null,
-            urlPdf = null,
-            rango = null,
+            xmlUrl = null,
+            pdfUrl = null,
+            rank = null,
         )
 
         val entity = publication.toPublicationEntity()
@@ -66,7 +66,7 @@ class PublicationPersistenceTest {
         assertNull(entity.deadlineDescription)
         assertNull(retrieved.issuingBody)
         assertNull(retrieved.heading)
-        assertNull(retrieved.texto)
+        assertNull(retrieved.body)
         assertNull(retrieved.category)
         assertNull(retrieved.deadline)
         assertEquals(publication, retrieved)
@@ -81,18 +81,18 @@ class PublicationPersistenceTest {
         assertEquals(publication.deadline, publication.toPublicationEntity().toDomain().deadline)
     }
 
-    private fun fullPublication(): Publicacion = Publicacion(
+    private fun fullPublication(): Publication = Publication(
         id = "BOE-A-2026-20979",
         title = "Resolución de 8 de octubre de 2026",
         publicationDate = "2026-10-09",
         issuingBody = "MINISTERIO DE EDUCACIÓN",
         section = BoeSectionDto.II_A,
         heading = "Becas y subvenciones",
-        texto = "Primero. Convocar...\nSegundo. El plazo...",
+        body = "Primero. Convocar...\nSegundo. El plazo...",
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-20979",
-        urlXml = "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-20979",
-        urlPdf = "https://www.boe.es/boe/dias/2026/10/09/pdfs/A00001-00002.pdf",
-        rango = "Resolución",
+        xmlUrl = "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-20979",
+        pdfUrl = "https://www.boe.es/boe/dias/2026/10/09/pdfs/A00001-00002.pdf",
+        rank = "Resolución",
         category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
         deadline = DeadlineDto(deadlineDate = "2026-11-30", description = "Diez días hábiles"),
     )

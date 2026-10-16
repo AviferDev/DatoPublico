@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.persistence
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.model.BoeSectionDto
@@ -151,18 +151,18 @@ class FragmentEmbeddingPersistenceLiveTest {
         content = "Contenido ${order + 1}",
     )
 
-    private fun publication(): Publicacion = Publicacion(
+    private fun publication(): Publication = Publication(
         id = PUBLICATION_ID,
         title = "Resolución de prueba de indexado vectorial",
         publicationDate = DATE,
         issuingBody = null,
         section = BoeSectionDto.II_A,
         heading = null,
-        texto = null,
+        body = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",
-        urlXml = null,
-        urlPdf = null,
-        rango = null,
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = null,
     )
 
     /**

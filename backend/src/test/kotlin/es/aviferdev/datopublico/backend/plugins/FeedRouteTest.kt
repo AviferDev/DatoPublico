@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.plugins
 
 import es.aviferdev.datopublico.backend.feed.DailyFeedService
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FeedItem
 import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
@@ -106,18 +106,18 @@ class FeedRouteTest {
     }
 
     private fun item(id: String): FeedItem = FeedItem(
-        publication = Publicacion(
+        publication = Publication(
             id = id,
             title = "Ley de prueba",
             publicationDate = DATE,
             issuingBody = "Jefatura del Estado",
             section = BoeSectionDto.I,
             heading = null,
-            texto = null,
+            body = null,
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-            urlXml = null,
-            urlPdf = null,
-            rango = "Ley",
+            xmlUrl = null,
+            pdfUrl = null,
+            rank = "Ley",
             category = CategoryDto.NORMS_AND_LEGISLATION,
         ),
         summary = SummaryEntity(

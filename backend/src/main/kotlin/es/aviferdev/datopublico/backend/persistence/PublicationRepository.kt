@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.persistence
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.BoeSectionDto
@@ -11,7 +11,7 @@ import java.time.LocalDate
 import javax.sql.DataSource
 
 /**
- * Persistencia de [Publicacion] en la tabla `publicacion`.
+ * Persistencia de [Publication] en la tabla `publicacion`.
  *
  * La ingesta (FT00009) y la clasificación (FT00012) escriben a través de esta
  * interfaz. `save` es un *upsert* por `id` (idempotente): volver a guardar la
@@ -22,13 +22,13 @@ interface PublicationRepository {
      * Inserta o actualiza [publication] por su `id` y devuelve el modelo
      * persistido.
      */
-    fun save(publication: Publicacion): Publicacion
+    fun save(publication: Publication): Publication
 
     /** Devuelve la publicación con [id], o `null` si no existe. */
-    fun findById(id: String): Publicacion?
+    fun findById(id: String): Publication?
 
     /** Lista las publicaciones de una fecha ISO-8601 ([publicationDate]). */
-    fun listByDate(publicationDate: String): List<Publicacion>
+    fun listByDate(publicationDate: String): List<Publication>
 }
 
 /**
@@ -55,8 +55,8 @@ data class PublicationEntity(
     val deadlineDescription: String?,
 )
 
-/** Proyecta el modelo de dominio [Publicacion] a su [PublicationEntity]. */
-internal fun Publicacion.toPublicationEntity(): PublicationEntity = PublicationEntity(
+/** Proyecta el modelo de dominio [Publication] a su [PublicationEntity]. */
+internal fun Publication.toPublicationEntity(): PublicationEntity = PublicationEntity(
     id = id,
     title = title,
     publicationDate = publicationDate,
@@ -64,33 +64,33 @@ internal fun Publicacion.toPublicationEntity(): PublicationEntity = PublicationE
     section = section.name,
     heading = heading,
     category = category?.name,
-    body = texto,
+    body = body,
     officialUrl = officialUrl,
-    xmlUrl = urlXml,
-    pdfUrl = urlPdf,
-    rank = rango,
+    xmlUrl = xmlUrl,
+    pdfUrl = pdfUrl,
+    rank = rank,
     deadlineDate = deadline?.deadlineDate,
     deadlineDescription = deadline?.description,
 )
 
 /**
- * Reconstruye el modelo de dominio [Publicacion] desde su [PublicationEntity].
+ * Reconstruye el modelo de dominio [Publication] desde su [PublicationEntity].
  *
  * @throws IllegalArgumentException si `section`/`category` no son nombres de
  *   enum válidos (datos corruptos: fail-fast).
  */
-internal fun PublicationEntity.toDomain(): Publicacion = Publicacion(
+internal fun PublicationEntity.toDomain(): Publication = Publication(
     id = id,
     title = title,
     publicationDate = publicationDate,
     issuingBody = organization,
     section = BoeSectionDto.valueOf(section),
     heading = heading,
-    texto = body,
+    body = body,
     officialUrl = officialUrl,
-    urlXml = xmlUrl,
-    urlPdf = pdfUrl,
-    rango = rank,
+    xmlUrl = xmlUrl,
+    pdfUrl = pdfUrl,
+    rank = rank,
     category = category?.let(CategoryDto::valueOf),
     deadline = deadlineDate?.let { deadlineDate ->
         DeadlineDto(deadlineDate = deadlineDate, description = deadlineDescription)
@@ -105,7 +105,7 @@ internal fun PublicationEntity.toDomain(): Publicacion = Publicacion(
  */
 class PublicationRepositoryJdbc(private val dataSource: DataSource) : PublicationRepository {
 
-    override fun save(publication: Publicacion): Publicacion {
+    override fun save(publication: Publication): Publication {
         val entity = publication.toPublicationEntity()
         dataSource.executeUpdate(UPSERT) { statement ->
             statement.bindParameters(entity)
@@ -113,14 +113,14 @@ class PublicationRepositoryJdbc(private val dataSource: DataSource) : Publicatio
         return publication
     }
 
-    override fun findById(id: String): Publicacion? =
+    override fun findById(id: String): Publication? =
         dataSource.queryRows(
             FIND_BY_ID,
             { statement -> statement.setString(1, id) },
             { rows -> rows.toPublicationEntity() },
         ).firstOrNull()?.toDomain()
 
-    override fun listByDate(publicationDate: String): List<Publicacion> =
+    override fun listByDate(publicationDate: String): List<Publication> =
         dataSource.queryRows(
             LIST_BY_DATE,
             { statement -> statement.setObject(1, LocalDate.parse(publicationDate), Types.DATE) },

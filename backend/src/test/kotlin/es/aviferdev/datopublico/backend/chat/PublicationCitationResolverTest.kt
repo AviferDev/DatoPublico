@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.chat
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.BoeSectionDto
@@ -34,31 +34,31 @@ class PublicationCitationResolverTest {
         assertNull(resolver.resolve("BOE-A-DESCONOCIDA"))
     }
 
-    private fun publication(): Publicacion = Publicacion(
+    private fun publication(): Publication = Publication(
         id = PUBLICATION_ID,
         title = "Real Decreto de prueba",
         publicationDate = "2026-10-11",
         issuingBody = null,
         section = BoeSectionDto.I,
         heading = null,
-        texto = null,
+        body = null,
         officialUrl = URL,
-        urlXml = null,
-        urlPdf = null,
-        rango = "Real Decreto",
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = "Real Decreto",
         category = CategoryDto.NORMS_AND_LEGISLATION,
     )
 
     /** Doble en memoria de [PublicationRepository] para el gate. */
     private class InMemoryPublicationRepository(
-        private val publications: List<Publicacion>,
+        private val publications: List<Publication>,
     ) : PublicationRepository {
-        override fun save(publication: Publicacion): Publicacion = publication
+        override fun save(publication: Publication): Publication = publication
 
-        override fun findById(id: String): Publicacion? =
+        override fun findById(id: String): Publication? =
             publications.firstOrNull { publication -> publication.id == id }
 
-        override fun listByDate(publicationDate: String): List<Publicacion> =
+        override fun listByDate(publicationDate: String): List<Publication> =
             publications.filter { publication -> publication.publicationDate == publicationDate }
     }
 

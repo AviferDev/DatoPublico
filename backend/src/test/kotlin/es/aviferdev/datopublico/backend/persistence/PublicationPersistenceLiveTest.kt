@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.persistence
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.model.CategoryDto
@@ -147,34 +147,34 @@ class PublicationPersistenceLiveTest {
         }
     }
 
-    private fun fullPublication(id: String): Publicacion = Publicacion(
+    private fun fullPublication(id: String): Publication = Publication(
         id = id,
         title = "Resolución de 8 de octubre de 2026",
         publicationDate = DATE,
         issuingBody = "MINISTERIO DE EDUCACIÓN",
         section = BoeSectionDto.II_A,
         heading = "Becas y subvenciones",
-        texto = "Primero. Convocar...\nSegundo. El plazo...",
+        body = "Primero. Convocar...\nSegundo. El plazo...",
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-        urlXml = "https://www.boe.es/diario_boe/xml.php?id=$id",
-        urlPdf = "https://www.boe.es/boe/dias/2026/10/09/pdfs/A00001-00002.pdf",
-        rango = "Resolución",
+        xmlUrl = "https://www.boe.es/diario_boe/xml.php?id=$id",
+        pdfUrl = "https://www.boe.es/boe/dias/2026/10/09/pdfs/A00001-00002.pdf",
+        rank = "Resolución",
         category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
         deadline = DeadlineDto(deadlineDate = "2026-11-30", description = "Diez días hábiles"),
     )
 
-    private fun publicationWithNulls(id: String): Publicacion = Publicacion(
+    private fun publicationWithNulls(id: String): Publication = Publication(
         id = id,
         title = "Resolución sin metadatos enriquecidos",
         publicationDate = DATE,
         issuingBody = null,
         section = BoeSectionDto.II_A,
         heading = null,
-        texto = null,
+        body = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-        urlXml = null,
-        urlPdf = null,
-        rango = null,
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = null,
     )
 
     /**

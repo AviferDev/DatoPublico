@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.review
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.ReviewQueueEntity
 import es.aviferdev.datopublico.backend.persistence.ReviewQueueRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
@@ -45,7 +45,7 @@ class SummaryDispositionService(
      *   exigido (`avisoIA = false`).
      */
     fun dispose(
-        publication: Publicacion,
+        publication: Publication,
         summary: SummaryDto,
         guardrail: SummaryGuardrailResult,
     ): SummaryReviewOutcome {
@@ -61,7 +61,7 @@ class SummaryDispositionService(
 
     /** Publica el resumen: `estado = publicado`, sin crear entrada en la cola. */
     private fun publish(
-        publication: Publicacion,
+        publication: Publication,
         summary: SummaryDto,
         guardrail: SummaryGuardrailResult,
     ): SummaryReviewOutcome {
@@ -71,7 +71,7 @@ class SummaryDispositionService(
 
     /** Encola el resumen de baja confianza: `en_cola_revision` + entrada pendiente. */
     private fun queue(
-        publication: Publicacion,
+        publication: Publication,
         summary: SummaryDto,
         guardrail: SummaryGuardrailResult,
     ): SummaryReviewOutcome {
@@ -85,7 +85,7 @@ class SummaryDispositionService(
 
     /** Descarta el resumen: `estado = descartado`, ni publicación ni cola. */
     private fun discard(
-        publication: Publicacion,
+        publication: Publication,
         summary: SummaryDto,
         guardrail: SummaryGuardrailResult,
     ): SummaryReviewOutcome {
@@ -98,7 +98,7 @@ class SummaryDispositionService(
      * el mapeo) con el [state] y la confianza del guardrail.
      */
     private fun persist(
-        publication: Publicacion,
+        publication: Publication,
         summary: SummaryDto,
         guardrail: SummaryGuardrailResult,
         state: SummaryState,

@@ -10,7 +10,7 @@ import es.aviferdev.datopublico.backend.rag.chat.CitationResolver
  *
  * Adapta [PublicationRepository.findById] al puerto `fun interface`
  * [CitationResolver] de FT00025: la URL oficial **no** la produce el modelo, se
- * **inyecta** de forma determinista desde `Publicacion.urlOficial` (mismo
+ * **inyecta** de forma determinista desde `Publication.urlOficial` (mismo
  * principio que la fuente del resumen, ADR 0015). Una publicación no resoluble
  * devuelve `null` y el servicio **descarta** esa cita: nunca se inventa una
  * fuente.

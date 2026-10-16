@@ -1,8 +1,8 @@
 package es.aviferdev.datopublico.backend.ingesta.backfill
 
 import es.aviferdev.datopublico.backend.ingesta.job.DailyIngestionJob
-import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionParser
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.BoePublicationParser
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryClient
 import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 import es.aviferdev.datopublico.backend.infra.Database
@@ -166,25 +166,25 @@ private class LiveSummaryClient : BoeSummaryClient {
                 issuingBody = "MINISTERIO DE PRUEBA",
                 heading = null,
                 officialUrl = "https://www.boe.es/diario_boe/txt.php?id=FT00011-LIVE-$date",
-                urlXml = null,
-                urlPdf = null,
+                xmlUrl = null,
+                pdfUrl = null,
             )
         )
 }
 
 /** Parser de prueba: proyecta cada entrada a una publicación sin red. */
-private class LiveParser : BoePublicacionParser {
-    override suspend fun parsear(entry: SummaryEntry): Publicacion = Publicacion(
+private class LiveParser : BoePublicationParser {
+    override suspend fun parse(entry: SummaryEntry): Publication = Publication(
         id = entry.identifier,
         title = entry.title,
         publicationDate = entry.publicationDate,
         issuingBody = entry.issuingBody,
         section = entry.section,
         heading = entry.heading,
-        texto = "texto de prueba de ${entry.identifier}",
+        body = "texto de prueba de ${entry.identifier}",
         officialUrl = entry.officialUrl,
-        urlXml = entry.urlXml,
-        urlPdf = entry.urlPdf,
-        rango = null,
+        xmlUrl = entry.xmlUrl,
+        pdfUrl = entry.pdfUrl,
+        rank = null,
     )
 }

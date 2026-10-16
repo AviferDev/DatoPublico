@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.rag.chunking
 
-import es.aviferdev.datopublico.backend.ingesta.publication.BoeXmlParser
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.BoeXmlParser
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.persistence.toEntity
 import es.aviferdev.datopublico.backend.rag.Fragment
@@ -29,7 +29,7 @@ class ArticleChunkerTest {
     fun `fragments a normative document by article header keeping the reference`() {
         val publication = publicationFromFixture("texto-I-2026-20979", BoeSectionDto.I)
         val fragments = chunker.chunk(publication)
-        val headerLines = nonEmptyLines(publication.texto).filter { line -> HEADER_REGEX.containsMatchIn(line) }
+        val headerLines = nonEmptyLines(publication.body).filter { line -> HEADER_REGEX.containsMatchIn(line) }
 
         assertEquals(20, headerLines.size)
         assertEquals(headerLines, referencedHeaders(fragments))
@@ -47,7 +47,7 @@ class ArticleChunkerTest {
     @Test
     fun `concatenated fragments reproduce the source lines without duplicates or loss`() {
         val publication = publicationFromFixture("texto-VB-2024-76", BoeSectionDto.V_B)
-        val source = nonEmptyLines(publication.texto).joinToString(NEWLINE)
+        val source = nonEmptyLines(publication.body).joinToString(NEWLINE)
         val joined = chunker.chunk(publication).joinToString(NEWLINE) { fragment -> fragment.content }
 
         assertEquals(source, joined)
@@ -59,7 +59,7 @@ class ArticleChunkerTest {
         val fragments = chunker.chunk(publication)
 
         assertEquals(
-            words(nonEmptyLines(publication.texto).joinToString(NEWLINE)),
+            words(nonEmptyLines(publication.body).joinToString(NEWLINE)),
             words(fragments.joinToString(NEWLINE) { fragment -> fragment.content }),
         )
     }
@@ -150,12 +150,12 @@ class ArticleChunkerTest {
             .filter { reference -> HEADER_REGEX.containsMatchIn(reference) }
             .distinct()
 
-    /** Construye la [Publicacion] de un fixture real parseado, con su sección. */
-    private fun publicationFromFixture(name: String, section: BoeSectionDto): Publicacion =
+    /** Construye la [Publication] de un fixture real parseado, con su sección. */
+    private fun publicationFromFixture(name: String, section: BoeSectionDto): Publication =
         publication(
             id = "BOE-TEST-$name",
             section = section,
-            text = parser.parse(resource("$name.xml")).texto,
+            text = parser.parse(resource("$name.xml")).body,
         )
 
     /** Publicación de prueba en memoria (sin red): señales neutras salvo [text]. */
@@ -163,18 +163,18 @@ class ArticleChunkerTest {
         id: String,
         section: BoeSectionDto = BoeSectionDto.I,
         text: String? = null,
-    ): Publicacion = Publicacion(
+    ): Publication = Publication(
         id = id,
         title = "Publicación $id",
         publicationDate = PUBLISHED_DATE,
         issuingBody = null,
         section = section,
         heading = null,
-        texto = text,
+        body = text,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-        urlXml = null,
-        urlPdf = null,
-        rango = null,
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = null,
     )
 
     /** Líneas no vacías del texto de origen (misma vista que consume el chunker). */

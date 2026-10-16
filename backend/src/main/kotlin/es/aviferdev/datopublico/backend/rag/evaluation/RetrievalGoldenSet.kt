@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.evaluation
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.BoeSectionDto
@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
  *
  * Es el **modelo interno** del backend (ni DTO ni `Entity`), por eso va **sin
  * sufijo** (`CONSTRAINTS.md` §«Nombres y contratos»). El corpus se mapea a
- * [Publicacion] para poder indexarlo con
+ * [Publication] para poder indexarlo con
  * [es.aviferdev.datopublico.backend.rag.indexing.FragmentIndexer] sin cambiar su
  * firma.
  *
@@ -28,7 +28,7 @@ import kotlinx.serialization.Serializable
 data class RetrievalGoldenSet(
     val version: String,
     val k: Int,
-    val corpus: List<Publicacion>,
+    val corpus: List<Publication>,
     val queries: List<RetrievalQuery>,
 )
 
@@ -188,22 +188,22 @@ private fun RetrievalGoldenSetDto.toGoldenSet(): RetrievalGoldenSet = RetrievalG
 )
 
 /**
- * Mapea un elemento del corpus a [Publicacion] reutilizando el modelo de dominio
+ * Mapea un elemento del corpus a [Publication] reutilizando el modelo de dominio
  * existente; los campos no presentes en el dataset quedan `null` y la URL oficial
  * se deriva del `id`.
  */
-private fun RetrievalCorpusItemDto.toPublicacion(): Publicacion = Publicacion(
+private fun RetrievalCorpusItemDto.toPublicacion(): Publication = Publication(
     id = id,
     title = title,
     publicationDate = date,
     issuingBody = organization,
     section = section,
     heading = null,
-    texto = text,
+    body = text,
     officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-    urlXml = null,
-    urlPdf = null,
-    rango = null,
+    xmlUrl = null,
+    pdfUrl = null,
+    rank = null,
     category = category,
 )
 

@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publication
+package es.aviferdev.datopublico.backend.ingestion.publication
 
 import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryResponseDto
 import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
@@ -22,74 +22,74 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 
 /**
- * Orquestador [BoePublicacionParser] sobre los **fixtures reales** del sumario y
+ * Orquestador [BoePublicationParser] sobre los **fixtures reales** del sumario y
  * del XML (sin red): cubre las secciones, el rango y, desde FT00012, la
  * **categoría** y el **plazo** de cada publicación.
  *
  * El `MockEngine` sirve el XML local correspondiente al `id` pedido, de modo que
- * el flujo sumario real → descarga → parseo → [Publicacion] se ejercita de punta
+ * el flujo sumario real → descarga → parseo → [Publication] se ejercita de punta
  * a punta con datos reales de las ocho secciones.
  */
-class BoePublicacionParserTest {
+class BoePublicationParserTest {
 
     @Test
     fun `fixture real de cada section produce una publication completa`() = runTest {
         val entries = entradasDelSumario()
-        val parser = BoePublicacionHttpParser(BoeTextoHttpClient(clientQueSirveFixtures()))
+        val parser = BoePublicationHttpParser(BoeTextHttpClient(clientQueSirveFixtures()))
 
-        RANGOS_POR_ID.forEach { (identifier, rango) ->
+        RANGOS_POR_ID.forEach { (identifier, rank) ->
             val entry = assertNotNull(entries[identifier], "sin entrada de sumario para $identifier")
-            val publication = parser.parsear(entry)
+            val publication = parser.parse(entry)
 
             assertEquals(identifier, publication.id)
             assertTrue(publication.title.isNotBlank(), "$identifier sin título")
             assertEquals(entry.publicationDate, publication.publicationDate)
             assertEquals(entry.section, publication.section)
             assertEquals(entry.officialUrl, publication.officialUrl)
-            assertEquals(rango, publication.rango, "$identifier: rango")
+            assertEquals(rank, publication.rank, "$identifier: rango")
             assertEquals(CATEGORIAS_POR_ID[identifier], publication.category, "$identifier: categoría")
             assertEquals(PLAZOS_POR_ID[identifier], publication.deadline?.deadlineDate, "$identifier: plazo")
-            val texto = assertNotNull(publication.texto, "$identifier sin texto")
-            assertTrue(texto.isNotBlank(), "$identifier con texto vacío")
+            val body = assertNotNull(publication.body, "$identifier sin texto")
+            assertTrue(body.isNotBlank(), "$identifier con texto vacío")
         }
     }
 
     @Test
     fun `cubre las ocho secciones del BOE`() = runTest {
         val entries = entradasDelSumario()
-        val parser = BoePublicacionHttpParser(BoeTextoHttpClient(clientQueSirveFixtures()))
+        val parser = BoePublicationHttpParser(BoeTextHttpClient(clientQueSirveFixtures()))
 
         val secciones = FIXTURES_POR_ID.keys
             .map { identifier -> assertNotNull(entries[identifier], "sin entrada $identifier") }
-            .map { parser.parsear(it).section }
+            .map { parser.parse(it).section }
             .toSet()
 
         assertEquals(BoeSectionDto.entries.toSet(), secciones)
     }
 
     @Test
-    fun `una entry sin urlXml no hace ninguna peticion y deja texto null`() = runTest {
+    fun `una entry sin xmlUrl no hace ninguna peticion y deja body null`() = runTest {
         var peticiones = 0
         val client = clientCon(MockEngine { peticiones += 1; respond("", HttpStatusCode.OK) })
-        val parser = BoePublicacionHttpParser(BoeTextoHttpClient(client))
+        val parser = BoePublicationHttpParser(BoeTextHttpClient(client))
 
-        val publication = parser.parsear(entry(urlXml = null))
+        val publication = parser.parse(entry(xmlUrl = null))
 
         assertEquals(0, peticiones, "No debe pedirse texto sin urlXml")
-        assertNull(publication.texto)
+        assertNull(publication.body)
         assertEquals("BOE-A-1", publication.id)
         assertTrue(publication.officialUrl.isNotBlank())
     }
 
     @Test
-    fun `un 404 produce una publication valida con texto null`() = runTest {
+    fun `un 404 produce una publication valida con body null`() = runTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.NotFound, "sin texto") })
-        val parser = BoePublicacionHttpParser(BoeTextoHttpClient(client))
+        val parser = BoePublicationHttpParser(BoeTextHttpClient(client))
 
-        val publication = parser.parsear(entry())
+        val publication = parser.parse(entry())
 
-        assertNull(publication.texto)
-        assertNull(publication.rango)
+        assertNull(publication.body)
+        assertNull(publication.rank)
         assertEquals("BOE-A-1", publication.id)
         assertEquals(BoeSectionDto.I, publication.section)
     }
@@ -124,9 +124,9 @@ class BoePublicacionParserTest {
     private fun clientCon(engine: MockEngine): HttpClient = HttpClient(engine) { expectSuccess = false }
 
     private fun entry(
-        urlXml: String? = URL_XML,
+        xmlUrl: String? = URL_XML,
         issuingBody: String? = "MINISTERIO DEL SUMARIO",
-        urlPdf: String? = null,
+        pdfUrl: String? = null,
     ): SummaryEntry = SummaryEntry(
         identifier = "BOE-A-1",
         control = "2026/1",
@@ -136,8 +136,8 @@ class BoePublicacionParserTest {
         issuingBody = issuingBody,
         heading = "Epígrafe",
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",
-        urlXml = urlXml,
-        urlPdf = urlPdf,
+        xmlUrl = xmlUrl,
+        pdfUrl = pdfUrl,
     )
 
     /** Lee un recurso de `src/test/resources/boe` como texto UTF-8. */

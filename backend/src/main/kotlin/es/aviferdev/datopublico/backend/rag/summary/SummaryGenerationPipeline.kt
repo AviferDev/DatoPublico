@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.summary
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.persistence.FragmentRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
@@ -91,7 +91,7 @@ internal fun createPipeline(
  */
 internal suspend fun processPublication(
     pipeline: SummaryGenerationPipeline,
-    publication: Publicacion,
+    publication: Publication,
 ): SummaryOutcome {
     val outcome = if (hasRealSummary(pipeline, publication)) {
         SummaryOutcome.ALREADY_DONE
@@ -104,13 +104,13 @@ internal suspend fun processPublication(
 /** ¿Tiene [publication] un resumen ya generado por el pipeline (confianza no nula)? */
 internal fun hasRealSummary(
     pipeline: SummaryGenerationPipeline,
-    publication: Publicacion,
+    publication: Publication,
 ): Boolean = pipeline.summaries.findByPublication(publication.id)?.confidence != null
 
 /** Indexa, recupera contexto, genera y traduce el resultado de la generación. */
 private suspend fun generateOutcome(
     pipeline: SummaryGenerationPipeline,
-    publication: Publicacion,
+    publication: Publication,
 ): SummaryOutcome {
     pipeline.indexer.index(publication)
     val context = contextFor(pipeline, publication)
@@ -123,7 +123,7 @@ private suspend fun generateOutcome(
 /** Evalúa los guardrails del resumen generado y lo dispone (publicar/encolar/descartar). */
 private suspend fun disposeSummary(
     pipeline: SummaryGenerationPipeline,
-    publication: Publicacion,
+    publication: Publication,
     summary: SummaryDto,
     context: List<FragmentEntity>,
 ): SummaryOutcome {
@@ -138,13 +138,13 @@ private suspend fun disposeSummary(
 /** Recupera los fragmentos de contexto de [publication] (mismo filtro que el generador). */
 private fun contextFor(
     pipeline: SummaryGenerationPipeline,
-    publication: Publicacion,
+    publication: Publication,
 ): List<FragmentEntity> =
     pipeline.hybridSearch.search(publication.title, filterFor(publication), CONTEXT_LIMIT)
         .map { match -> match.fragment }
 
 /** Filtro de recuperación por los metadatos de [publication]. */
-private fun filterFor(publication: Publicacion): SearchFilter = SearchFilter(
+private fun filterFor(publication: Publication): SearchFilter = SearchFilter(
     publishedFrom = publication.publicationDate,
     publishedTo = publication.publicationDate,
     category = publication.category,

@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.indexing
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FragmentRepository
 import es.aviferdev.datopublico.backend.persistence.toEntity
 import es.aviferdev.datopublico.backend.rag.chunking.ArticleChunker
@@ -42,7 +42,7 @@ class FragmentIndexer(
      *
      * @return número de fragmentos indexados.
      */
-    fun index(publication: Publicacion): Int {
+    fun index(publication: Publication): Int {
         val fragments = chunker.chunk(publication)
         fragments.forEach { fragment ->
             fragmentRepository.save(fragment.toEntity())

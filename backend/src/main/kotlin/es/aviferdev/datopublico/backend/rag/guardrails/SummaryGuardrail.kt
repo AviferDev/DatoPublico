@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.guardrails
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.SummaryDto
@@ -41,7 +41,7 @@ class SummaryGuardrail(private val reachability: SourceReachability? = null) {
      *   (fail-fast, igual que el generador).
      */
     suspend fun evaluate(
-        publication: Publicacion,
+        publication: Publication,
         summary: SummaryDto,
         context: List<FragmentEntity>,
     ): SummaryGuardrailResult {
@@ -56,7 +56,7 @@ class SummaryGuardrail(private val reachability: SourceReachability? = null) {
     }
 
     /** Categoría obligatoria de la publicación (fail-fast si falta). */
-    private fun requireCategory(publication: Publicacion): CategoryDto =
+    private fun requireCategory(publication: Publication): CategoryDto =
         publication.category
             ?: throw IllegalArgumentException(
                 "La publicación ${publication.id} no tiene categoría; no se puede evaluar el guardrail."

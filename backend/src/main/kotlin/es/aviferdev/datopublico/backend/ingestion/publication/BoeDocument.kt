@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publication
+package es.aviferdev.datopublico.backend.ingestion.publication
 
 /**
  * Resultado del parseo del XML estructurado de una publicación del BOE
@@ -6,16 +6,16 @@ package es.aviferdev.datopublico.backend.ingesta.publication
  *
  * Es un modelo **interno** de `:backend` (ni serializable ni `Dto`). Separa el
  * **texto** ya normalizado de los **metadatos** del `<documento>` para que el
- * [PublicacionParser] y la persistencia (FT00008) los usen por separado.
+ * [PublicationParser] y la persistencia (FT00008) los usen por separado.
  *
- * [texto] es `null` cuando la publicación no trae `<texto>` o lo trae vacío
+ * [body] es `null` cuando la publicación no trae `<texto>` o lo trae vacío
  * (documentos servidos solo como imagen/PDF): no se inventa texto.
  */
-data class DocumentoBoe(
+data class BoeDocument(
     /** Texto completo normalizado por párrafos, o `null` si no hay texto. */
-    val texto: String?,
+    val body: String?,
     /** Metadatos del bloque `<metadatos>` del XML. */
-    val metadata: MetadatosBoe,
+    val metadata: BoeMetadata,
 )
 
 /**
@@ -25,17 +25,17 @@ data class DocumentoBoe(
  * (las Secciones IV, V.A, V.B y V.C no traen rango ni origen legislativo, y el
  * `numero_oficial` puede venir vacío).
  */
-data class MetadatosBoe(
+data class BoeMetadata(
     /** Rango normativo (`Real Decreto`, `Orden`, `Resolución`…). */
-    val rango: String?,
+    val rank: String?,
     /** Departamento emisor (organismo). */
     val department: String?,
     /** Fecha de disposición en formato `YYYYMMDD` tal cual la publica el BOE. */
-    val fechaDisposicion: String?,
+    val dispositionDate: String?,
     /** Número oficial (`814/2026`, `DEF/1431/2023`…); opcional. */
-    val numeroOficial: String?,
+    val officialNumber: String?,
     /** URL del PDF oficial. */
-    val urlPdf: String?,
+    val pdfUrl: String?,
     /** Origen legislativo (`Estatal`, `Autonómico`…); opcional. */
-    val origenLegislativo: String?,
+    val legislativeOrigin: String?,
 )

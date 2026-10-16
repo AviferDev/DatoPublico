@@ -69,9 +69,9 @@ private fun BoeSummaryItemDto.toEntry(
     section = section,
     issuingBody = issuingBody,
     heading = heading,
-    officialUrl = htmlUrl ?: urlPdf?.text.orEmpty(),
-    urlXml = urlXml,
-    urlPdf = urlPdf?.text,
+    officialUrl = htmlUrl ?: pdfUrl?.text.orEmpty(),
+    xmlUrl = xmlUrl,
+    pdfUrl = pdfUrl?.text,
 )
 
 /** Mapea el código de sección del BOE a la sección del contrato; `null` si es ajeno. */

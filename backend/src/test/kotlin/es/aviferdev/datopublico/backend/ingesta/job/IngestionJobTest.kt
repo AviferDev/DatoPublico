@@ -1,8 +1,8 @@
 package es.aviferdev.datopublico.backend.ingesta.job
 
-import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionParser
-import es.aviferdev.datopublico.backend.ingesta.publication.BoeTextoException
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.BoePublicationParser
+import es.aviferdev.datopublico.backend.ingestion.publication.BoeTextException
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryClient
 import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryException
 import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
@@ -109,7 +109,7 @@ class IngestionJobTest {
 
     private fun jobWith(
         entries: List<SummaryEntry>,
-        parser: BoePublicacionParser,
+        parser: BoePublicationParser,
         repository: PublicationRepository,
     ): IngestionJob = DailyIngestionJob(
         summaryClient = FakeSummaryClient(entries = entries),
@@ -126,8 +126,8 @@ class IngestionJobTest {
         issuingBody = "MINISTERIO X",
         heading = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-        urlXml = "https://www.boe.es/diario_boe/xml.php?id=$id",
-        urlPdf = null,
+        xmlUrl = "https://www.boe.es/diario_boe/xml.php?id=$id",
+        pdfUrl = null,
     )
 
     /** Doble del sumario: devuelve las entradas o lanza el error configurado. */
@@ -140,10 +140,10 @@ class IngestionJobTest {
     }
 
     /** Doble del parser: produce una publicación, salvo para los ids de [failing]. */
-    private class FakeParser(private val failing: Set<String>) : BoePublicacionParser {
-        override suspend fun parsear(entry: SummaryEntry): Publicacion {
+    private class FakeParser(private val failing: Set<String>) : BoePublicationParser {
+        override suspend fun parse(entry: SummaryEntry): Publication {
             if (entry.identifier in failing) {
-                throw BoeTextoException("sin texto para ${entry.identifier}")
+                throw BoeTextException("sin texto para ${entry.identifier}")
             }
             return publicationFrom(entry)
         }
@@ -153,10 +153,10 @@ class IngestionJobTest {
     private class FakePublicationRepository(
         private val failOnId: String? = null,
     ) : PublicationRepository {
-        val saved = mutableMapOf<String, Publicacion>()
+        val saved = mutableMapOf<String, Publication>()
         val saveCounts = mutableMapOf<String, Int>()
 
-        override fun save(publication: Publicacion): Publicacion {
+        override fun save(publication: Publication): Publication {
             if (publication.id == failOnId) {
                 throw IllegalStateException("fallo de repositorio para ${publication.id}")
             }
@@ -165,26 +165,26 @@ class IngestionJobTest {
             return publication
         }
 
-        override fun findById(id: String): Publicacion? = saved[id]
+        override fun findById(id: String): Publication? = saved[id]
 
-        override fun listByDate(publicationDate: String): List<Publicacion> =
+        override fun listByDate(publicationDate: String): List<Publication> =
             saved.values.filter { it.publicationDate == publicationDate }
     }
 
     private companion object {
         /** Proyecta la entrada a la publicación que produciría el parser. */
-        fun publicationFrom(entry: SummaryEntry): Publicacion = Publicacion(
+        fun publicationFrom(entry: SummaryEntry): Publication = Publication(
             id = entry.identifier,
             title = entry.title,
             publicationDate = entry.publicationDate,
             issuingBody = entry.issuingBody,
             section = entry.section,
             heading = entry.heading,
-            texto = "texto de ${entry.identifier}",
+            body = "texto de ${entry.identifier}",
             officialUrl = entry.officialUrl,
-            urlXml = entry.urlXml,
-            urlPdf = entry.urlPdf,
-            rango = null,
+            xmlUrl = entry.xmlUrl,
+            pdfUrl = entry.pdfUrl,
+            rank = null,
         )
     }
 }

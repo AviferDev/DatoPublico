@@ -8,7 +8,7 @@ package es.aviferdev.datopublico.backend.rag.chat
  * de fragmento que aporta el modelo y la **cita a la fuente oficial**: el servicio
  * de chat **no** conoce `PublicationRepository`, JDBC ni Ktor. En **producción**
  * (FT00031) se implementa sobre `PublicationRepository.findById`
- * (`Publicacion.id` → `ChatCitation(id, titulo, urlOficial)`); en el gate se usa un
+ * (`Publication.id` → `ChatCitation(id, titulo, urlOficial)`); en el gate se usa un
  * doble determinista.
  *
  * @see RagChatService

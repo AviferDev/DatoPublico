@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.relevance
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 
 /**
  * Motivo **objetivo** por el que una publicación del BOE se considera destacada.
@@ -23,7 +23,7 @@ enum class HighlightReason {
     /** La categoría curada (FT00012) es de interés ciudadano directo. */
     THEMATIC_KEYWORD,
 
-    /** La convocatoria tiene un plazo de solicitud fiable ([Publicacion.plazo]). */
+    /** La convocatoria tiene un plazo de solicitud fiable ([Publication.plazo]). */
     OPEN_DEADLINE,
 
     /** El organismo emisor está en la lista curada de emisores de referencia. */
@@ -43,7 +43,7 @@ enum class HighlightReason {
  * @property reasons motivos que dispararon la puntuación; no vacía.
  */
 data class Highlight(
-    val publication: Publicacion,
+    val publication: Publication,
     val score: Int,
     val reasons: List<HighlightReason>,
 )

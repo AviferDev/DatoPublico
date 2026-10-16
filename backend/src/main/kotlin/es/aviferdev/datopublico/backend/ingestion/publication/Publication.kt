@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publication
+package es.aviferdev.datopublico.backend.ingestion.publication
 
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
@@ -13,20 +13,20 @@ import es.aviferdev.datopublico.model.BoeSectionDto
  * añade el texto completo, las URLs xml/pdf y el rango.
  *
  * [fechaPublicacion] es una fecha ISO-8601 (`2026-10-09`) como `String`, coherente
- * con `SummaryEntry` y `PublicationDto`. [organismo], [epigrafe], [texto],
- * [urlXml], [urlPdf] y [rango] son opcionales porque la estructura del BOE varía
+ * con `SummaryEntry` y `PublicationDto`. [issuingBody], [heading], [body],
+ * [urlXml], [urlPdf] y [rank] son opcionales porque la estructura del BOE varía
  * entre secciones y hay publicaciones sin texto XML disponible (imagen/PDF).
  *
- * [rango] procede del XML estructurado (`xml.php`) y es útil para los destacados
+ * [rank] procede del XML estructurado (`xml.php`) y es útil para los destacados
  * (FT00013). El resto de metadatos enriquecidos del XML (`departamento`,
  * `fechaDisposicion`, `numeroOficial`, `origenLegislativo`) se conservan en
- * [DocumentoBoe.metadatos] para que la persistencia decida qué guarda.
+ * [BoeDocument.metadata] para que la persistencia decida qué guarda.
  *
- * [categoria] y [plazo] los rellena [PublicacionParser] al construir el modelo
+ * [category] y [deadline] los rellena [PublicationParser] al construir el modelo
  * (FT00012): la categoría es siempre una de las 11 curadas y el plazo queda
  * `null` cuando la fuente no lo indica de forma fiable.
  */
-data class Publicacion(
+data class Publication(
     /** Identificador oficial del BOE (p. ej. `BOE-A-2026-20979`). */
     val id: String,
     /** Título oficial de la publicación. */
@@ -40,20 +40,20 @@ data class Publicacion(
     /** Epígrafe del BOE; opcional (falta en las entradas sin epígrafe). */
     val heading: String?,
     /** Texto completo normalizado por párrafos; `null` si la fuente no lo trae. */
-    val texto: String?,
+    val body: String?,
     /** URL oficial de la publicación (html o, si no existe, pdf). */
     val officialUrl: String,
     /** URL del XML estructurado (`xml.php`); opcional. */
-    val urlXml: String?,
+    val xmlUrl: String?,
     /** URL del PDF oficial; opcional. */
-    val urlPdf: String?,
+    val pdfUrl: String?,
     /** Rango normativo del XML (`Real Decreto`, `Orden`…); opcional. */
-    val rango: String?,
-    /** Categoría curada (FT00012); la asigna [PublicacionParser], nunca `null`. */
+    val rank: String?,
+    /** Categoría curada (FT00012); la asigna [PublicationParser], nunca `null`. */
     val category: CategoryDto? = null,
     /**
      * Plazo de solicitud (convocatorias de empleo público, becas o subvenciones);
-     * lo extrae [PublicacionParser] cuando es fiable, o `null`. Es aditivo para
+     * lo extrae [PublicationParser] cuando es fiable, o `null`. Es aditivo para
      * que la persistencia (FT00008) pueda guardar y recuperar el plazo.
      */
     val deadline: DeadlineDto? = null,

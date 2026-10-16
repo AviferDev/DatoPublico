@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.relevance
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.BoeSectionDto
 import java.text.Normalizer
@@ -8,7 +8,7 @@ import java.text.Normalizer
 /**
  * Ranker **puro, determinista y explicable** de los destacados del día del BOE.
  *
- * Dada la lista de [Publicacion] de una misma fecha (la que devuelve
+ * Dada la lista de [Publication] de una misma fecha (la que devuelve
  * `PublicationRepository.listByDate`), marca un **subconjunto** como destacado
  * mediante una **puntuación aditiva por señales objetivas** y expone el **motivo**
  * de cada destacado ([Highlight.reasons]). Es la base del feed (FT00026).
@@ -21,7 +21,7 @@ import java.text.Normalizer
  * Señales y pesos (semilla determinista documentada; el afinado con datos reales
  * es deuda aceptada, no bloquea la 1.0.0):
  * - [HighlightReason.NORMATIVE_SECTION]: Sección I (normas) → [NORMATIVE_SECTION_WEIGHT].
- * - [HighlightReason.NORMATIVE_RANK]: por [Publicacion.rango] normalizado →
+ * - [HighlightReason.NORMATIVE_RANK]: por [Publication.rango] normalizado →
  *   [HIGH_RANK_WEIGHT] (ley orgánica, ley, real decreto-ley, real decreto
  *   legislativo), [REAL_DECREE_WEIGHT] (real decreto), [MEDIUM_RANK_WEIGHT]
  *   (orden, orden ministerial, instrucción), [LOW_RANK_WEIGHT] (resolución,
@@ -44,7 +44,7 @@ class HighlightRanker {
      * @return destacados ordenados por `score` desc / `id` asc, con tope
      *   [MAX_HIGHLIGHTS]; lista vacía si ninguna alcanza [MIN_SCORE].
      */
-    fun rank(publications: List<Publicacion>): List<Highlight> =
+    fun rank(publications: List<Publication>): List<Highlight> =
         publications
             .map { publication -> highlightOf(publication) }
             .filter { highlight -> highlight.score >= MIN_SCORE }
@@ -52,7 +52,7 @@ class HighlightRanker {
             .take(MAX_HIGHLIGHTS)
 
     /** Construye el [Highlight] de una publicación a partir de sus razones. */
-    private fun highlightOf(publication: Publicacion): Highlight {
+    private fun highlightOf(publication: Publication): Highlight {
         val reasons = reasonsOf(publication)
         return Highlight(publication, scoreOf(publication, reasons), reasons)
     }
@@ -63,11 +63,11 @@ class HighlightRanker {
      * Es la **única** fuente de verdad de las señales: [scoreOf] suma el peso de
      * cada razón devuelta, así que puntuación y explicación no pueden divergir.
      */
-    private fun reasonsOf(publication: Publicacion): List<HighlightReason> = buildList {
+    private fun reasonsOf(publication: Publication): List<HighlightReason> = buildList {
         if (publication.section == BoeSectionDto.I) {
             add(HighlightReason.NORMATIVE_SECTION)
         }
-        if (rankScoreOf(publication.rango) > NO_WEIGHT) {
+        if (rankScoreOf(publication.rank) > NO_WEIGHT) {
             add(HighlightReason.NORMATIVE_RANK)
         }
         if (publication.category in THEMATIC_CATEGORIES) {
@@ -82,10 +82,10 @@ class HighlightRanker {
     }
 
     /** Suma aditiva de los pesos de [reasons] (el rango aporta su peso variable). */
-    private fun scoreOf(publication: Publicacion, reasons: List<HighlightReason>): Int =
+    private fun scoreOf(publication: Publication, reasons: List<HighlightReason>): Int =
         reasons.sumOf { reason ->
             when (reason) {
-                HighlightReason.NORMATIVE_RANK -> rankScoreOf(publication.rango)
+                HighlightReason.NORMATIVE_RANK -> rankScoreOf(publication.rank)
                 HighlightReason.NORMATIVE_SECTION -> NORMATIVE_SECTION_WEIGHT
                 HighlightReason.THEMATIC_KEYWORD -> THEMATIC_WEIGHT
                 HighlightReason.OPEN_DEADLINE -> OPEN_DEADLINE_WEIGHT

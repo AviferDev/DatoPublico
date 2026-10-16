@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.summary
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.rag.generation.TextGenerationProvider
 import es.aviferdev.datopublico.backend.rag.generation.TokenUsage
@@ -24,7 +24,7 @@ import es.aviferdev.datopublico.validation.CitizenSummaryValidator
  *
  * Un resumen que no cumple el contrato **no se publica**: se devuelve
  * [CitizenSummaryResult.Invalid] con las violaciones (no una excepción). La
- * **fuente oficial** se inyecta desde `Publicacion.urlOficial`, nunca la produce
+ * **fuente oficial** se inyecta desde `Publication.urlOficial`, nunca la produce
  * el modelo.
  *
  * @param hybridSearch recuperación híbrida que aporta los fragmentos de contexto.
@@ -53,7 +53,7 @@ class CitizenSummaryGenerator(
      * @throws SummaryGenerationException si la salida del proveedor no es
      *   interpretable.
      */
-    suspend fun generate(publication: Publicacion, limit: Int = DEFAULT_LIMIT): CitizenSummaryResult {
+    suspend fun generate(publication: Publication, limit: Int = DEFAULT_LIMIT): CitizenSummaryResult {
         val category = requireCategory(publication)
         val request = promptBuilder.build(publication, retrieve(publication, limit))
         val response = textGenerationProvider.generate(request)
@@ -62,14 +62,14 @@ class CitizenSummaryGenerator(
     }
 
     /** Categoría obligatoria de la publicación (fail-fast si falta). */
-    private fun requireCategory(publication: Publicacion): CategoryDto =
+    private fun requireCategory(publication: Publication): CategoryDto =
         publication.category
             ?: throw IllegalArgumentException(
                 "La publicación ${publication.id} no tiene categoría; no se puede generar el resumen."
             )
 
     /** Recupera el contexto de la publicación con un filtro por sus metadatos. */
-    private fun retrieve(publication: Publicacion, limit: Int): List<FragmentEntity> {
+    private fun retrieve(publication: Publication, limit: Int): List<FragmentEntity> {
         val filter = SearchFilter(
             publishedFrom = publication.publicationDate,
             publishedTo = publication.publicationDate,

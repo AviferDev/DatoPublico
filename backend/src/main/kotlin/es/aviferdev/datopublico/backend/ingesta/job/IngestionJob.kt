@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.job
 
-import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionParser
+import es.aviferdev.datopublico.backend.ingestion.publication.BoePublicationParser
 import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryClient
 import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
@@ -50,7 +50,7 @@ interface IngestionJob {
 
 /**
  * Implementación de [IngestionJob] sobre los colaboradores ya existentes
- * ([BoeSummaryClient], [BoePublicacionParser] y [PublicationRepository]).
+ * ([BoeSummaryClient], [BoePublicationParser] y [PublicationRepository]).
  *
  * Los accesos a la base de datos son **bloqueantes** (JDBC) y se ejecutan en
  * [ioDispatcher] para no ocupar el hilo de eventos HTTP.
@@ -62,7 +62,7 @@ interface IngestionJob {
  */
 class DailyIngestionJob(
     private val summaryClient: BoeSummaryClient,
-    private val publicationParser: BoePublicacionParser,
+    private val publicationParser: BoePublicationParser,
     private val repository: PublicationRepository,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : IngestionJob {
@@ -105,7 +105,7 @@ class DailyIngestionJob(
 
     /** Parsea y guarda una entrada; `false` si falla (salvo cancelación). */
     private suspend fun persist(entry: SummaryEntry): Boolean = try {
-        repository.save(publicationParser.parsear(entry))
+        repository.save(publicationParser.parse(entry))
         true
     } catch (cancellation: CancellationException) {
         throw cancellation

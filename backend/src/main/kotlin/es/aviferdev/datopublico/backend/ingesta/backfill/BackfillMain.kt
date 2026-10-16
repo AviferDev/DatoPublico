@@ -3,9 +3,9 @@ package es.aviferdev.datopublico.backend.ingesta.backfill
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.backend.ingesta.job.DailyIngestionJob
-import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionHttpParser
-import es.aviferdev.datopublico.backend.ingesta.publication.BoeTextoHttpClient
-import es.aviferdev.datopublico.backend.ingesta.publication.boeTextoHttpClient
+import es.aviferdev.datopublico.backend.ingestion.publication.BoePublicationHttpParser
+import es.aviferdev.datopublico.backend.ingestion.publication.BoeTextHttpClient
+import es.aviferdev.datopublico.backend.ingestion.publication.boeTextHttpClient
 import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryHttpClient
 import es.aviferdev.datopublico.backend.ingestion.summary.boeSummaryHttpClient
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
@@ -45,7 +45,7 @@ fun main() {
 private suspend fun executeBackfill(config: BackfillConfig) {
     val dataSource = Database.createDataSource(DatabaseConfig.fromEnv())
     val summaryHttp = boeSummaryHttpClient()
-    val textHttp = boeTextoHttpClient()
+    val textHttp = boeTextHttpClient()
     try {
         val runner = BackfillRunner(
             job = createIngestionJob(dataSource, summaryHttp, textHttp),
@@ -66,7 +66,7 @@ private fun createIngestionJob(
     textHttp: HttpClient,
 ): DailyIngestionJob = DailyIngestionJob(
     summaryClient = BoeSummaryHttpClient(summaryHttp),
-    publicationParser = BoePublicacionHttpParser(BoeTextoHttpClient(textHttp)),
+    publicationParser = BoePublicationHttpParser(BoeTextHttpClient(textHttp)),
     repository = PublicationRepositoryJdbc(dataSource),
 )
 

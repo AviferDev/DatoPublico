@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publication
+package es.aviferdev.datopublico.backend.ingestion.publication
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -13,50 +13,50 @@ import io.ktor.http.HttpStatusCode
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Implementación Ktor de [BoeTextoClient] con `HttpClient` **inyectado**.
+ * Implementación Ktor de [BoeTextClient] con `HttpClient` **inyectado**.
  *
  * Hace `GET <urlXml>` (la URL es **absoluta**, no hay base URL) con cabecera
  * `Accept: application/xml` y decodifica el cuerpo como **UTF-8**. `404` se
  * traduce a `null` (publicación sin texto XML); cualquier otro estado, fallo de
- * red o cuerpo ilegible lanza [BoeTextoException] (nunca datos parciales).
+ * red o cuerpo ilegible lanza [BoeTextException] (nunca datos parciales).
  *
  * @param httpClient cliente de salida ya configurado (`expectSuccess = false`).
  * @param parser parser del XML del BOE; inyectable para los tests.
  */
-class BoeTextoHttpClient(
+class BoeTextHttpClient(
     private val httpClient: HttpClient,
     private val parser: BoeXmlParser = BoeXmlParser(),
-) : BoeTextoClient {
+) : BoeTextClient {
 
-    override suspend fun obtenerDocumento(urlXml: String): DocumentoBoe? {
-        val response = execute(urlXml)
+    override suspend fun fetchDocument(xmlUrl: String): BoeDocument? {
+        val response = execute(xmlUrl)
         return when (response.status) {
-            HttpStatusCode.OK -> parse(urlXml, response)
+            HttpStatusCode.OK -> parse(xmlUrl, response)
             HttpStatusCode.NotFound -> null
-            else -> throw BoeTextoException(
-                "El BOE respondió ${response.status.value} al pedir el texto de $urlXml"
+            else -> throw BoeTextException(
+                "El BOE respondió ${response.status.value} al pedir el texto de $xmlUrl"
             )
         }
     }
 
-    /** Lanza [BoeTextoException] con la URL como contexto ante cualquier fallo de red. */
-    private suspend fun execute(urlXml: String): HttpResponse = try {
-        httpClient.get(urlXml) {
+    /** Lanza [BoeTextException] con la URL como contexto ante cualquier fallo de red. */
+    private suspend fun execute(xmlUrl: String): HttpResponse = try {
+        httpClient.get(xmlUrl) {
             header(HttpHeaders.Accept, ContentType.Application.Xml.toString())
         }
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {
-        throw BoeTextoException("No se pudo consultar el texto del BOE para $urlXml", error)
+        throw BoeTextException("No se pudo consultar el texto del BOE para $xmlUrl", error)
     }
 
     /** Decodifica el cuerpo UTF-8 y lo parsea; envuelve cualquier cuerpo ilegible. */
-    private suspend fun parse(urlXml: String, response: HttpResponse): DocumentoBoe = try {
+    private suspend fun parse(xmlUrl: String, response: HttpResponse): BoeDocument = try {
         parser.parse(response.body<ByteArray>().decodeToString())
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {
-        throw BoeTextoException("Respuesta ilegible del texto del BOE para $urlXml", error)
+        throw BoeTextException("Respuesta ilegible del texto del BOE para $xmlUrl", error)
     }
 }
 
@@ -68,7 +68,7 @@ class BoeTextoHttpClient(
  *
  * No fija base URL: la URL del XML (`xml.php`) es absoluta en el sumario.
  */
-fun boeTextoHttpClient(): HttpClient = HttpClient(CIO) {
+fun boeTextHttpClient(): HttpClient = HttpClient(CIO) {
     expectSuccess = false
     install(HttpTimeout) {
         requestTimeoutMillis = HTTP_REQUEST_TIMEOUT_MS

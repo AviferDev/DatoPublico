@@ -1,8 +1,8 @@
 package es.aviferdev.datopublico.backend.ingesta.categorizacion
 
-import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioResponseDto
-import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
-import es.aviferdev.datopublico.backend.ingesta.sumario.toEntradasSumario
+import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryResponseDto
+import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
+import es.aviferdev.datopublico.backend.ingestion.summary.toSummaryEntries
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
@@ -25,36 +25,36 @@ class PublicationClassifierTest {
 
     @Test
     fun `clasifica la muestra real de las ocho secciones por su category esperada`() {
-        val entradas = entradasDelSumario()
+        val entries = entradasDelSumario()
 
-        EXPECTED_CATEGORIES.forEach { (identificador, category) ->
-            val entrada = assertNotNull(entradas[identificador], "sin entrada de sumario para $identificador")
-            val actual = classifier.classify(entrada.section, entrada.heading, entrada.title)
-            assertEquals(category, actual, "$identificador (sección ${entrada.section})")
+        EXPECTED_CATEGORIES.forEach { (identifier, category) ->
+            val entry = assertNotNull(entries[identifier], "sin entrada de sumario para $identifier")
+            val actual = classifier.classify(entry.section, entry.heading, entry.title)
+            assertEquals(category, actual, "$identifier (sección ${entry.section})")
         }
     }
 
     @Test
-    fun `conserva el heading real del sumario sin mutarlo`() {
-        val entradas = entradasDelSumario()
+    fun `conserva el heading real del summary sin mutarlo`() {
+        val entries = entradasDelSumario()
 
-        EXPECTED_HEADINGS.forEach { (identificador, heading) ->
-            val entrada = assertNotNull(entradas[identificador], "sin entrada de sumario para $identificador")
-            assertEquals(heading, entrada.heading, "$identificador: epígrafe conservado")
+        EXPECTED_HEADINGS.forEach { (identifier, heading) ->
+            val entry = assertNotNull(entries[identifier], "sin entrada de sumario para $identifier")
+            assertEquals(heading, entry.heading, "$identifier: epígrafe conservado")
         }
     }
 
     @Test
-    fun `las entradas reales sin heading caen en la category por defecto de su section`() {
-        val entradas = entradasDelSumario()
+    fun `las entries reales sin heading caen en la category por defecto de su section`() {
+        val entries = entradasDelSumario()
 
-        listOf("BOE-B-2024-1", "BOE-B-2024-92").forEach { identificador ->
-            val entrada = assertNotNull(entradas[identificador], "sin entrada de sumario para $identificador")
-            assertNull(entrada.heading, "$identificador: sin epígrafe")
+        listOf("BOE-B-2024-1", "BOE-B-2024-92").forEach { identifier ->
+            val entry = assertNotNull(entries[identifier], "sin entrada de sumario para $identifier")
+            assertNull(entry.heading, "$identifier: sin epígrafe")
             assertEquals(
                 CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
-                classifier.classify(entrada.section, entrada.heading, entrada.title),
-                "$identificador",
+                classifier.classify(entry.section, entry.heading, entry.title),
+                "$identifier",
             )
         }
     }
@@ -76,24 +76,24 @@ class PublicationClassifierTest {
     }
 
     @Test
-    fun `es determinista para la misma entrada`() {
-        val entrada = assertNotNull(entradasDelSumario()["BOE-A-2024-93"], "sin entrada de la convocatoria")
+    fun `es determinista para la misma entry`() {
+        val entry = assertNotNull(entradasDelSumario()["BOE-A-2024-93"], "sin entrada de la convocatoria")
 
-        val primera = classifier.classify(entrada.section, entrada.heading, entrada.title)
-        val segunda = classifier.classify(entrada.section, entrada.heading, entrada.title)
+        val primera = classifier.classify(entry.section, entry.heading, entry.title)
+        val segunda = classifier.classify(entry.section, entry.heading, entry.title)
 
         assertEquals(primera, segunda)
     }
 
-    private fun entradasDelSumario(): Map<String, EntradaSumario> =
+    private fun entradasDelSumario(): Map<String, SummaryEntry> =
         listOf(
             "sumario-20261009.json" to LocalDate.of(2026, 10, 9),
             "sumario-20240102.json" to LocalDate.of(2024, 1, 2),
         )
-            .flatMap { (nombre, date) ->
-                DatoPublicoJson.decodeFromString<BoeSumarioResponseDto>(recurso(nombre)).toEntradasSumario(date)
+            .flatMap { (name, date) ->
+                DatoPublicoJson.decodeFromString<BoeSummaryResponseDto>(recurso(name)).toSummaryEntries(date)
             }
-            .associateBy { it.identificador }
+            .associateBy { it.identifier }
 
     /** Lee un recurso de `src/test/resources/boe` como texto UTF-8. */
     private fun recurso(ruta: String): String =

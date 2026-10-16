@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.indexing
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.persistence.FragmentMatch
 import es.aviferdev.datopublico.backend.persistence.FragmentRepository

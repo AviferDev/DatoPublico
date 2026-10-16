@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publicacion
+package es.aviferdev.datopublico.backend.ingesta.publication
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,21 +20,21 @@ class BoeXmlParserTest {
     private val parser = BoeXmlParser()
 
     @Test
-    fun `los ocho fixtures reales por section producen texto no vacio y metadatos`() {
-        EXPECTATIVAS_POR_SECCION.forEach { (nombre, rango) ->
-            val documento = parseFixture(nombre)
-            val texto = assertNotNull(documento.texto, "$nombre no produjo texto")
-            assertTrue(texto.isNotBlank(), "$nombre produjo texto vacío")
-            assertTrue(!texto.contains(ESPACIO_DURO), "$nombre conserva espacio duro")
-            assertTrue(!texto.contains("  "), "$nombre conserva espacios repetidos")
-            assertEquals(rango, documento.metadatos.rango, "$nombre: rango")
-            assertNotNull(documento.metadatos.departamento, "$nombre: departamento")
-            assertNotNull(documento.metadatos.urlPdf, "$nombre: urlPdf")
+    fun `los ocho fixtures reales por section producen texto no vacio y metadata`() {
+        EXPECTATIVAS_POR_SECCION.forEach { (name, rango) ->
+            val documento = parseFixture(name)
+            val texto = assertNotNull(documento.texto, "$name no produjo texto")
+            assertTrue(texto.isNotBlank(), "$name produjo texto vacío")
+            assertTrue(!texto.contains(ESPACIO_DURO), "$name conserva espacio duro")
+            assertTrue(!texto.contains("  "), "$name conserva espacios repetidos")
+            assertEquals(rango, documento.metadata.rango, "$name: rango")
+            assertNotNull(documento.metadata.department, "$name: departamento")
+            assertNotNull(documento.metadata.urlPdf, "$name: urlPdf")
         }
     }
 
     @Test
-    fun `la publicacion extensa de la Seccion I conserva el texto y los parrafos`() {
+    fun `la publication extensa de la Seccion I conserva el texto y los parrafos`() {
         val documento = parseFixture("texto-I-2026-20979")
         val texto = assertNotNull(documento.texto)
 
@@ -42,8 +42,8 @@ class BoeXmlParserTest {
         assertTrue(texto.lines().size > 140, "pocos párrafos: ${texto.lines().size}")
         assertTrue(texto.contains("FELIPE R."), "falta el cierre de la norma")
         assertTrue(texto.contains("DIANA MORANT RIPOLL"), "falta la firma de la ministra")
-        assertEquals("814/2026", documento.metadatos.numeroOficial)
-        assertEquals("20261007", documento.metadatos.fechaDisposicion)
+        assertEquals("814/2026", documento.metadata.numeroOficial)
+        assertEquals("20261007", documento.metadata.fechaDisposicion)
     }
 
     @Test
@@ -62,7 +62,7 @@ class BoeXmlParserTest {
 
         val resultado = parser.parse(documento)
 
-        assertEquals("Real Decreto", resultado.metadatos.rango)
+        assertEquals("Real Decreto", resultado.metadata.rango)
         assertEquals("Dos espacios y más", resultado.texto)
     }
 
@@ -71,8 +71,8 @@ class BoeXmlParserTest {
         val documento = parseFixture("texto-sin-texto")
 
         assertNull(documento.texto)
-        assertEquals("ORGANISMO SINTÉTICO", documento.metadatos.departamento)
-        assertNull(documento.metadatos.rango)
+        assertEquals("ORGANISMO SINTÉTICO", documento.metadata.department)
+        assertNull(documento.metadata.rango)
     }
 
     @Test
@@ -80,7 +80,7 @@ class BoeXmlParserTest {
         val documento = parser.parse("<documento><metadatos><rango>Orden</rango></metadatos></documento>")
 
         assertNull(documento.texto)
-        assertEquals("Orden", documento.metadatos.rango)
+        assertEquals("Orden", documento.metadata.rango)
     }
 
     @Test
@@ -105,7 +105,7 @@ class BoeXmlParserTest {
         assertTrue(error.message!!.contains("malformado"), error.message!!)
     }
 
-    private fun parseFixture(nombre: String): DocumentoBoe = parser.parse(recurso("$nombre.xml"))
+    private fun parseFixture(name: String): DocumentoBoe = parser.parse(recurso("$name.xml"))
 
     /** Lee un recurso de `src/test/resources/boe` como texto UTF-8. */
     private fun recurso(ruta: String): String =

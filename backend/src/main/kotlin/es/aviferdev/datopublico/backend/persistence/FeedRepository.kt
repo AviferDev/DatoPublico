@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.persistence
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
 import java.sql.PreparedStatement
 import java.sql.ResultSet

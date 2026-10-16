@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.summary
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.persistence.GenerationUsageEntity
 import es.aviferdev.datopublico.backend.persistence.GenerationUsageRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryCacheEntity

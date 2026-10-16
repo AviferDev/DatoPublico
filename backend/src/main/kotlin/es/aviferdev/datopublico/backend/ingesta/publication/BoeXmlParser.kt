@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publicacion
+package es.aviferdev.datopublico.backend.ingesta.publication
 
 import java.io.StringReader
 import javax.xml.XMLConstants
@@ -38,7 +38,7 @@ class BoeXmlParser {
         val documento = documentoDe(xml)
         DocumentoBoe(
             texto = textoDe(documento),
-            metadatos = metadatosDe(documento),
+            metadata = metadatosDe(documento),
         )
     } catch (error: Exception) {
         throw BoeTextoException("XML del BOE malformado o no permitido (DTD/entidades externas)", error)
@@ -60,14 +60,14 @@ class BoeXmlParser {
 
     /** Extrae los metadatos del `<metadatos>` raíz; cada campo es `null` si falta. */
     private fun metadatosDe(documento: Document): MetadatosBoe {
-        val metadatos = hijoDirecto(documento.documentElement, "metadatos")
+        val metadata = hijoDirecto(documento.documentElement, "metadatos")
         return MetadatosBoe(
-            rango = textoHijo(metadatos, "rango"),
-            departamento = textoHijo(metadatos, "departamento"),
-            fechaDisposicion = textoHijo(metadatos, "fecha_disposicion"),
-            numeroOficial = textoHijo(metadatos, "numero_oficial"),
-            urlPdf = textoHijo(metadatos, "url_pdf"),
-            origenLegislativo = textoHijo(metadatos, "origen_legislativo"),
+            rango = textoHijo(metadata, "rango"),
+            department = textoHijo(metadata, "departamento"),
+            fechaDisposicion = textoHijo(metadata, "fecha_disposicion"),
+            numeroOficial = textoHijo(metadata, "numero_oficial"),
+            urlPdf = textoHijo(metadata, "url_pdf"),
+            origenLegislativo = textoHijo(metadata, "origen_legislativo"),
         )
     }
 

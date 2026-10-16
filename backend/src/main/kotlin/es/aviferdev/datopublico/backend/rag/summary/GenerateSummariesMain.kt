@@ -2,7 +2,7 @@ package es.aviferdev.datopublico.backend.rag.summary
 
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
 import es.aviferdev.datopublico.backend.rag.generation.OpenCodeConfig
 import es.aviferdev.datopublico.backend.rag.generation.openCodeHttpClient

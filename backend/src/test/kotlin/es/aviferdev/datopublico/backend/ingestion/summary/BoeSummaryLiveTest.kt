@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.sumario
+package es.aviferdev.datopublico.backend.ingestion.summary
 
 import es.aviferdev.datopublico.model.BoeSectionDto
 import java.time.LocalDate
@@ -14,30 +14,30 @@ import kotlinx.coroutines.test.runTest
  * hagan llamadas de red. Para ejecutarla:
  *
  * ```
- * BOE_LIVE_TEST=1 ./gradlew :backend:test --tests '*BoeSumarioLiveTest'
+ * BOE_LIVE_TEST=1 ./gradlew :backend:test --tests '*BoeSummaryLiveTest'
  * ```
  */
-class BoeSumarioLiveTest {
+class BoeSummaryLiveTest {
 
     @Test
-    fun `la API real devuelve 200 y entradas de todas las secciones del BOE`() = runTest {
+    fun `la API real devuelve 200 y entries de todas las secciones del BOE`() = runTest {
         if (System.getenv("BOE_LIVE_TEST") != "1") {
-            println("BoeSumarioLiveTest omitido: exporta BOE_LIVE_TEST=1 para el test real.")
+            println("BoeSummaryLiveTest omitido: exporta BOE_LIVE_TEST=1 para el test real.")
         } else {
-            val httpClient = boeSumarioHttpClient()
+            val httpClient = boeSummaryHttpClient()
             try {
-                val entradas = BoeSumarioHttpClient(httpClient).obtenerSumario(FECHA_CON_TODAS_LAS_SECCIONES)
+                val entries = BoeSummaryHttpClient(httpClient).fetchSummary(FECHA_CON_TODAS_LAS_SECCIONES)
 
                 assertTrue(
-                    entradas.isNotEmpty(),
+                    entries.isNotEmpty(),
                     "La API real no devolvió entradas para $FECHA_CON_TODAS_LAS_SECCIONES",
                 )
                 assertEquals(
                     BoeSectionDto.entries.toSet(),
-                    entradas.map { it.section }.toSet(),
+                    entries.map { it.section }.toSet(),
                 )
-                assertTrue(entradas.all { it.identificador.isNotBlank() && it.officialUrl.isNotBlank() })
-                assertTrue(entradas.all { it.urlPdf != null })
+                assertTrue(entries.all { it.identifier.isNotBlank() && it.officialUrl.isNotBlank() })
+                assertTrue(entries.all { it.urlPdf != null })
             } finally {
                 httpClient.close()
             }

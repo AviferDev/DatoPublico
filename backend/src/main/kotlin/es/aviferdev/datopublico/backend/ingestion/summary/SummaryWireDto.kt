@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.sumario
+package es.aviferdev.datopublico.backend.ingestion.summary
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
  * Reproducen las claves del sobre tal y como las publica la fuente
  * (`fecha_publicacion`, `sumario_diario`, `url_html`, `url_xml`…). Son tipos
  * **internos de `:backend`**, no forman parte del contrato de `:shared` y no
- * deben filtrarse al dominio; el cliente los traduce a [EntradaSumario].
+ * deben filtrarse al dominio; el cliente los traduce a [SummaryEntry].
  *
  * Todos los campos son opcionales y tolerantes a claves desconocidas (la config
  * JSON usa `ignoreUnknownKeys`) porque la estructura varía entre secciones.
@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
  * con la clave JSON (regla MUST de `CONSTRAINTS.md` §«Serialización»).
  */
 @Serializable
-data class BoeSumarioResponseDto(
+data class BoeSummaryResponseDto(
     @SerialName("status")
     val status: BoeStatusDto? = null,
     @SerialName("data")
@@ -36,70 +36,70 @@ data class BoeStatusDto(
 @Serializable
 data class BoeDataDto(
     @SerialName("sumario")
-    val sumario: BoeSumarioDto? = null,
+    val summary: BoeSummaryDto? = null,
 )
 
 @Serializable
-data class BoeSumarioDto(
+data class BoeSummaryDto(
     @SerialName("metadatos")
-    val metadatos: BoeMetadatosDto? = null,
+    val metadata: BoeMetadataDto? = null,
     @SerialName("diario")
-    @Serializable(with = DiarioListSerializer::class)
-    val diario: List<BoeDiarioDto> = emptyList(),
+    @Serializable(with = DailyListSerializer::class)
+    val daily: List<BoeDailyDto> = emptyList(),
 )
 
 @Serializable
-data class BoeMetadatosDto(
+data class BoeMetadataDto(
     @SerialName("publicacion")
-    val publicacion: String? = null,
+    val publication: String? = null,
     @SerialName("fecha_publicacion")
     val publicationDate: String? = null,
 )
 
 @Serializable
-data class BoeDiarioDto(
+data class BoeDailyDto(
     @SerialName("numero")
-    val numero: String? = null,
+    val number: String? = null,
     @SerialName("seccion")
-    @Serializable(with = SeccionListSerializer::class)
-    val section: List<BoeSeccionDto> = emptyList(),
+    @Serializable(with = SectionListSerializer::class)
+    val section: List<BoeSectionNodeDto> = emptyList(),
     @SerialName("sumario_diario")
-    val sumarioDiario: BoeSumarioDiarioDto? = null,
+    val dailySummary: BoeSummaryDailyDto? = null,
 )
 
 @Serializable
-data class BoeSumarioDiarioDto(
+data class BoeSummaryDailyDto(
     @SerialName("identificador")
-    val identificador: String? = null,
+    val identifier: String? = null,
     @SerialName("url_pdf")
-    val urlPdf: BoeUrlPdfDto? = null,
+    val urlPdf: BoePdfUrlDto? = null,
 )
 
 @Serializable
-data class BoeSeccionDto(
+data class BoeSectionNodeDto(
     @SerialName("codigo")
-    val codigo: String? = null,
+    val code: String? = null,
     @SerialName("nombre")
-    val nombre: String? = null,
+    val name: String? = null,
     @SerialName("departamento")
-    @Serializable(with = DepartamentoListSerializer::class)
-    val departamento: List<BoeDepartamentoDto> = emptyList(),
+    @Serializable(with = DepartmentListSerializer::class)
+    val department: List<BoeDepartmentDto> = emptyList(),
 )
 
 @Serializable
-data class BoeDepartamentoDto(
+data class BoeDepartmentDto(
     @SerialName("codigo")
-    val codigo: String? = null,
+    val code: String? = null,
     @SerialName("nombre")
-    val nombre: String? = null,
+    val name: String? = null,
     @SerialName("epigrafe")
-    @Serializable(with = EpigrafeListSerializer::class)
-    val heading: List<BoeEpigrafeDto> = emptyList(),
+    @Serializable(with = HeadingListSerializer::class)
+    val heading: List<BoeHeadingDto> = emptyList(),
     @SerialName("item")
     @Serializable(with = ItemListSerializer::class)
-    val item: List<BoeSumarioItemDto> = emptyList(),
+    val item: List<BoeSummaryItemDto> = emptyList(),
     @SerialName("texto")
-    val texto: BoeTextoDto? = null,
+    val text: BoeTextDto? = null,
 )
 
 /**
@@ -108,47 +108,47 @@ data class BoeDepartamentoDto(
  * directamente en `departamento.item`.
  */
 @Serializable
-data class BoeTextoDto(
+data class BoeTextDto(
     @SerialName("item")
     @Serializable(with = ItemListSerializer::class)
-    val item: List<BoeSumarioItemDto> = emptyList(),
+    val item: List<BoeSummaryItemDto> = emptyList(),
 )
 
 @Serializable
-data class BoeEpigrafeDto(
+data class BoeHeadingDto(
     @SerialName("nombre")
-    val nombre: String? = null,
+    val name: String? = null,
     @SerialName("item")
     @Serializable(with = ItemListSerializer::class)
-    val item: List<BoeSumarioItemDto> = emptyList(),
+    val item: List<BoeSummaryItemDto> = emptyList(),
 )
 
 @Serializable
-data class BoeSumarioItemDto(
+data class BoeSummaryItemDto(
     @SerialName("identificador")
-    val identificador: String? = null,
+    val identifier: String? = null,
     @SerialName("control")
     val control: String? = null,
     @SerialName("titulo")
     val title: String? = null,
     @SerialName("url_html")
-    val urlHtml: String? = null,
+    val htmlUrl: String? = null,
     @SerialName("url_xml")
     val urlXml: String? = null,
     @SerialName("url_pdf")
-    val urlPdf: BoeUrlPdfDto? = null,
+    val urlPdf: BoePdfUrlDto? = null,
 )
 
 @Serializable
-data class BoeUrlPdfDto(
+data class BoePdfUrlDto(
     @SerialName("szBytes")
     val szBytes: String? = null,
     @SerialName("szKBytes")
     val szKBytes: String? = null,
     @SerialName("pagina_inicial")
-    val paginaInicial: String? = null,
+    val firstPage: String? = null,
     @SerialName("pagina_final")
-    val paginaFinal: String? = null,
+    val lastPage: String? = null,
     @SerialName("texto")
-    val texto: String? = null,
+    val text: String? = null,
 )

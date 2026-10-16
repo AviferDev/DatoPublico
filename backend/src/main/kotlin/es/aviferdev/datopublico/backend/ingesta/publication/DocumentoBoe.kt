@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publicacion
+package es.aviferdev.datopublico.backend.ingesta.publication
 
 /**
  * Resultado del parseo del XML estructurado de una publicación del BOE
@@ -15,7 +15,7 @@ data class DocumentoBoe(
     /** Texto completo normalizado por párrafos, o `null` si no hay texto. */
     val texto: String?,
     /** Metadatos del bloque `<metadatos>` del XML. */
-    val metadatos: MetadatosBoe,
+    val metadata: MetadatosBoe,
 )
 
 /**
@@ -29,7 +29,7 @@ data class MetadatosBoe(
     /** Rango normativo (`Real Decreto`, `Orden`, `Resolución`…). */
     val rango: String?,
     /** Departamento emisor (organismo). */
-    val departamento: String?,
+    val department: String?,
     /** Fecha de disposición en formato `YYYYMMDD` tal cual la publica el BOE. */
     val fechaDisposicion: String?,
     /** Número oficial (`814/2026`, `DEF/1431/2023`…); opcional. */

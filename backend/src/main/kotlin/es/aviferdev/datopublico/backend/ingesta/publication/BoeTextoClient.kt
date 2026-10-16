@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publicacion
+package es.aviferdev.datopublico.backend.ingesta.publication
 
 /**
  * Cliente del **texto oficial** de una publicación del BOE.

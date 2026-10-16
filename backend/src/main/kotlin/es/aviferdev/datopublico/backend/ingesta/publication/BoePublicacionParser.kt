@@ -1,6 +1,6 @@
-package es.aviferdev.datopublico.backend.ingesta.publicacion
+package es.aviferdev.datopublico.backend.ingesta.publication
 
-import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
+import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 
 /**
  * Punto de entrada de la ingesta de una publicación: descarga su texto y lo
@@ -16,7 +16,7 @@ interface BoePublicacionParser {
      *
      * @throws BoeTextoException si el texto no se puede obtener o parsear.
      */
-    suspend fun parsear(entrada: EntradaSumario): Publicacion
+    suspend fun parsear(entry: SummaryEntry): Publicacion
 }
 
 /**
@@ -31,8 +31,8 @@ class BoePublicacionHttpParser(
     private val publicacionParser: PublicacionParser = PublicacionParser(),
 ) : BoePublicacionParser {
 
-    override suspend fun parsear(entrada: EntradaSumario): Publicacion {
-        val documento = entrada.urlXml?.let { textoClient.obtenerDocumento(it) }
-        return publicacionParser.parsear(entrada, documento)
+    override suspend fun parsear(entry: SummaryEntry): Publicacion {
+        val documento = entry.urlXml?.let { textoClient.obtenerDocumento(it) }
+        return publicacionParser.parsear(entry, documento)
     }
 }

@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.persistence
 
 import es.aviferdev.datopublico.backend.chat.PublicationCitationResolver
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.model.CategoryDto

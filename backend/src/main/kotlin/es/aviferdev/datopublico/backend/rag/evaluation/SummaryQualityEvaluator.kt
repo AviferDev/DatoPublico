@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.evaluation
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.rag.summary.CitizenSummaryGenerator
 import es.aviferdev.datopublico.backend.rag.summary.CitizenSummaryResult
 import es.aviferdev.datopublico.backend.rag.summary.SummaryGenerationDto

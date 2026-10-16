@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.sumario
+package es.aviferdev.datopublico.backend.ingestion.summary
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -44,21 +44,21 @@ fun <T> singleOrArraySerializer(elementSerializer: KSerializer<T>): KSerializer<
 }
 
 /** `diario`: colección de días del sumario (lista u objeto). */
-object DiarioListSerializer :
-    KSerializer<List<BoeDiarioDto>> by singleOrArraySerializer(BoeDiarioDto.serializer())
+object DailyListSerializer :
+    KSerializer<List<BoeDailyDto>> by singleOrArraySerializer(BoeDailyDto.serializer())
 
 /** `seccion`: colección de secciones (lista u objeto). */
-object SeccionListSerializer :
-    KSerializer<List<BoeSeccionDto>> by singleOrArraySerializer(BoeSeccionDto.serializer())
+object SectionListSerializer :
+    KSerializer<List<BoeSectionNodeDto>> by singleOrArraySerializer(BoeSectionNodeDto.serializer())
 
 /** `departamento`: colección de organismos (lista u objeto; objeto real en `20240102`). */
-object DepartamentoListSerializer :
-    KSerializer<List<BoeDepartamentoDto>> by singleOrArraySerializer(BoeDepartamentoDto.serializer())
+object DepartmentListSerializer :
+    KSerializer<List<BoeDepartmentDto>> by singleOrArraySerializer(BoeDepartmentDto.serializer())
 
 /** `epigrafe`: colección de epígrafes (lista u objeto). */
-object EpigrafeListSerializer :
-    KSerializer<List<BoeEpigrafeDto>> by singleOrArraySerializer(BoeEpigrafeDto.serializer())
+object HeadingListSerializer :
+    KSerializer<List<BoeHeadingDto>> by singleOrArraySerializer(BoeHeadingDto.serializer())
 
 /** `item`: colección de entradas (objeto único o lista; forma mixta en ambos fixtures). */
 object ItemListSerializer :
-    KSerializer<List<BoeSumarioItemDto>> by singleOrArraySerializer(BoeSumarioItemDto.serializer())
+    KSerializer<List<BoeSummaryItemDto>> by singleOrArraySerializer(BoeSummaryItemDto.serializer())

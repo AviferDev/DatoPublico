@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.chunking
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.rag.Fragment
 
 /**
@@ -43,15 +43,15 @@ class ArticleChunker(
      *   (nunca lanza excepción).
      * @return fragmentos con `order` contiguo desde `0`; lista vacía sin texto.
      */
-    fun chunk(publicacion: Publicacion): List<Fragment> {
-        val sectionReference = SECTION_REFERENCE_PREFIX + publicacion.section.name
-        val lines = nonEmptyLines(publicacion.texto)
+    fun chunk(publication: Publicacion): List<Fragment> {
+        val sectionReference = SECTION_REFERENCE_PREFIX + publication.section.name
+        val lines = nonEmptyLines(publication.texto)
         val blocks = blocksOf(lines, sectionReference)
         return blocks
             .flatMap { block -> packedContents(block).map { content -> block.reference to content } }
             .filter { (_, content) -> content.isNotBlank() }
             .mapIndexed { index, (reference, content) ->
-                Fragment(publicacion.id, index, reference, content)
+                Fragment(publication.id, index, reference, content)
             }
     }
 

@@ -1,11 +1,11 @@
 package es.aviferdev.datopublico.backend.ingesta.job
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoePublicacionParser
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoeTextoException
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
-import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioClient
-import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioException
-import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
+import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionParser
+import es.aviferdev.datopublico.backend.ingesta.publication.BoeTextoException
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryClient
+import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryException
+import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
 import es.aviferdev.datopublico.model.BoeSectionDto
 import java.time.LocalDate
@@ -94,7 +94,7 @@ class IngestionJobTest {
     @Test
     fun `a summary failure is reported without propagating`() = runTest {
         val job = DailyIngestionJob(
-            summaryClient = FakeSummaryClient(error = BoeSumarioException("BOE caído")),
+            summaryClient = FakeSummaryClient(error = BoeSummaryException("BOE caído")),
             publicationParser = FakeParser(failing = emptySet()),
             repository = FakePublicationRepository(),
         )
@@ -108,7 +108,7 @@ class IngestionJobTest {
     }
 
     private fun jobWith(
-        entries: List<EntradaSumario>,
+        entries: List<SummaryEntry>,
         parser: BoePublicacionParser,
         repository: PublicationRepository,
     ): IngestionJob = DailyIngestionJob(
@@ -117,8 +117,8 @@ class IngestionJobTest {
         repository = repository,
     )
 
-    private fun entry(id: String): EntradaSumario = EntradaSumario(
-        identificador = id,
+    private fun entry(id: String): SummaryEntry = SummaryEntry(
+        identifier = id,
         control = null,
         title = "Título de $id",
         publicationDate = date.toString(),
@@ -132,20 +132,20 @@ class IngestionJobTest {
 
     /** Doble del sumario: devuelve las entradas o lanza el error configurado. */
     private class FakeSummaryClient(
-        private val entries: List<EntradaSumario> = emptyList(),
-        private val error: BoeSumarioException? = null,
-    ) : BoeSumarioClient {
-        override suspend fun obtenerSumario(date: LocalDate): List<EntradaSumario> =
+        private val entries: List<SummaryEntry> = emptyList(),
+        private val error: BoeSummaryException? = null,
+    ) : BoeSummaryClient {
+        override suspend fun fetchSummary(date: LocalDate): List<SummaryEntry> =
             error?.let { throw it } ?: entries
     }
 
     /** Doble del parser: produce una publicación, salvo para los ids de [failing]. */
     private class FakeParser(private val failing: Set<String>) : BoePublicacionParser {
-        override suspend fun parsear(entrada: EntradaSumario): Publicacion {
-            if (entrada.identificador in failing) {
-                throw BoeTextoException("sin texto para ${entrada.identificador}")
+        override suspend fun parsear(entry: SummaryEntry): Publicacion {
+            if (entry.identifier in failing) {
+                throw BoeTextoException("sin texto para ${entry.identifier}")
             }
-            return publicationFrom(entrada)
+            return publicationFrom(entry)
         }
     }
 
@@ -173,17 +173,17 @@ class IngestionJobTest {
 
     private companion object {
         /** Proyecta la entrada a la publicación que produciría el parser. */
-        fun publicationFrom(entrada: EntradaSumario): Publicacion = Publicacion(
-            id = entrada.identificador,
-            title = entrada.title,
-            publicationDate = entrada.publicationDate,
-            issuingBody = entrada.issuingBody,
-            section = entrada.section,
-            heading = entrada.heading,
-            texto = "texto de ${entrada.identificador}",
-            officialUrl = entrada.officialUrl,
-            urlXml = entrada.urlXml,
-            urlPdf = entrada.urlPdf,
+        fun publicationFrom(entry: SummaryEntry): Publicacion = Publicacion(
+            id = entry.identifier,
+            title = entry.title,
+            publicationDate = entry.publicationDate,
+            issuingBody = entry.issuingBody,
+            section = entry.section,
+            heading = entry.heading,
+            texto = "texto de ${entry.identifier}",
+            officialUrl = entry.officialUrl,
+            urlXml = entry.urlXml,
+            urlPdf = entry.urlPdf,
             rango = null,
         )
     }

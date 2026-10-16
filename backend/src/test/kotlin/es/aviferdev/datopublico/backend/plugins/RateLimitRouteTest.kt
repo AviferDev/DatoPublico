@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.plugins
 
 import es.aviferdev.datopublico.backend.feed.DailyFeedService
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.infra.RateLimitSettings
 import es.aviferdev.datopublico.backend.persistence.FeedItem
 import es.aviferdev.datopublico.backend.persistence.FeedRepository

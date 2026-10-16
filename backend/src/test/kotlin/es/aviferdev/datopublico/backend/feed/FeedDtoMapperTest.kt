@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.feed
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.relevance.Highlight
 import es.aviferdev.datopublico.backend.relevance.HighlightReason

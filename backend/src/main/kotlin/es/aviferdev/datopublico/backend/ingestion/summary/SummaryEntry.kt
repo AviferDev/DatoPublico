@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.sumario
+package es.aviferdev.datopublico.backend.ingestion.summary
 
 import es.aviferdev.datopublico.model.BoeSectionDto
 
@@ -17,8 +17,8 @@ import es.aviferdev.datopublico.model.BoeSectionDto
  * [urlOficial] es el enlace HTML (`txt.php?id=…`) o, si no existe, la URL del PDF;
  * [urlXml] y [urlPdf] son opcionales según la sección.
  */
-data class EntradaSumario(
-    val identificador: String,
+data class SummaryEntry(
+    val identifier: String,
     val control: String?,
     val title: String,
     val publicationDate: String,

@@ -1,8 +1,8 @@
-package es.aviferdev.datopublico.backend.ingesta.publicacion
+package es.aviferdev.datopublico.backend.ingesta.publication
 
-import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioResponseDto
-import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
-import es.aviferdev.datopublico.backend.ingesta.sumario.toEntradasSumario
+import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryResponseDto
+import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
+import es.aviferdev.datopublico.backend.ingestion.summary.toSummaryEntries
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
@@ -33,34 +33,34 @@ import kotlinx.coroutines.test.runTest
 class BoePublicacionParserTest {
 
     @Test
-    fun `fixture real de cada section produce una publicacion completa`() = runTest {
-        val entradas = entradasDelSumario()
+    fun `fixture real de cada section produce una publication completa`() = runTest {
+        val entries = entradasDelSumario()
         val parser = BoePublicacionHttpParser(BoeTextoHttpClient(clientQueSirveFixtures()))
 
-        RANGOS_POR_ID.forEach { (identificador, rango) ->
-            val entrada = assertNotNull(entradas[identificador], "sin entrada de sumario para $identificador")
-            val publicacion = parser.parsear(entrada)
+        RANGOS_POR_ID.forEach { (identifier, rango) ->
+            val entry = assertNotNull(entries[identifier], "sin entrada de sumario para $identifier")
+            val publication = parser.parsear(entry)
 
-            assertEquals(identificador, publicacion.id)
-            assertTrue(publicacion.title.isNotBlank(), "$identificador sin título")
-            assertEquals(entrada.publicationDate, publicacion.publicationDate)
-            assertEquals(entrada.section, publicacion.section)
-            assertEquals(entrada.officialUrl, publicacion.officialUrl)
-            assertEquals(rango, publicacion.rango, "$identificador: rango")
-            assertEquals(CATEGORIAS_POR_ID[identificador], publicacion.category, "$identificador: categoría")
-            assertEquals(PLAZOS_POR_ID[identificador], publicacion.deadline?.deadlineDate, "$identificador: plazo")
-            val texto = assertNotNull(publicacion.texto, "$identificador sin texto")
-            assertTrue(texto.isNotBlank(), "$identificador con texto vacío")
+            assertEquals(identifier, publication.id)
+            assertTrue(publication.title.isNotBlank(), "$identifier sin título")
+            assertEquals(entry.publicationDate, publication.publicationDate)
+            assertEquals(entry.section, publication.section)
+            assertEquals(entry.officialUrl, publication.officialUrl)
+            assertEquals(rango, publication.rango, "$identifier: rango")
+            assertEquals(CATEGORIAS_POR_ID[identifier], publication.category, "$identifier: categoría")
+            assertEquals(PLAZOS_POR_ID[identifier], publication.deadline?.deadlineDate, "$identifier: plazo")
+            val texto = assertNotNull(publication.texto, "$identifier sin texto")
+            assertTrue(texto.isNotBlank(), "$identifier con texto vacío")
         }
     }
 
     @Test
     fun `cubre las ocho secciones del BOE`() = runTest {
-        val entradas = entradasDelSumario()
+        val entries = entradasDelSumario()
         val parser = BoePublicacionHttpParser(BoeTextoHttpClient(clientQueSirveFixtures()))
 
         val secciones = FIXTURES_POR_ID.keys
-            .map { identificador -> assertNotNull(entradas[identificador], "sin entrada $identificador") }
+            .map { identifier -> assertNotNull(entries[identifier], "sin entrada $identifier") }
             .map { parser.parsear(it).section }
             .toSet()
 
@@ -68,42 +68,42 @@ class BoePublicacionParserTest {
     }
 
     @Test
-    fun `una entrada sin urlXml no hace ninguna peticion y deja texto null`() = runTest {
+    fun `una entry sin urlXml no hace ninguna peticion y deja texto null`() = runTest {
         var peticiones = 0
         val client = clientCon(MockEngine { peticiones += 1; respond("", HttpStatusCode.OK) })
         val parser = BoePublicacionHttpParser(BoeTextoHttpClient(client))
 
-        val publicacion = parser.parsear(entrada(urlXml = null))
+        val publication = parser.parsear(entry(urlXml = null))
 
         assertEquals(0, peticiones, "No debe pedirse texto sin urlXml")
-        assertNull(publicacion.texto)
-        assertEquals("BOE-A-1", publicacion.id)
-        assertTrue(publicacion.officialUrl.isNotBlank())
+        assertNull(publication.texto)
+        assertEquals("BOE-A-1", publication.id)
+        assertTrue(publication.officialUrl.isNotBlank())
     }
 
     @Test
-    fun `un 404 produce una publicacion valida con texto null`() = runTest {
+    fun `un 404 produce una publication valida con texto null`() = runTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.NotFound, "sin texto") })
         val parser = BoePublicacionHttpParser(BoeTextoHttpClient(client))
 
-        val publicacion = parser.parsear(entrada())
+        val publication = parser.parsear(entry())
 
-        assertNull(publicacion.texto)
-        assertNull(publicacion.rango)
-        assertEquals("BOE-A-1", publicacion.id)
-        assertEquals(BoeSectionDto.I, publicacion.section)
+        assertNull(publication.texto)
+        assertNull(publication.rango)
+        assertEquals("BOE-A-1", publication.id)
+        assertEquals(BoeSectionDto.I, publication.section)
     }
 
-    private fun entradasDelSumario(): Map<String, EntradaSumario> =
+    private fun entradasDelSumario(): Map<String, SummaryEntry> =
         listOf(
             "sumario-20261009.json" to LocalDate.of(2026, 10, 9),
             "sumario-20240102.json" to LocalDate.of(2024, 1, 2),
         )
-            .flatMap { (nombre, date) -> parseSumario(nombre, date) }
-            .associateBy { it.identificador }
+            .flatMap { (name, date) -> parseSumario(name, date) }
+            .associateBy { it.identifier }
 
-    private fun parseSumario(nombre: String, date: LocalDate): List<EntradaSumario> =
-        DatoPublicoJson.decodeFromString<BoeSumarioResponseDto>(recurso(nombre)).toEntradasSumario(date)
+    private fun parseSumario(name: String, date: LocalDate): List<SummaryEntry> =
+        DatoPublicoJson.decodeFromString<BoeSummaryResponseDto>(recurso(name)).toSummaryEntries(date)
 
     /** Sirve el fixture XML local cuyo `id` coincide con el `urlXml` pedido. */
     private fun clientQueSirveFixtures(): HttpClient = clientCon(
@@ -123,12 +123,12 @@ class BoePublicacionParserTest {
 
     private fun clientCon(engine: MockEngine): HttpClient = HttpClient(engine) { expectSuccess = false }
 
-    private fun entrada(
+    private fun entry(
         urlXml: String? = URL_XML,
         issuingBody: String? = "MINISTERIO DEL SUMARIO",
         urlPdf: String? = null,
-    ): EntradaSumario = EntradaSumario(
-        identificador = "BOE-A-1",
+    ): SummaryEntry = SummaryEntry(
+        identifier = "BOE-A-1",
         control = "2026/1",
         title = "Título de prueba",
         publicationDate = "2026-10-09",

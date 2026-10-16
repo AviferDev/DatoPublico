@@ -1,8 +1,8 @@
 package es.aviferdev.datopublico.backend.ingesta.job
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoePublicacionParser
-import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioClient
-import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
+import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionParser
+import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryClient
+import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
 import java.time.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
@@ -50,7 +50,7 @@ interface IngestionJob {
 
 /**
  * Implementación de [IngestionJob] sobre los colaboradores ya existentes
- * ([BoeSumarioClient], [BoePublicacionParser] y [PublicationRepository]).
+ * ([BoeSummaryClient], [BoePublicacionParser] y [PublicationRepository]).
  *
  * Los accesos a la base de datos son **bloqueantes** (JDBC) y se ejecutan en
  * [ioDispatcher] para no ocupar el hilo de eventos HTTP.
@@ -61,7 +61,7 @@ interface IngestionJob {
  * @param ioDispatcher dispatcher para el trabajo de E/S bloqueante.
  */
 class DailyIngestionJob(
-    private val summaryClient: BoeSumarioClient,
+    private val summaryClient: BoeSummaryClient,
     private val publicationParser: BoePublicacionParser,
     private val repository: PublicationRepository,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -84,7 +84,7 @@ class DailyIngestionJob(
     /** Persiste cada entrada contando éxitos y fallos; nunca aborta por una. */
     private suspend fun saveAll(
         date: LocalDate,
-        entries: List<EntradaSumario>,
+        entries: List<SummaryEntry>,
     ): IngestionResult {
         var saved = 0
         var failed = 0
@@ -104,7 +104,7 @@ class DailyIngestionJob(
     }
 
     /** Parsea y guarda una entrada; `false` si falla (salvo cancelación). */
-    private suspend fun persist(entry: EntradaSumario): Boolean = try {
+    private suspend fun persist(entry: SummaryEntry): Boolean = try {
         repository.save(publicationParser.parsear(entry))
         true
     } catch (cancellation: CancellationException) {
@@ -115,7 +115,7 @@ class DailyIngestionJob(
 
     /** Traduce el fallo del sumario a [SummaryOutcome.Failure] (no propaga). */
     private suspend fun fetchSummary(date: LocalDate): SummaryOutcome = try {
-        SummaryOutcome.Success(summaryClient.obtenerSumario(date))
+        SummaryOutcome.Success(summaryClient.fetchSummary(date))
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {
@@ -127,6 +127,6 @@ class DailyIngestionJob(
 
 /** Resultado interno de obtener el sumario: las entradas o el motivo del fallo. */
 private sealed interface SummaryOutcome {
-    data class Success(val entries: List<EntradaSumario>) : SummaryOutcome
+    data class Success(val entries: List<SummaryEntry>) : SummaryOutcome
     data class Failure(val message: String) : SummaryOutcome
 }

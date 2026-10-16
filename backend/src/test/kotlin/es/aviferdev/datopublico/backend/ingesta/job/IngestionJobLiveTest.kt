@@ -1,9 +1,9 @@
 package es.aviferdev.datopublico.backend.ingesta.job
 
-import es.aviferdev.datopublico.backend.ingesta.publicacion.BoePublicacionParser
-import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
-import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioClient
-import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
+import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionParser
+import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryClient
+import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
@@ -71,30 +71,30 @@ class IngestionJobLiveTest {
     }
 
     /** Sumario de prueba con dos entradas de la sección I. */
-    private fun testSummary(): BoeSumarioClient = object : BoeSumarioClient {
-        override suspend fun obtenerSumario(date: LocalDate): List<EntradaSumario> =
+    private fun testSummary(): BoeSummaryClient = object : BoeSummaryClient {
+        override suspend fun fetchSummary(date: LocalDate): List<SummaryEntry> =
             listOf(entry(ID_1), entry(ID_2))
     }
 
     /** Parser de prueba: proyecta cada entrada a una [Publicacion] sin red. */
     private fun testParser(): BoePublicacionParser = object : BoePublicacionParser {
-        override suspend fun parsear(entrada: EntradaSumario): Publicacion = Publicacion(
-            id = entrada.identificador,
-            title = entrada.title,
-            publicationDate = entrada.publicationDate,
-            issuingBody = entrada.issuingBody,
-            section = entrada.section,
-            heading = entrada.heading,
-            texto = "texto de prueba de ${entrada.identificador}",
-            officialUrl = entrada.officialUrl,
-            urlXml = entrada.urlXml,
-            urlPdf = entrada.urlPdf,
+        override suspend fun parsear(entry: SummaryEntry): Publicacion = Publicacion(
+            id = entry.identifier,
+            title = entry.title,
+            publicationDate = entry.publicationDate,
+            issuingBody = entry.issuingBody,
+            section = entry.section,
+            heading = entry.heading,
+            texto = "texto de prueba de ${entry.identifier}",
+            officialUrl = entry.officialUrl,
+            urlXml = entry.urlXml,
+            urlPdf = entry.urlPdf,
             rango = null,
         )
     }
 
-    private fun entry(id: String): EntradaSumario = EntradaSumario(
-        identificador = id,
+    private fun entry(id: String): SummaryEntry = SummaryEntry(
+        identifier = id,
         control = null,
         title = "Publicación de prueba $id",
         publicationDate = DATE.toString(),

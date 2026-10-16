@@ -20,7 +20,7 @@ import java.time.format.DateTimeParseException
  *
  * Las columnas comparadas son las del esquema `V2` (`fecha_publicacion`,
  * `categoria`, `seccion`, `organismo`), donde categoría y sección se guardan por
- * el **nombre del enum** Kotlin (`CategoriaDto.name`, `SeccionBoeDto.name`).
+ * el **nombre del enum** Kotlin (`CategoryDto.name`, `BoeSectionDto.name`).
  */
 object SearchFilterSql {
 

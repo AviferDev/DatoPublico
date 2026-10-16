@@ -8,9 +8,9 @@ import es.aviferdev.datopublico.backend.persistence.SummaryRepository
 import es.aviferdev.datopublico.backend.rag.guardrails.GuardrailDecision
 import es.aviferdev.datopublico.backend.rag.guardrails.SummaryGuardrailResult
 import es.aviferdev.datopublico.backend.rag.guardrails.SummaryGuardrailViolation
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.SummaryDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -122,14 +122,14 @@ class SummaryDispositionServiceTest {
         title = "Real Decreto de prueba",
         publicationDate = DATE,
         issuingBody = "MINISTERIO DE PRUEBA",
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         heading = "Disposiciones generales",
         texto = null,
         officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        category = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoryDto.NORMS_AND_LEGISLATION,
     )
 
     private fun summary(): SummaryDto = SummaryDto(

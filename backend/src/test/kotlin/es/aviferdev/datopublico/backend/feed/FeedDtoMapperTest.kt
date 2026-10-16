@@ -4,10 +4,10 @@ import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.relevance.Highlight
 import es.aviferdev.datopublico.backend.relevance.HighlightReason
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.HighlightReasonDto
 import es.aviferdev.datopublico.model.DeadlineDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -27,7 +27,7 @@ class FeedDtoMapperTest {
         val dto = FeedDtoMapper.toPublicacionDto(publication(), summary())
 
         assertEquals(PUBLICATION_ID, dto.id)
-        assertEquals(CategoriaDto.NORMAS_Y_LEGISLACION, dto.category)
+        assertEquals(CategoryDto.NORMS_AND_LEGISLATION, dto.category)
         assertEquals(URL, dto.officialUrl)
         assertEquals(DeadlineDto("2026-10-30"), dto.deadline)
         assertEquals("Cambia algo", dto.summary?.whatChanges)
@@ -102,14 +102,14 @@ class FeedDtoMapperTest {
         title = "Ley de prueba",
         publicationDate = DATE,
         issuingBody = "Jefatura del Estado",
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         heading = "Disposiciones generales",
         texto = null,
         officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Ley",
-        category = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoryDto.NORMS_AND_LEGISLATION,
         deadline = DeadlineDto("2026-10-30"),
     )
 

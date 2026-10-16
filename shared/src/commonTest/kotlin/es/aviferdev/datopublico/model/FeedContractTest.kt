@@ -20,9 +20,9 @@ class FeedContractTest {
         title = "Real Decreto de prueba",
         publicationDate = "2026-10-11",
         issuingBody = "Ministerio de la Presidencia",
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         heading = "Disposiciones generales",
-        category = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoryDto.NORMS_AND_LEGISLATION,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
         summary = SummaryDto(
             whatChanges = "Cambia algo",

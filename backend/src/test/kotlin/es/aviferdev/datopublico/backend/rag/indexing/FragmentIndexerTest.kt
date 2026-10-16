@@ -7,7 +7,7 @@ import es.aviferdev.datopublico.backend.persistence.FragmentRepository
 import es.aviferdev.datopublico.backend.rag.chunking.ArticleChunker
 import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -26,7 +26,7 @@ class FragmentIndexerTest {
         title = "Resolución de prueba",
         publicationDate = "2026-10-09",
         issuingBody = null,
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         heading = null,
         texto = "Artículo 1\nContenido uno.\nArtículo 2\nContenido dos.",
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-0001",

@@ -33,7 +33,7 @@ data class IngestionResult(
  * y persiste la publicación de forma **idempotente**.
  *
  * Reejecutar la misma fecha **no duplica** filas: `PublicationRepository.save` es
- * un *upsert* por `id`. [es.aviferdev.datopublico.model.CategoriaDto] y
+ * un *upsert* por `id`. [es.aviferdev.datopublico.model.CategoryDto] y
  * [es.aviferdev.datopublico.model.DeadlineDto] llegan siempre `null` aquí; los
  * clasifica FT00012.
  */

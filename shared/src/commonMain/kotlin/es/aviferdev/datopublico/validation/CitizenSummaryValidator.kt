@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.validation
 
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.SummaryDto
 
@@ -26,7 +26,7 @@ object CitizenSummaryValidator {
      * @param category categoría curada de la publicación de origen.
      * @return el resultado con las violaciones detectadas; vacío si es válido.
      */
-    fun validate(summary: SummaryDto, category: CategoriaDto): CitizenSummaryValidation {
+    fun validate(summary: SummaryDto, category: CategoryDto): CitizenSummaryValidation {
         val variant = CitizenSummaryVariantResolver.variantFor(category)
         val violations = buildList {
             if (!hasAbsoluteSource(summary.officialSource)) {

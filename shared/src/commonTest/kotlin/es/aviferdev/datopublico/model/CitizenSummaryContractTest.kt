@@ -25,7 +25,7 @@ class CitizenSummaryContractTest {
 
         assertEquals(fullSummary, decoded)
         assertEquals(json, DatoPublicoJson.encodeToString(SummaryDto.serializer(), decoded))
-        assertTrue(CitizenSummaryValidator.validate(decoded, CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO).isValid)
+        assertTrue(CitizenSummaryValidator.validate(decoded, CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS).isValid)
     }
 
     @Test

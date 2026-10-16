@@ -6,7 +6,7 @@ import es.aviferdev.datopublico.backend.rag.generation.TextGenerationProvider
 import es.aviferdev.datopublico.backend.rag.generation.TokenUsage
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.validation.CitizenSummaryValidation
 import es.aviferdev.datopublico.validation.CitizenSummaryValidator
@@ -62,7 +62,7 @@ class CitizenSummaryGenerator(
     }
 
     /** Categoría obligatoria de la publicación (fail-fast si falta). */
-    private fun requireCategory(publication: Publicacion): CategoriaDto =
+    private fun requireCategory(publication: Publicacion): CategoryDto =
         publication.category
             ?: throw IllegalArgumentException(
                 "La publicación ${publication.id} no tiene categoría; no se puede generar el resumen."

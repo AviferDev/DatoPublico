@@ -9,8 +9,8 @@ import es.aviferdev.datopublico.backend.persistence.PgVector
 import es.aviferdev.datopublico.backend.persistence.PublicationRepositoryJdbc
 import es.aviferdev.datopublico.backend.persistence.executeUpdate
 import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.io.File
 import javax.sql.DataSource
 import kotlin.test.Test
@@ -63,10 +63,10 @@ class HybridSearchLiveTest {
     /** Crea publicaciones y fragmentos con embeddings sintéticos (uno sin embedding). */
     private fun prepare(dataSource: DataSource) {
         val publications = PublicationRepositoryJdbc(dataSource)
-        publications.save(publication(PUB_A, DATE_1, SeccionBoeDto.I, CategoriaDto.NORMAS_Y_LEGISLACION, ORG_A))
-        publications.save(publication(PUB_B, DATE_2, SeccionBoeDto.II_B, CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO, ORG_B))
-        publications.save(publication(PUB_C, DATE_3, SeccionBoeDto.III, CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, ORG_A))
-        publications.save(publication(PUB_NULL, DATE_1, SeccionBoeDto.I, CategoriaDto.NORMAS_Y_LEGISLACION, ORG_A))
+        publications.save(publication(PUB_A, DATE_1, BoeSectionDto.I, CategoryDto.NORMS_AND_LEGISLATION, ORG_A))
+        publications.save(publication(PUB_B, DATE_2, BoeSectionDto.II_B, CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS, ORG_B))
+        publications.save(publication(PUB_C, DATE_3, BoeSectionDto.III, CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID, ORG_A))
+        publications.save(publication(PUB_NULL, DATE_1, BoeSectionDto.I, CategoryDto.NORMS_AND_LEGISLATION, ORG_A))
         val fragments = FragmentRepositoryJdbc(dataSource)
         saveFragment(fragments, PUB_A, axis = 0)
         saveFragment(fragments, PUB_B, axis = 1)
@@ -76,7 +76,7 @@ class HybridSearchLiveTest {
 
     /** Escenario 1: el filtro de categoría devuelve solo la publicación de esa categoría. */
     private fun checkCategoryFilter(repository: FragmentRepositoryJdbc) {
-        val filter = SearchFilter(category = CategoriaDto.NORMAS_Y_LEGISLACION)
+        val filter = SearchFilter(category = CategoryDto.NORMS_AND_LEGISLATION)
 
         val matches = repository.findNearest(axisVector(0), filter, limit = 10)
 
@@ -106,7 +106,7 @@ class HybridSearchLiveTest {
     private fun checkCombinedFilter(repository: FragmentRepositoryJdbc) {
         val filter = SearchFilter(
             publishedFrom = DATE_3,
-            section = SeccionBoeDto.III,
+            section = BoeSectionDto.III,
             organization = ORG_A,
         )
 
@@ -136,7 +136,7 @@ class HybridSearchLiveTest {
         val provider = FixedQueryEmbeddingProvider(axisVector(0))
         val search = HybridSearch(provider, repository)
 
-        val matches = search.search("consulta de prueba", SearchFilter(section = SeccionBoeDto.I), limit = 10)
+        val matches = search.search("consulta de prueba", SearchFilter(section = BoeSectionDto.I), limit = 10)
 
         assertEquals(listOf(PUB_A), matches.map { match -> match.fragment.publicationId })
     }
@@ -159,8 +159,8 @@ class HybridSearchLiveTest {
     private fun publication(
         id: String,
         date: String,
-        section: SeccionBoeDto,
-        category: CategoriaDto,
+        section: BoeSectionDto,
+        category: CategoryDto,
         organization: String,
     ): Publicacion = Publicacion(
         id = id,

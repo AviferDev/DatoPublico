@@ -4,9 +4,9 @@ import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.persistence.FeedItem
 import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,9 +23,9 @@ import kotlin.test.assertTrue
 class DailyFeedServiceTest {
 
     private val published = listOf(
-        item("BOE-A-3", section = SeccionBoeDto.II_A),
-        item("BOE-A-1", section = SeccionBoeDto.I, rank = "Ley", deadline = DeadlineDto("2026-10-30")),
-        item("BOE-A-2", section = SeccionBoeDto.II_B),
+        item("BOE-A-3", section = BoeSectionDto.II_A),
+        item("BOE-A-1", section = BoeSectionDto.I, rank = "Ley", deadline = DeadlineDto("2026-10-30")),
+        item("BOE-A-2", section = BoeSectionDto.II_B),
     )
 
     @Test
@@ -117,7 +117,7 @@ class DailyFeedServiceTest {
 
     private fun item(
         id: String,
-        section: SeccionBoeDto = SeccionBoeDto.II_A,
+        section: BoeSectionDto = BoeSectionDto.II_A,
         rank: String? = null,
         deadline: DeadlineDto? = null,
     ): FeedItem = FeedItem(
@@ -133,7 +133,7 @@ class DailyFeedServiceTest {
             urlXml = null,
             urlPdf = null,
             rango = rank,
-            category = CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
+            category = CategoryDto.PUBLIC_INFORMATION_AND_CONCESSIONS,
             deadline = deadline,
         ),
         summary = SummaryEntity(

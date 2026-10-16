@@ -4,8 +4,8 @@ import es.aviferdev.datopublico.backend.chat.PublicationCitationResolver
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.io.File
 import javax.sql.DataSource
 import kotlin.test.Test
@@ -67,14 +67,14 @@ class PublicationCitationResolverLiveTest {
         title = "Real Decreto de prueba del chat",
         publicationDate = DATE,
         issuingBody = null,
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         heading = null,
         texto = null,
         officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        category = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoryDto.NORMS_AND_LEGISLATION,
     )
 
     /** Borra la publicación de prueba. */

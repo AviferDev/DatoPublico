@@ -1,8 +1,8 @@
 package es.aviferdev.datopublico.backend.ingesta.publicacion
 
 import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -26,13 +26,13 @@ class PublicacionParserTest {
         assertEquals("BOE-A-1", publicacion.id)
         assertEquals("Título de prueba", publicacion.title)
         assertEquals("2026-10-09", publicacion.publicationDate)
-        assertEquals(SeccionBoeDto.I, publicacion.section)
+        assertEquals(BoeSectionDto.I, publicacion.section)
         assertEquals("Epígrafe", publicacion.heading)
         assertEquals("Texto oficial completo.", publicacion.texto)
         assertEquals("https://www.boe.es/diario_boe/txt.php?id=BOE-A-1", publicacion.officialUrl)
         assertEquals(URL_XML, publicacion.urlXml)
         assertEquals("Real Decreto", publicacion.rango)
-        assertEquals(CategoriaDto.NORMAS_Y_LEGISLACION, publicacion.category)
+        assertEquals(CategoryDto.NORMS_AND_LEGISLATION, publicacion.category)
         assertNull(publicacion.deadline, "El texto de prueba no es una convocatoria con plazo")
     }
 
@@ -43,7 +43,7 @@ class PublicacionParserTest {
             documento(texto = TEXTO_CONVOCATORIA_CON_PLAZO),
         )
 
-        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, publicacion.category)
+        assertEquals(CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID, publicacion.category)
         assertEquals("2024-01-23", publicacion.deadline?.deadlineDate)
     }
 
@@ -88,7 +88,7 @@ class PublicacionParserTest {
         control = "2026/1",
         title = "Título de prueba",
         publicationDate = publicationDate,
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         issuingBody = issuingBody,
         heading = heading,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",

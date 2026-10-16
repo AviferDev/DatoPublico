@@ -3,7 +3,7 @@ package es.aviferdev.datopublico.backend.rag.evaluation
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.persistence.FragmentMatch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -25,8 +25,8 @@ class RetrievalEvaluatorTest {
         )
         val dataset = dataset(
             queries = listOf(
-                query("q-1", "uno", setOf(refA), SearchFilter(section = SeccionBoeDto.I)),
-                query("q-2", "dos", setOf(refB), SearchFilter(section = SeccionBoeDto.III)),
+                query("q-1", "uno", setOf(refA), SearchFilter(section = BoeSectionDto.I)),
+                query("q-2", "dos", setOf(refB), SearchFilter(section = BoeSectionDto.III)),
             ),
             k = 3,
         )
@@ -41,8 +41,8 @@ class RetrievalEvaluatorTest {
         assertEquals(listOf("q-1", "q-2"), result.perQuery.map { row -> row.queryId })
         assertEquals(
             listOf(
-                RetrieverCall("uno", SearchFilter(section = SeccionBoeDto.I), 3),
-                RetrieverCall("dos", SearchFilter(section = SeccionBoeDto.III), 3),
+                RetrieverCall("uno", SearchFilter(section = BoeSectionDto.I), 3),
+                RetrieverCall("dos", SearchFilter(section = BoeSectionDto.III), 3),
             ),
             retriever.calls,
         )

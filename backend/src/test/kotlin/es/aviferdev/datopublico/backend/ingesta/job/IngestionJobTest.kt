@@ -7,7 +7,7 @@ import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioClient
 import es.aviferdev.datopublico.backend.ingesta.sumario.BoeSumarioException
 import es.aviferdev.datopublico.backend.ingesta.sumario.EntradaSumario
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -122,7 +122,7 @@ class IngestionJobTest {
         control = null,
         title = "Título de $id",
         publicationDate = date.toString(),
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         issuingBody = "MINISTERIO X",
         heading = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",

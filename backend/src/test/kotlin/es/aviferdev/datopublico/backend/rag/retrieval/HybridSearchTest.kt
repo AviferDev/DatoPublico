@@ -4,7 +4,7 @@ import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.persistence.FragmentMatch
 import es.aviferdev.datopublico.backend.persistence.FragmentRepository
 import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -27,7 +27,7 @@ class HybridSearchTest {
         val repository = RecordingFragmentRepository()
         val match = fragmentMatch(order = 0)
         repository.matches = listOf(match)
-        val filter = SearchFilter(category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS)
+        val filter = SearchFilter(category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID)
         val search = HybridSearch(provider, repository)
 
         val results = search.search("ayudas para estudiantes", filter, limit = 5)

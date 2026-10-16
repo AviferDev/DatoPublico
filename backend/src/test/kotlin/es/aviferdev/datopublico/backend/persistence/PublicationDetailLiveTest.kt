@@ -5,8 +5,8 @@ import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.backend.publication.PublicationDetailService
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.io.File
 import javax.sql.DataSource
 import kotlin.test.Test
@@ -63,7 +63,7 @@ class PublicationDetailLiveTest {
 
         val published = service.detail(PUBLISHED_ID)
         assertEquals(PUBLISHED_ID, published?.id)
-        assertEquals(CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES, published?.category)
+        assertEquals(CategoryDto.PUBLIC_INFORMATION_AND_CONCESSIONS, published?.category)
         assertNotNull(published?.summary)
         assertNull(service.detail(QUEUED_ID))
         println("PublicationDetailLiveTest: solo el resumen publicado se sirve OK")
@@ -74,14 +74,14 @@ class PublicationDetailLiveTest {
         title = "Publicación de prueba del detalle",
         publicationDate = DATE,
         issuingBody = null,
-        section = SeccionBoeDto.II_A,
+        section = BoeSectionDto.II_A,
         heading = null,
         texto = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        category = CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
+        category = CategoryDto.PUBLIC_INFORMATION_AND_CONCESSIONS,
     )
 
     private fun summary(publicationId: String, status: String): SummaryEntity = SummaryEntity(

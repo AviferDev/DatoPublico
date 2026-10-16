@@ -3,7 +3,7 @@ package es.aviferdev.datopublico.backend.persistence
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.io.File
 import javax.sql.DataSource
 import kotlin.test.Test
@@ -156,7 +156,7 @@ class FragmentEmbeddingPersistenceLiveTest {
         title = "Resolución de prueba de indexado vectorial",
         publicationDate = DATE,
         issuingBody = null,
-        section = SeccionBoeDto.II_A,
+        section = BoeSectionDto.II_A,
         heading = null,
         texto = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",

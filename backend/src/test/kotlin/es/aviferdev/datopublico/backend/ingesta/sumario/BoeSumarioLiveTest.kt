@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.sumario
 
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,7 +33,7 @@ class BoeSumarioLiveTest {
                     "La API real no devolvió entradas para $FECHA_CON_TODAS_LAS_SECCIONES",
                 )
                 assertEquals(
-                    SeccionBoeDto.entries.toSet(),
+                    BoeSectionDto.entries.toSet(),
                     entradas.map { it.section }.toSet(),
                 )
                 assertTrue(entradas.all { it.identificador.isNotBlank() && it.officialUrl.isNotBlank() })

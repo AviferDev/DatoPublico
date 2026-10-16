@@ -15,9 +15,9 @@ import es.aviferdev.datopublico.backend.rag.generation.TextGenerationProvider
 import es.aviferdev.datopublico.backend.rag.generation.TokenUsage
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.SummaryDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.validation.CitizenSummaryViolation
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -85,7 +85,7 @@ class CachedCitizenSummaryGeneratorTest {
         val usage = FakeGenerationUsageRepository()
         val generator = cachedGenerator(provider, cache, usage)
 
-        val result = generator.generate(publication(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS))
+        val result = generator.generate(publication(CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID))
 
         assertFalse(result.cacheHit)
         val invalid = assertIs<CitizenSummaryResult.Invalid>(result.result)
@@ -173,12 +173,12 @@ class CachedCitizenSummaryGeneratorTest {
         officialSource = url,
     )
 
-    private fun publication(category: CategoriaDto = CategoriaDto.NORMAS_Y_LEGISLACION): Publicacion = Publicacion(
+    private fun publication(category: CategoryDto = CategoryDto.NORMS_AND_LEGISLATION): Publicacion = Publicacion(
         id = PUBLICATION_ID,
         title = "Real Decreto de prueba",
         publicationDate = "2026-10-10",
         issuingBody = "MINISTERIO DE PRUEBA",
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         heading = "Disposiciones generales",
         texto = "texto",
         officialUrl = url,

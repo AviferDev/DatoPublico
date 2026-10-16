@@ -2,8 +2,8 @@ package es.aviferdev.datopublico.backend.rag.evaluation
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import java.nio.file.Files
 import java.nio.file.Path
@@ -147,8 +147,8 @@ data class RetrievalCorpusItemDto(
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("date") val date: String,
-    @SerialName("section") val section: SeccionBoeDto,
-    @SerialName("category") val category: CategoriaDto,
+    @SerialName("section") val section: BoeSectionDto,
+    @SerialName("category") val category: CategoryDto,
     @SerialName("organization") val organization: String? = null,
     @SerialName("text") val text: String,
 )
@@ -167,8 +167,8 @@ data class RetrievalQueryDto(
 data class RetrievalFilterDto(
     @SerialName("publishedFrom") val publishedFrom: String? = null,
     @SerialName("publishedTo") val publishedTo: String? = null,
-    @SerialName("category") val category: CategoriaDto? = null,
-    @SerialName("section") val section: SeccionBoeDto? = null,
+    @SerialName("category") val category: CategoryDto? = null,
+    @SerialName("section") val section: BoeSectionDto? = null,
     @SerialName("organization") val organization: String? = null,
 )
 

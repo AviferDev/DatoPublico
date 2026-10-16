@@ -8,8 +8,8 @@ import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.model.ApiErrorCodeDto
 import es.aviferdev.datopublico.model.ApiErrorDto
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -115,14 +115,14 @@ class RateLimitRouteTest {
             title = "Ley de prueba",
             publicationDate = DATE,
             issuingBody = "Jefatura del Estado",
-            section = SeccionBoeDto.I,
+            section = BoeSectionDto.I,
             heading = null,
             texto = null,
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
             urlXml = null,
             urlPdf = null,
             rango = "Ley",
-            category = CategoriaDto.NORMAS_Y_LEGISLACION,
+            category = CategoryDto.NORMS_AND_LEGISLATION,
         ),
         summary = SummaryEntity(
             publicationId = id,

@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.sumario
 
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -55,12 +55,12 @@ class BoeSumarioClientTest {
         assertEquals(237, entradas.size)
         assertEquals(
             setOf(
-                SeccionBoeDto.I,
-                SeccionBoeDto.II_A,
-                SeccionBoeDto.II_B,
-                SeccionBoeDto.III,
-                SeccionBoeDto.V_A,
-                SeccionBoeDto.V_B,
+                BoeSectionDto.I,
+                BoeSectionDto.II_A,
+                BoeSectionDto.II_B,
+                BoeSectionDto.III,
+                BoeSectionDto.V_A,
+                BoeSectionDto.V_B,
             ),
             entradas.map { it.section }.toSet(),
         )
@@ -74,7 +74,7 @@ class BoeSumarioClientTest {
             control = "2026/1",
             title = "T",
             publicationDate = "2026-10-09",
-            section = SeccionBoeDto.I,
+            section = BoeSectionDto.I,
             issuingBody = "MINISTERIO X",
             heading = "Epi",
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",

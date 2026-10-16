@@ -3,9 +3,9 @@ package es.aviferdev.datopublico.backend.rag.evaluation
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.rag.summary.CitizenSummaryResult
 import es.aviferdev.datopublico.backend.rag.summary.SummaryGenerationDto
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.SummaryDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -146,14 +146,14 @@ class SummaryQualityEvaluatorTest {
         title = "Título",
         publicationDate = "2026-10-09",
         issuingBody = "Organismo",
-        section = SeccionBoeDto.III,
+        section = BoeSectionDto.III,
         heading = null,
         texto = "Artículo 1\nTexto.",
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
     )
 
     /** Resumen de referencia de prueba. */

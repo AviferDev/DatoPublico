@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.rag.retrieval
 
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 
 /**
  * Filtro de **metadatos** de una recuperación híbrida (FT00017).
@@ -19,15 +19,15 @@ import es.aviferdev.datopublico.model.SeccionBoeDto
  *
  * @property publishedFrom fecha ISO-8601 **inclusiva** mínima de publicación.
  * @property publishedTo fecha ISO-8601 **inclusiva** máxima de publicación.
- * @property category categoría curada (`CategoriaDto`) de la publicación.
- * @property section sección del BOE (`SeccionBoeDto`) de la publicación.
+ * @property category categoría curada (`CategoryDto`) de la publicación.
+ * @property section sección del BOE (`BoeSectionDto`) de la publicación.
  * @property organization organismo emisor exacto (valor del BOE, sensible a
  *   mayúsculas; la normalización es una decisión de la API de búsqueda).
  */
 data class SearchFilter(
     val publishedFrom: String? = null,
     val publishedTo: String? = null,
-    val category: CategoriaDto? = null,
-    val section: SeccionBoeDto? = null,
+    val category: CategoryDto? = null,
+    val section: BoeSectionDto? = null,
     val organization: String? = null,
 )

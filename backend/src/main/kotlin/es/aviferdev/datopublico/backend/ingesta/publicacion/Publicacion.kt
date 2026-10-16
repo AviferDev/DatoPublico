@@ -1,8 +1,8 @@
 package es.aviferdev.datopublico.backend.ingesta.publicacion
 
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 
 /**
  * Publicación del BOE ya enriquecida con el **texto oficial** de la fuente.
@@ -36,7 +36,7 @@ data class Publicacion(
     /** Organismo emisor (del sumario o, en su defecto, del XML); opcional. */
     val issuingBody: String?,
     /** Sección del BOE de la que procede. */
-    val section: SeccionBoeDto,
+    val section: BoeSectionDto,
     /** Epígrafe del BOE; opcional (falta en las entradas sin epígrafe). */
     val heading: String?,
     /** Texto completo normalizado por párrafos; `null` si la fuente no lo trae. */
@@ -50,7 +50,7 @@ data class Publicacion(
     /** Rango normativo del XML (`Real Decreto`, `Orden`…); opcional. */
     val rango: String?,
     /** Categoría curada (FT00012); la asigna [PublicacionParser], nunca `null`. */
-    val category: CategoriaDto? = null,
+    val category: CategoryDto? = null,
     /**
      * Plazo de solicitud (convocatorias de empleo público, becas o subvenciones);
      * lo extrae [PublicacionParser] cuando es fiable, o `null`. Es aditivo para

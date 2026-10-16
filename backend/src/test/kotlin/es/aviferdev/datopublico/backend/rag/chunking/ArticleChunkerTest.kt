@@ -5,7 +5,7 @@ import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.persistence.toEntity
 import es.aviferdev.datopublico.backend.rag.Fragment
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -27,7 +27,7 @@ class ArticleChunkerTest {
 
     @Test
     fun `fragments a normative document by article header keeping the reference`() {
-        val publication = publicationFromFixture("texto-I-2026-20979", SeccionBoeDto.I)
+        val publication = publicationFromFixture("texto-I-2026-20979", BoeSectionDto.I)
         val fragments = chunker.chunk(publication)
         val headerLines = nonEmptyLines(publication.texto).filter { line -> HEADER_REGEX.containsMatchIn(line) }
 
@@ -46,7 +46,7 @@ class ArticleChunkerTest {
 
     @Test
     fun `concatenated fragments reproduce the source lines without duplicates or loss`() {
-        val publication = publicationFromFixture("texto-VB-2024-76", SeccionBoeDto.V_B)
+        val publication = publicationFromFixture("texto-VB-2024-76", BoeSectionDto.V_B)
         val source = nonEmptyLines(publication.texto).joinToString(NEWLINE)
         val joined = chunker.chunk(publication).joinToString(NEWLINE) { fragment -> fragment.content }
 
@@ -55,7 +55,7 @@ class ArticleChunkerTest {
 
     @Test
     fun `splitting a long paragraph preserves every word in order`() {
-        val publication = publicationFromFixture("texto-I-2026-20979", SeccionBoeDto.I)
+        val publication = publicationFromFixture("texto-I-2026-20979", BoeSectionDto.I)
         val fragments = chunker.chunk(publication)
 
         assertEquals(
@@ -66,7 +66,7 @@ class ArticleChunkerTest {
 
     @Test
     fun `a section without articles groups paragraphs under the section reference`() {
-        val publication = publicationFromFixture("texto-VB-2024-76", SeccionBoeDto.V_B)
+        val publication = publicationFromFixture("texto-VB-2024-76", BoeSectionDto.V_B)
         val fragments = chunker.chunk(publication)
 
         assertTrue(fragments.size > 1)
@@ -80,7 +80,7 @@ class ArticleChunkerTest {
         val body = (1..800).joinToString(" ") { index -> "palabra$index" }
         val publication = publication(
             id = "BOE-TEST-LONG",
-            section = SeccionBoeDto.I,
+            section = BoeSectionDto.I,
             text = "$LONG_ARTICLE_HEADER\n$body",
         )
         val fragments = chunker.chunk(publication)
@@ -96,7 +96,7 @@ class ArticleChunkerTest {
 
     @Test
     fun `order is contiguous and chunking is deterministic`() {
-        val publication = publicationFromFixture("texto-I-2026-20979", SeccionBoeDto.I)
+        val publication = publicationFromFixture("texto-I-2026-20979", BoeSectionDto.I)
         val fragments = chunker.chunk(publication)
 
         assertEquals(fragments.indices.toList(), fragments.map { fragment -> fragment.order })
@@ -105,7 +105,7 @@ class ArticleChunkerTest {
 
     @Test
     fun `null or blank text returns an empty list`() {
-        val withoutText = publicationFromFixture("texto-sin-texto", SeccionBoeDto.IV)
+        val withoutText = publicationFromFixture("texto-sin-texto", BoeSectionDto.IV)
 
         assertTrue(chunker.chunk(withoutText).isEmpty())
         assertTrue(chunker.chunk(publication(id = "BOE-TEST-NULL", text = null)).isEmpty())
@@ -115,7 +115,7 @@ class ArticleChunkerTest {
 
     @Test
     fun `domain fragments map to persistence entities without an id`() {
-        val fragments = chunker.chunk(publicationFromFixture("texto-VC-2024-92", SeccionBoeDto.V_C))
+        val fragments = chunker.chunk(publicationFromFixture("texto-VC-2024-92", BoeSectionDto.V_C))
         val entities = fragments.map { fragment -> fragment.toEntity() }
 
         assertEquals(fragments.size, entities.size)
@@ -151,7 +151,7 @@ class ArticleChunkerTest {
             .distinct()
 
     /** Construye la [Publicacion] de un fixture real parseado, con su sección. */
-    private fun publicationFromFixture(name: String, section: SeccionBoeDto): Publicacion =
+    private fun publicationFromFixture(name: String, section: BoeSectionDto): Publicacion =
         publication(
             id = "BOE-TEST-$name",
             section = section,
@@ -161,7 +161,7 @@ class ArticleChunkerTest {
     /** Publicación de prueba en memoria (sin red): señales neutras salvo [text]. */
     private fun publication(
         id: String,
-        section: SeccionBoeDto = SeccionBoeDto.I,
+        section: BoeSectionDto = BoeSectionDto.I,
         text: String? = null,
     ): Publicacion = Publicacion(
         id = id,
@@ -218,14 +218,14 @@ class ArticleChunkerTest {
 
         /** Fixtures reales con texto y su sección (los 8 del sumario). */
         val FIXTURES = listOf(
-            "texto-I-2026-20979" to SeccionBoeDto.I,
-            "texto-IIA-2024-87" to SeccionBoeDto.II_A,
-            "texto-IIB-2024-93" to SeccionBoeDto.II_B,
-            "texto-III-2024-117" to SeccionBoeDto.III,
-            "texto-IV-2024-1" to SeccionBoeDto.IV,
-            "texto-VA-2024-25" to SeccionBoeDto.V_A,
-            "texto-VB-2024-76" to SeccionBoeDto.V_B,
-            "texto-VC-2024-92" to SeccionBoeDto.V_C,
+            "texto-I-2026-20979" to BoeSectionDto.I,
+            "texto-IIA-2024-87" to BoeSectionDto.II_A,
+            "texto-IIB-2024-93" to BoeSectionDto.II_B,
+            "texto-III-2024-117" to BoeSectionDto.III,
+            "texto-IV-2024-1" to BoeSectionDto.IV,
+            "texto-VA-2024-25" to BoeSectionDto.V_A,
+            "texto-VB-2024-76" to BoeSectionDto.V_B,
+            "texto-VC-2024-92" to BoeSectionDto.V_C,
         )
     }
 }

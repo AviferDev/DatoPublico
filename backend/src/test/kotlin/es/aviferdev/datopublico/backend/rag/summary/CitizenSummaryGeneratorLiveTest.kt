@@ -10,8 +10,8 @@ import es.aviferdev.datopublico.backend.rag.generation.OpenCodeTextGenerationPro
 import es.aviferdev.datopublico.backend.rag.generation.openCodeHttpClient
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -74,14 +74,14 @@ class CitizenSummaryGeneratorLiveTest {
         title = "Real Decreto de prueba sobre el régimen de ayudas",
         publicationDate = "2026-10-10",
         issuingBody = "MINISTERIO DE PRUEBA",
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         heading = "Disposiciones generales",
         texto = CONTEXT,
         officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        category = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoryDto.NORMS_AND_LEGISLATION,
     )
 
     /** Proveedor de embeddings simulado: la recuperación no usa el modelo real. */

@@ -11,37 +11,37 @@ import kotlinx.serialization.Serializable
  * compartido entre backend y cliente y no debe renombrarse sin una migración.
  */
 @Serializable
-enum class CategoriaDto {
+enum class CategoryDto {
     @SerialName("normas_y_legislacion")
-    NORMAS_Y_LEGISLACION,
+    NORMS_AND_LEGISLATION,
 
     @SerialName("nombramientos_y_ceses")
-    NOMBRAMIENTOS_Y_CESES,
+    APPOINTMENTS_AND_DISMISSALS,
 
     @SerialName("oposiciones_y_empleo_publico")
-    OPOSICIONES_Y_EMPLEO_PUBLICO,
+    PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
 
     @SerialName("becas_subvenciones_y_ayudas")
-    BECAS_SUBVENCIONES_Y_AYUDAS,
+    SCHOLARSHIPS_GRANTS_AND_AID,
 
     @SerialName("premios")
-    PREMIOS,
+    AWARDS,
 
     @SerialName("convenios_y_acuerdos")
-    CONVENIOS_Y_ACUERDOS,
+    AGREEMENTS_AND_CONVENTIONS,
 
     @SerialName("educacion_y_planes_de_estudio")
-    EDUCACION_Y_PLANES_DE_ESTUDIO,
+    EDUCATION_AND_STUDY_PLANS,
 
     @SerialName("medio_ambiente")
-    MEDIO_AMBIENTE,
+    ENVIRONMENT,
 
     @SerialName("recursos_y_resoluciones")
-    RECURSOS_Y_RESOLUCIONES,
+    APPEALS_AND_RESOLUTIONS,
 
     @SerialName("informacion_publica_y_concesiones")
-    INFORMACION_PUBLICA_Y_CONCESIONES,
+    PUBLIC_INFORMATION_AND_CONCESSIONS,
 
     @SerialName("otras_disposiciones_y_anuncios")
-    OTRAS_DISPOSICIONES_Y_ANUNCIOS,
+    OTHER_PROVISIONS_AND_ANNOUNCEMENTS,
 }

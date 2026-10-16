@@ -11,8 +11,8 @@ import es.aviferdev.datopublico.backend.rag.generation.TextGenerationProvider
 import es.aviferdev.datopublico.backend.rag.generation.TokenUsage
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
-import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.CategoryDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import es.aviferdev.datopublico.validation.CitizenSummaryViolation
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,9 +34,9 @@ class CitizenSummaryGeneratorTest {
     @Test
     fun `generates a valid employment summary with the source injected`() = runTest {
         val provider = FakeTextGenerationProvider(VALID_EMPLOYMENT_JSON)
-        val generator = generatorCon(provider, publication(CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO))
+        val generator = generatorCon(provider, publication(CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS))
 
-        val result = generator.generate(publication(CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO))
+        val result = generator.generate(publication(CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS))
 
         val valid = assertIs<CitizenSummaryResult.Valid>(result)
         assertEquals(url, valid.summary.officialSource)
@@ -49,9 +49,9 @@ class CitizenSummaryGeneratorTest {
     @Test
     fun `a scholarship summary without deadline is invalid`() = runTest {
         val provider = FakeTextGenerationProvider(JSON_WITHOUT_DEADLINE)
-        val generator = generatorCon(provider, publication(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS))
+        val generator = generatorCon(provider, publication(CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID))
 
-        val result = generator.generate(publication(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS))
+        val result = generator.generate(publication(CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID))
 
         val invalid = assertIs<CitizenSummaryResult.Invalid>(result)
         assertTrue(invalid.violations.contains(CitizenSummaryViolation.MISSING_DEADLINE))
@@ -60,7 +60,7 @@ class CitizenSummaryGeneratorTest {
     @Test
     fun `a blank official source is invalid`() = runTest {
         val provider = FakeTextGenerationProvider(JSON_WITHOUT_DEADLINE)
-        val publication = publication(CategoriaDto.NORMAS_Y_LEGISLACION).copy(officialUrl = " ")
+        val publication = publication(CategoryDto.NORMS_AND_LEGISLATION).copy(officialUrl = " ")
         val generator = generatorCon(provider, publication)
 
         val result = generator.generate(publication)
@@ -72,7 +72,7 @@ class CitizenSummaryGeneratorTest {
     @Test
     fun `the provider receives the built prompt with the context`() = runTest {
         val provider = FakeTextGenerationProvider(VALID_EMPLOYMENT_JSON)
-        val publication = publication(CategoriaDto.NORMAS_Y_LEGISLACION)
+        val publication = publication(CategoryDto.NORMS_AND_LEGISLATION)
         val generator = generatorCon(provider, publication)
 
         generator.generate(publication)
@@ -87,9 +87,9 @@ class CitizenSummaryGeneratorTest {
     fun `propagates the provider token usage into a valid result`() = runTest {
         val usage = TokenUsage(promptTokens = 10, completionTokens = 20, totalTokens = 30)
         val provider = FakeTextGenerationProvider(VALID_EMPLOYMENT_JSON, usage)
-        val generator = generatorCon(provider, publication(CategoriaDto.NORMAS_Y_LEGISLACION))
+        val generator = generatorCon(provider, publication(CategoryDto.NORMS_AND_LEGISLATION))
 
-        val result = generator.generate(publication(CategoriaDto.NORMAS_Y_LEGISLACION))
+        val result = generator.generate(publication(CategoryDto.NORMS_AND_LEGISLATION))
 
         val valid = assertIs<CitizenSummaryResult.Valid>(result)
         assertEquals(usage, valid.usage)
@@ -99,7 +99,7 @@ class CitizenSummaryGeneratorTest {
     fun `propagates the provider token usage into an invalid result`() = runTest {
         val usage = TokenUsage(promptTokens = 7, completionTokens = 8, totalTokens = 15)
         val provider = FakeTextGenerationProvider(JSON_WITHOUT_DEADLINE, usage)
-        val publication = publication(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS)
+        val publication = publication(CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID)
         val generator = generatorCon(provider, publication)
 
         val result = generator.generate(publication)
@@ -111,7 +111,7 @@ class CitizenSummaryGeneratorTest {
     @Test
     fun `a publication without category fails fast before invoking the provider`() = runTest {
         val provider = FakeTextGenerationProvider(VALID_EMPLOYMENT_JSON)
-        val publication = publication(CategoriaDto.NORMAS_Y_LEGISLACION).copy(category = null)
+        val publication = publication(CategoryDto.NORMS_AND_LEGISLATION).copy(category = null)
         val generator = generatorCon(provider, publication)
 
         assertFailsWith<IllegalArgumentException> { generator.generate(publication) }
@@ -140,12 +140,12 @@ class CitizenSummaryGeneratorTest {
         )
     }
 
-    private fun publication(category: CategoriaDto?): Publicacion = Publicacion(
+    private fun publication(category: CategoryDto?): Publicacion = Publicacion(
         id = "BOE-A-2026-1",
         title = "Real Decreto de prueba",
         publicationDate = "2026-10-10",
         issuingBody = "MINISTERIO DE PRUEBA",
-        section = SeccionBoeDto.I,
+        section = BoeSectionDto.I,
         heading = "Disposiciones generales",
         texto = "texto",
         officialUrl = url,

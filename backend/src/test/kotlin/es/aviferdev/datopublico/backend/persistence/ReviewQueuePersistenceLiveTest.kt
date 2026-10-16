@@ -9,9 +9,9 @@ import es.aviferdev.datopublico.backend.rag.guardrails.SummaryGuardrailViolation
 import es.aviferdev.datopublico.backend.rag.review.SummaryDispositionService
 import es.aviferdev.datopublico.backend.rag.review.SummaryReviewOutcome
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
-import es.aviferdev.datopublico.model.CategoriaDto
+import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.SummaryDto
-import es.aviferdev.datopublico.model.SeccionBoeDto
+import es.aviferdev.datopublico.model.BoeSectionDto
 import java.io.File
 import javax.sql.DataSource
 import kotlin.test.Test
@@ -137,14 +137,14 @@ class ReviewQueuePersistenceLiveTest {
         title = "Resolución de prueba de la cola de revisión",
         publicationDate = DATE,
         issuingBody = null,
-        section = SeccionBoeDto.II_A,
+        section = BoeSectionDto.II_A,
         heading = null,
         texto = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
     )
 
     private fun summary(whatChanges: String = "Se aumenta el plazo de solicitud"): SummaryDto = SummaryDto(

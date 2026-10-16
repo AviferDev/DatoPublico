@@ -2,7 +2,7 @@ package es.aviferdev.datopublico.backend.persistence
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PlazoDto
+import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -35,7 +35,7 @@ interface PublicationRepository {
  * Fila de la tabla `publicacion` (representación de persistencia).
  *
  * `section` y `category` guardan el **nombre** del enum; `deadline*` son las dos
- * columnas del [PlazoDto]. `creado_en`/`actualizado_en` los gestiona la base de
+ * columnas del [DeadlineDto]. `creado_en`/`actualizado_en` los gestiona la base de
  * datos (no forman parte del modelo de dominio).
  */
 data class PublicationEntity(
@@ -58,19 +58,19 @@ data class PublicationEntity(
 /** Proyecta el modelo de dominio [Publicacion] a su [PublicationEntity]. */
 internal fun Publicacion.toPublicationEntity(): PublicationEntity = PublicationEntity(
     id = id,
-    title = titulo,
-    publicationDate = fechaPublicacion,
-    organization = organismo,
-    section = seccion.name,
-    heading = epigrafe,
-    category = categoria?.name,
+    title = title,
+    publicationDate = publicationDate,
+    organization = issuingBody,
+    section = section.name,
+    heading = heading,
+    category = category?.name,
     body = texto,
-    officialUrl = urlOficial,
+    officialUrl = officialUrl,
     xmlUrl = urlXml,
     pdfUrl = urlPdf,
     rank = rango,
-    deadlineDate = plazo?.fechaLimite,
-    deadlineDescription = plazo?.descripcion,
+    deadlineDate = deadline?.deadlineDate,
+    deadlineDescription = deadline?.description,
 )
 
 /**
@@ -81,19 +81,19 @@ internal fun Publicacion.toPublicationEntity(): PublicationEntity = PublicationE
  */
 internal fun PublicationEntity.toDomain(): Publicacion = Publicacion(
     id = id,
-    titulo = title,
-    fechaPublicacion = publicationDate,
-    organismo = organization,
-    seccion = SeccionBoeDto.valueOf(section),
-    epigrafe = heading,
+    title = title,
+    publicationDate = publicationDate,
+    issuingBody = organization,
+    section = SeccionBoeDto.valueOf(section),
+    heading = heading,
     texto = body,
-    urlOficial = officialUrl,
+    officialUrl = officialUrl,
     urlXml = xmlUrl,
     urlPdf = pdfUrl,
     rango = rank,
-    categoria = category?.let(CategoriaDto::valueOf),
-    plazo = deadlineDate?.let { fechaLimite ->
-        PlazoDto(fechaLimite = fechaLimite, descripcion = deadlineDescription)
+    category = category?.let(CategoriaDto::valueOf),
+    deadline = deadlineDate?.let { deadlineDate ->
+        DeadlineDto(deadlineDate = deadlineDate, description = deadlineDescription)
     },
 )
 

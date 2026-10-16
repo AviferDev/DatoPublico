@@ -10,7 +10,7 @@ import es.aviferdev.datopublico.backend.rag.review.SummaryDispositionService
 import es.aviferdev.datopublico.backend.rag.review.SummaryReviewOutcome
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import java.io.File
 import javax.sql.DataSource
@@ -108,7 +108,7 @@ class ReviewQueuePersistenceLiveTest {
     ) {
         service.dispose(
             publication(QUEUED_ID),
-            summary(queCambia = "Resumen actualizado"),
+            summary(whatChanges = "Resumen actualizado"),
             result(GuardrailDecision.NEEDS_REVIEW, 0.6, listOf(SummaryGuardrailViolation.UNSUPPORTED_FIGURE)),
         )
 
@@ -134,25 +134,25 @@ class ReviewQueuePersistenceLiveTest {
 
     private fun publication(id: String): Publicacion = Publicacion(
         id = id,
-        titulo = "Resolución de prueba de la cola de revisión",
-        fechaPublicacion = DATE,
-        organismo = null,
-        seccion = SeccionBoeDto.II_A,
-        epigrafe = null,
+        title = "Resolución de prueba de la cola de revisión",
+        publicationDate = DATE,
+        issuingBody = null,
+        section = SeccionBoeDto.II_A,
+        heading = null,
         texto = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        categoria = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
     )
 
-    private fun summary(queCambia: String = "Se aumenta el plazo de solicitud"): ResumenDto = ResumenDto(
-        queCambia = queCambia,
-        aQuienAfecta = "A la ciudadanía",
-        cifrasClave = listOf("30 días"),
-        fuenteOficial = "https://www.boe.es/diario_boe/txt.php?id=$QUEUED_ID",
-        avisoIA = true,
+    private fun summary(whatChanges: String = "Se aumenta el plazo de solicitud"): SummaryDto = SummaryDto(
+        whatChanges = whatChanges,
+        whoIsAffected = "A la ciudadanía",
+        keyFigures = listOf("30 días"),
+        officialSource = "https://www.boe.es/diario_boe/txt.php?id=$QUEUED_ID",
+        aiNotice = true,
     )
 
     /** Borra las publicaciones de prueba (la cascada limpia `resumen` y `cola_revision`). */

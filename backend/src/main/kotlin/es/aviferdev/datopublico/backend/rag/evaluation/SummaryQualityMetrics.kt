@@ -93,7 +93,7 @@ object SummaryQualityMetrics {
 
     /** Concadena los campos comparables de [summary] en un único texto. */
     private fun fieldsText(summary: SummaryGenerationDto): String =
-        listOf(summary.queCambia, summary.aQuienAfecta, summary.cifrasClave.joinToString(separator = " "))
+        listOf(summary.whatChanges, summary.whoIsAffected, summary.keyFigures.joinToString(separator = " "))
             .joinToString(separator = " ")
 
     /** `part / total` como `Double`, o `0.0` si [total] es `0` (sin `NaN`). */

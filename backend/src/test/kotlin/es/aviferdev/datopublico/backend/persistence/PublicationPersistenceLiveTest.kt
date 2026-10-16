@@ -4,7 +4,7 @@ import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PlazoDto
+import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import java.io.File
 import java.sql.ResultSet
@@ -82,10 +82,10 @@ class PublicationPersistenceLiveTest {
             repository.save(fullPublication(ID_UPSERT))
             val before = dataSource.updatedAt(ID_UPSERT)
             Thread.sleep(10)
-            repository.save(fullPublication(ID_UPSERT).copy(titulo = "Título actualizado"))
+            repository.save(fullPublication(ID_UPSERT).copy(title = "Título actualizado"))
 
             assertEquals(1, dataSource.countPublications(ID_UPSERT))
-            assertEquals("Título actualizado", repository.findById(ID_UPSERT)?.titulo)
+            assertEquals("Título actualizado", repository.findById(ID_UPSERT)?.title)
             assertTrue(dataSource.updatedAt(ID_UPSERT).isAfter(before))
         } finally {
             dataSource.deletePublication(ID_UPSERT)
@@ -149,29 +149,29 @@ class PublicationPersistenceLiveTest {
 
     private fun fullPublication(id: String): Publicacion = Publicacion(
         id = id,
-        titulo = "Resolución de 8 de octubre de 2026",
-        fechaPublicacion = DATE,
-        organismo = "MINISTERIO DE EDUCACIÓN",
-        seccion = SeccionBoeDto.II_A,
-        epigrafe = "Becas y subvenciones",
+        title = "Resolución de 8 de octubre de 2026",
+        publicationDate = DATE,
+        issuingBody = "MINISTERIO DE EDUCACIÓN",
+        section = SeccionBoeDto.II_A,
+        heading = "Becas y subvenciones",
         texto = "Primero. Convocar...\nSegundo. El plazo...",
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = "https://www.boe.es/diario_boe/xml.php?id=$id",
         urlPdf = "https://www.boe.es/boe/dias/2026/10/09/pdfs/A00001-00002.pdf",
         rango = "Resolución",
-        categoria = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
-        plazo = PlazoDto(fechaLimite = "2026-11-30", descripcion = "Diez días hábiles"),
+        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        deadline = DeadlineDto(deadlineDate = "2026-11-30", description = "Diez días hábiles"),
     )
 
     private fun publicationWithNulls(id: String): Publicacion = Publicacion(
         id = id,
-        titulo = "Resolución sin metadatos enriquecidos",
-        fechaPublicacion = DATE,
-        organismo = null,
-        seccion = SeccionBoeDto.II_A,
-        epigrafe = null,
+        title = "Resolución sin metadatos enriquecidos",
+        publicationDate = DATE,
+        issuingBody = null,
+        section = SeccionBoeDto.II_A,
+        heading = null,
         texto = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = null,

@@ -63,25 +63,25 @@ class PublicationDetailLiveTest {
 
         val published = service.detail(PUBLISHED_ID)
         assertEquals(PUBLISHED_ID, published?.id)
-        assertEquals(CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES, published?.categoria)
-        assertNotNull(published?.resumen)
+        assertEquals(CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES, published?.category)
+        assertNotNull(published?.summary)
         assertNull(service.detail(QUEUED_ID))
         println("PublicationDetailLiveTest: solo el resumen publicado se sirve OK")
     }
 
     private fun publication(id: String): Publicacion = Publicacion(
         id = id,
-        titulo = "Publicación de prueba del detalle",
-        fechaPublicacion = DATE,
-        organismo = null,
-        seccion = SeccionBoeDto.II_A,
-        epigrafe = null,
+        title = "Publicación de prueba del detalle",
+        publicationDate = DATE,
+        issuingBody = null,
+        section = SeccionBoeDto.II_A,
+        heading = null,
         texto = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        categoria = CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
+        category = CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
     )
 
     private fun summary(publicationId: String, status: String): SummaryEntity = SummaryEntity(

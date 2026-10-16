@@ -165,7 +165,7 @@ class BackfillRunnerTest {
         assertEquals(8, repository.saved.size)
         assertEquals(
             SeccionBoeDto.values().map { section -> section.name }.toSet(),
-            repository.saved.values.map { publication -> publication.seccion.name }.toSet(),
+            repository.saved.values.map { publication -> publication.section.name }.toSet(),
         )
     }
 
@@ -187,8 +187,8 @@ class BackfillRunnerTest {
         entriesFor: (LocalDate) -> List<EntradaSumario>,
     ): DailyIngestionJob = DailyIngestionJob(
         summaryClient = object : BoeSumarioClient {
-            override suspend fun obtenerSumario(fecha: LocalDate): List<EntradaSumario> =
-                entriesFor(fecha)
+            override suspend fun obtenerSumario(date: LocalDate): List<EntradaSumario> =
+                entriesFor(date)
         },
         publicationParser = TestParser(),
         repository = repository,
@@ -201,12 +201,12 @@ class BackfillRunnerTest {
         EntradaSumario(
             identificador = id,
             control = null,
-            titulo = "Título $id",
-            fechaPublicacion = date.toString(),
-            seccion = section,
-            organismo = "MINISTERIO X",
-            epigrafe = null,
-            urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+            title = "Título $id",
+            publicationDate = date.toString(),
+            section = section,
+            issuingBody = "MINISTERIO X",
+            heading = null,
+            officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
             urlXml = "https://www.boe.es/diario_boe/xml.php?id=$id",
             urlPdf = null,
         )
@@ -260,20 +260,20 @@ private class InMemoryPublicationRepository : PublicationRepository {
     override fun findById(id: String): Publicacion? = saved[id]
 
     override fun listByDate(publicationDate: String): List<Publicacion> =
-        saved.values.filter { publication -> publication.fechaPublicacion == publicationDate }
+        saved.values.filter { publication -> publication.publicationDate == publicationDate }
 }
 
 /** Parser de prueba: proyecta la entrada a una publicación sin red. */
 private class TestParser : BoePublicacionParser {
     override suspend fun parsear(entrada: EntradaSumario): Publicacion = Publicacion(
         id = entrada.identificador,
-        titulo = entrada.titulo,
-        fechaPublicacion = entrada.fechaPublicacion,
-        organismo = entrada.organismo,
-        seccion = entrada.seccion,
-        epigrafe = entrada.epigrafe,
+        title = entrada.title,
+        publicationDate = entrada.publicationDate,
+        issuingBody = entrada.issuingBody,
+        section = entrada.section,
+        heading = entrada.heading,
         texto = "texto de ${entrada.identificador}",
-        urlOficial = entrada.urlOficial,
+        officialUrl = entrada.officialUrl,
         urlXml = entrada.urlXml,
         urlPdf = entrada.urlPdf,
         rango = null,

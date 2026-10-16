@@ -2,7 +2,7 @@ package es.aviferdev.datopublico.backend.persistence
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PlazoDto
+import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -46,13 +46,13 @@ class PublicationPersistenceTest {
     fun `keeps the nulls from the parser before FT00012`() {
         val publication = Publicacion(
             id = "BOE-A-2024-87",
-            titulo = "Resolución de 21 de diciembre de 2023",
-            fechaPublicacion = "2024-01-02",
-            organismo = null,
-            seccion = SeccionBoeDto.II_A,
-            epigrafe = null,
+            title = "Resolución de 21 de diciembre de 2023",
+            publicationDate = "2024-01-02",
+            issuingBody = null,
+            section = SeccionBoeDto.II_A,
+            heading = null,
             texto = null,
-            urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-87",
+            officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-87",
             urlXml = null,
             urlPdf = null,
             rango = null,
@@ -64,36 +64,36 @@ class PublicationPersistenceTest {
         assertNull(entity.category)
         assertNull(entity.deadlineDate)
         assertNull(entity.deadlineDescription)
-        assertNull(retrieved.organismo)
-        assertNull(retrieved.epigrafe)
+        assertNull(retrieved.issuingBody)
+        assertNull(retrieved.heading)
         assertNull(retrieved.texto)
-        assertNull(retrieved.categoria)
-        assertNull(retrieved.plazo)
+        assertNull(retrieved.category)
+        assertNull(retrieved.deadline)
         assertEquals(publication, retrieved)
     }
 
     @Test
     fun `keeps a deadline without description`() {
         val publication = fullPublication().copy(
-            plazo = PlazoDto(fechaLimite = "2026-12-15"),
+            deadline = DeadlineDto(deadlineDate = "2026-12-15"),
         )
 
-        assertEquals(publication.plazo, publication.toPublicationEntity().toDomain().plazo)
+        assertEquals(publication.deadline, publication.toPublicationEntity().toDomain().deadline)
     }
 
     private fun fullPublication(): Publicacion = Publicacion(
         id = "BOE-A-2026-20979",
-        titulo = "Resolución de 8 de octubre de 2026",
-        fechaPublicacion = "2026-10-09",
-        organismo = "MINISTERIO DE EDUCACIÓN",
-        seccion = SeccionBoeDto.II_A,
-        epigrafe = "Becas y subvenciones",
+        title = "Resolución de 8 de octubre de 2026",
+        publicationDate = "2026-10-09",
+        issuingBody = "MINISTERIO DE EDUCACIÓN",
+        section = SeccionBoeDto.II_A,
+        heading = "Becas y subvenciones",
         texto = "Primero. Convocar...\nSegundo. El plazo...",
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-20979",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-20979",
         urlXml = "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-20979",
         urlPdf = "https://www.boe.es/boe/dias/2026/10/09/pdfs/A00001-00002.pdf",
         rango = "Resolución",
-        categoria = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
-        plazo = PlazoDto(fechaLimite = "2026-11-30", descripcion = "Diez días hábiles"),
+        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        deadline = DeadlineDto(deadlineDate = "2026-11-30", description = "Diez días hábiles"),
     )
 }

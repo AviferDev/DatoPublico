@@ -76,7 +76,7 @@ class FeedRepositoryJdbc(private val dataSource: DataSource) : FeedRepository {
             SELECT_PUBLISHED_BY_DATE,
             { statement -> statement.setString(1, publicationDate) },
             { rows -> rows.toFeedItem() },
-        ).filter { item -> item.publication.categoria != null }
+        ).filter { item -> item.publication.category != null }
 
     override fun listPublishedByIds(ids: List<String>): List<FeedItem> =
         if (ids.isEmpty()) {
@@ -86,7 +86,7 @@ class FeedRepositoryJdbc(private val dataSource: DataSource) : FeedRepository {
                 SELECT_PUBLISHED_BY_IDS,
                 { statement -> statement.bindIds(ids) },
                 { rows -> rows.toFeedItem() },
-            ).filter { item -> item.publication.categoria != null }
+            ).filter { item -> item.publication.category != null }
         }
 
     /** Asigna el lote de identificadores (`ANY(?)`) y el token del estado publicado. */

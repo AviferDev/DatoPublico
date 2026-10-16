@@ -41,18 +41,18 @@ class PublicacionParser(
         val metadatos = documento?.metadatos
         return Publicacion(
             id = entrada.identificador,
-            titulo = entrada.titulo,
-            fechaPublicacion = entrada.fechaPublicacion,
-            organismo = entrada.organismo ?: metadatos?.departamento,
-            seccion = entrada.seccion,
-            epigrafe = entrada.epigrafe,
+            title = entrada.title,
+            publicationDate = entrada.publicationDate,
+            issuingBody = entrada.issuingBody ?: metadatos?.departamento,
+            section = entrada.section,
+            heading = entrada.heading,
             texto = documento?.texto,
-            urlOficial = entrada.urlOficial,
+            officialUrl = entrada.officialUrl,
             urlXml = entrada.urlXml,
             urlPdf = entrada.urlPdf ?: metadatos?.urlPdf,
             rango = metadatos?.rango,
-            categoria = classifier.classify(entrada.seccion, entrada.epigrafe, entrada.titulo),
-            plazo = deadlineExtractor.extract(documento?.texto, entrada.fechaPublicacion),
+            category = classifier.classify(entrada.section, entrada.heading, entrada.title),
+            deadline = deadlineExtractor.extract(documento?.texto, entrada.publicationDate),
         )
     }
 }

@@ -16,7 +16,7 @@ import es.aviferdev.datopublico.backend.rag.generation.TokenUsage
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import es.aviferdev.datopublico.validation.CitizenSummaryViolation
 import kotlin.test.Test
@@ -51,7 +51,7 @@ class CachedCitizenSummaryGeneratorTest {
 
         assertTrue(result.cacheHit)
         val valid = assertIs<CitizenSummaryResult.Valid>(result.result)
-        assertEquals("Resumen cacheado", valid.summary.queCambia)
+        assertEquals("Resumen cacheado", valid.summary.whatChanges)
         assertEquals(0, provider.calls)
         val record = assertIs<GenerationUsageEntity>(usage.records.singleOrNull())
         assertTrue(record.cacheHit)
@@ -70,7 +70,7 @@ class CachedCitizenSummaryGeneratorTest {
         assertFalse(result.cacheHit)
         assertIs<CitizenSummaryResult.Valid>(result.result)
         assertEquals(1, provider.calls)
-        assertEquals("Resumen generado", assertNotNull(cache.find(KEY)).summary.queCambia)
+        assertEquals("Resumen generado", assertNotNull(cache.find(KEY)).summary.whatChanges)
         val record = assertIs<GenerationUsageEntity>(usage.records.singleOrNull())
         assertFalse(record.cacheHit)
         assertEquals(11, record.promptTokens)
@@ -167,25 +167,25 @@ class CachedCitizenSummaryGeneratorTest {
         )
     }
 
-    private fun cachedSummary(): ResumenDto = ResumenDto(
-        queCambia = "Resumen cacheado",
-        aQuienAfecta = "A la ciudadanía",
-        fuenteOficial = url,
+    private fun cachedSummary(): SummaryDto = SummaryDto(
+        whatChanges = "Resumen cacheado",
+        whoIsAffected = "A la ciudadanía",
+        officialSource = url,
     )
 
-    private fun publication(categoria: CategoriaDto = CategoriaDto.NORMAS_Y_LEGISLACION): Publicacion = Publicacion(
+    private fun publication(category: CategoriaDto = CategoriaDto.NORMAS_Y_LEGISLACION): Publicacion = Publicacion(
         id = PUBLICATION_ID,
-        titulo = "Real Decreto de prueba",
-        fechaPublicacion = "2026-10-10",
-        organismo = "MINISTERIO DE PRUEBA",
-        seccion = SeccionBoeDto.I,
-        epigrafe = "Disposiciones generales",
+        title = "Real Decreto de prueba",
+        publicationDate = "2026-10-10",
+        issuingBody = "MINISTERIO DE PRUEBA",
+        section = SeccionBoeDto.I,
+        heading = "Disposiciones generales",
         texto = "texto",
-        urlOficial = url,
+        officialUrl = url,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        categoria = categoria,
+        category = category,
     )
 
     /** Doble de [TextGenerationProvider]: devuelve el texto y el uso indicados. */

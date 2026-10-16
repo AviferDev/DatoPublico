@@ -1,8 +1,8 @@
 package es.aviferdev.datopublico.validation
 
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PlazoDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.DeadlineDto
+import es.aviferdev.datopublico.model.SummaryDto
 
 /**
  * Valida el **contrato** del resumen ciudadano (no su veracidad).
@@ -26,22 +26,22 @@ object CitizenSummaryValidator {
      * @param category categoría curada de la publicación de origen.
      * @return el resultado con las violaciones detectadas; vacío si es válido.
      */
-    fun validate(summary: ResumenDto, category: CategoriaDto): CitizenSummaryValidation {
+    fun validate(summary: SummaryDto, category: CategoriaDto): CitizenSummaryValidation {
         val variant = CitizenSummaryVariantResolver.variantFor(category)
         val violations = buildList {
-            if (!hasAbsoluteSource(summary.fuenteOficial)) {
+            if (!hasAbsoluteSource(summary.officialSource)) {
                 add(CitizenSummaryViolation.MISSING_OFFICIAL_SOURCE)
             }
-            if (summary.queCambia.isBlank()) {
+            if (summary.whatChanges.isBlank()) {
                 add(CitizenSummaryViolation.MISSING_WHAT_CHANGES)
             }
-            if (summary.aQuienAfecta.isBlank()) {
+            if (summary.whoIsAffected.isBlank()) {
                 add(CitizenSummaryViolation.MISSING_WHO_IS_AFFECTED)
             }
-            if (summary.cifrasClave.any { figure -> figure.isBlank() }) {
+            if (summary.keyFigures.any { figure -> figure.isBlank() }) {
                 add(CitizenSummaryViolation.BLANK_KEY_FIGURE)
             }
-            if (variant == CitizenSummaryVariant.EMPLOYMENT_OR_SCHOLARSHIP && !hasDeadline(summary.plazo)) {
+            if (variant == CitizenSummaryVariant.EMPLOYMENT_OR_SCHOLARSHIP && !hasDeadline(summary.deadline)) {
                 add(CitizenSummaryViolation.MISSING_DEADLINE)
             }
         }
@@ -55,6 +55,6 @@ object CitizenSummaryValidator {
     }
 
     /** `true` si [deadline] existe y su fecha límite no está en blanco. */
-    private fun hasDeadline(deadline: PlazoDto?): Boolean =
-        deadline?.fechaLimite?.isNotBlank() == true
+    private fun hasDeadline(deadline: DeadlineDto?): Boolean =
+        deadline?.deadlineDate?.isNotBlank() == true
 }

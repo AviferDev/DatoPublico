@@ -74,19 +74,19 @@ class CitizenSummaryPromptBuilderTest {
         assertTrue(request.userPrompt.contains("referencia=\"Fragmento 1\""))
     }
 
-    private fun publication(categoria: CategoriaDto): Publicacion = Publicacion(
+    private fun publication(category: CategoriaDto): Publicacion = Publicacion(
         id = "BOE-A-2026-1",
-        titulo = "Real Decreto de prueba",
-        fechaPublicacion = "2026-10-10",
-        organismo = "MINISTERIO DE PRUEBA",
-        seccion = SeccionBoeDto.I,
-        epigrafe = "Disposiciones generales",
+        title = "Real Decreto de prueba",
+        publicationDate = "2026-10-10",
+        issuingBody = "MINISTERIO DE PRUEBA",
+        section = SeccionBoeDto.I,
+        heading = "Disposiciones generales",
         texto = "texto",
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        categoria = categoria,
+        category = category,
     )
 
     private fun fragment(reference: String?, content: String): FragmentEntity = FragmentEntity(

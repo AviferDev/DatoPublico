@@ -112,17 +112,17 @@ class RateLimitRouteTest {
     private fun item(id: String): FeedItem = FeedItem(
         publication = Publicacion(
             id = id,
-            titulo = "Ley de prueba",
-            fechaPublicacion = DATE,
-            organismo = "Jefatura del Estado",
-            seccion = SeccionBoeDto.I,
-            epigrafe = null,
+            title = "Ley de prueba",
+            publicationDate = DATE,
+            issuingBody = "Jefatura del Estado",
+            section = SeccionBoeDto.I,
+            heading = null,
             texto = null,
-            urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+            officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
             urlXml = null,
             urlPdf = null,
             rango = "Ley",
-            categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
+            category = CategoriaDto.NORMAS_Y_LEGISLACION,
         ),
         summary = SummaryEntity(
             publicationId = id,
@@ -136,7 +136,7 @@ class RateLimitRouteTest {
     /** Doble en memoria de [FeedRepository]. */
     private class InMemoryFeedRepository(private val items: List<FeedItem>) : FeedRepository {
         override fun listPublishedByDate(publicationDate: String): List<FeedItem> =
-            items.filter { item -> item.publication.fechaPublicacion == publicationDate }
+            items.filter { item -> item.publication.publicationDate == publicationDate }
 
         override fun listPublishedByIds(ids: List<String>): List<FeedItem> =
             items.filter { item -> item.publication.id in ids }

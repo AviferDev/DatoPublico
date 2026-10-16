@@ -53,7 +53,7 @@ data class BoeMetadatosDto(
     @SerialName("publicacion")
     val publicacion: String? = null,
     @SerialName("fecha_publicacion")
-    val fechaPublicacion: String? = null,
+    val publicationDate: String? = null,
 )
 
 @Serializable
@@ -62,7 +62,7 @@ data class BoeDiarioDto(
     val numero: String? = null,
     @SerialName("seccion")
     @Serializable(with = SeccionListSerializer::class)
-    val seccion: List<BoeSeccionDto> = emptyList(),
+    val section: List<BoeSeccionDto> = emptyList(),
     @SerialName("sumario_diario")
     val sumarioDiario: BoeSumarioDiarioDto? = null,
 )
@@ -94,7 +94,7 @@ data class BoeDepartamentoDto(
     val nombre: String? = null,
     @SerialName("epigrafe")
     @Serializable(with = EpigrafeListSerializer::class)
-    val epigrafe: List<BoeEpigrafeDto> = emptyList(),
+    val heading: List<BoeEpigrafeDto> = emptyList(),
     @SerialName("item")
     @Serializable(with = ItemListSerializer::class)
     val item: List<BoeSumarioItemDto> = emptyList(),
@@ -130,7 +130,7 @@ data class BoeSumarioItemDto(
     @SerialName("control")
     val control: String? = null,
     @SerialName("titulo")
-    val titulo: String? = null,
+    val title: String? = null,
     @SerialName("url_html")
     val urlHtml: String? = null,
     @SerialName("url_xml")

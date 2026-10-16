@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.rag.guardrails
 
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -24,7 +24,7 @@ class SummaryGroundingCheckerTest {
     @Test
     fun `a claim outside the context is unsupported`() {
         val summary = supportedSummary()
-            .copy(queCambia = "Se aumenta el plazo de solicitud. Se reduce el impuesto especial")
+            .copy(whatChanges = "Se aumenta el plazo de solicitud. Se reduce el impuesto especial")
 
         val assessment = SummaryGroundingChecker.check(summary, context())
 
@@ -34,7 +34,7 @@ class SummaryGroundingCheckerTest {
 
     @Test
     fun `a figure outside the context is unsupported`() {
-        val summary = supportedSummary().copy(cifrasClave = listOf("5000 euros"))
+        val summary = supportedSummary().copy(keyFigures = listOf("5000 euros"))
 
         val assessment = SummaryGroundingChecker.check(summary, context())
 
@@ -51,11 +51,11 @@ class SummaryGroundingCheckerTest {
 
     @Test
     fun `a summary without claims scores one`() {
-        val summary = ResumenDto(
-            queCambia = "",
-            aQuienAfecta = "",
-            cifrasClave = emptyList(),
-            fuenteOficial = URL,
+        val summary = SummaryDto(
+            whatChanges = "",
+            whoIsAffected = "",
+            keyFigures = emptyList(),
+            officialSource = URL,
         )
 
         val assessment = SummaryGroundingChecker.check(summary, context())
@@ -64,11 +64,11 @@ class SummaryGroundingCheckerTest {
         assertTrue(assessment.violations.isEmpty())
     }
 
-    private fun supportedSummary(): ResumenDto = ResumenDto(
-        queCambia = "Se aumenta el plazo de solicitud",
-        aQuienAfecta = "A las personas beneficiarias",
-        cifrasClave = listOf("1000 euros"),
-        fuenteOficial = URL,
+    private fun supportedSummary(): SummaryDto = SummaryDto(
+        whatChanges = "Se aumenta el plazo de solicitud",
+        whoIsAffected = "A las personas beneficiarias",
+        keyFigures = listOf("1000 euros"),
+        officialSource = URL,
     )
 
     private fun context(): List<FragmentEntity> = listOf(

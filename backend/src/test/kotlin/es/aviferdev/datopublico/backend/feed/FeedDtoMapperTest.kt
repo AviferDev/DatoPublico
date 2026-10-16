@@ -6,7 +6,7 @@ import es.aviferdev.datopublico.backend.relevance.Highlight
 import es.aviferdev.datopublico.backend.relevance.HighlightReason
 import es.aviferdev.datopublico.model.CategoriaDto
 import es.aviferdev.datopublico.model.HighlightReasonDto
-import es.aviferdev.datopublico.model.PlazoDto
+import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,30 +27,30 @@ class FeedDtoMapperTest {
         val dto = FeedDtoMapper.toPublicacionDto(publication(), summary())
 
         assertEquals(PUBLICATION_ID, dto.id)
-        assertEquals(CategoriaDto.NORMAS_Y_LEGISLACION, dto.categoria)
-        assertEquals(URL, dto.urlOficial)
-        assertEquals(PlazoDto("2026-10-30"), dto.plazo)
-        assertEquals("Cambia algo", dto.resumen?.queCambia)
-        assertEquals(URL, dto.resumen?.fuenteOficial)
-        assertTrue(dto.resumen?.avisoIA == true)
+        assertEquals(CategoriaDto.NORMAS_Y_LEGISLACION, dto.category)
+        assertEquals(URL, dto.officialUrl)
+        assertEquals(DeadlineDto("2026-10-30"), dto.deadline)
+        assertEquals("Cambia algo", dto.summary?.whatChanges)
+        assertEquals(URL, dto.summary?.officialSource)
+        assertTrue(dto.summary?.aiNotice == true)
     }
 
     @Test
     fun `the summary is projected without deadline because the table does not store it`() {
         val dto = FeedDtoMapper.toResumenDto(summary())
 
-        assertEquals("Cambia algo", dto.queCambia)
-        assertEquals("A la ciudadanía", dto.aQuienAfecta)
-        assertEquals(listOf("1 ley"), dto.cifrasClave)
-        assertEquals(URL, dto.fuenteOficial)
-        assertTrue(dto.avisoIA)
-        assertNull(dto.plazo)
+        assertEquals("Cambia algo", dto.whatChanges)
+        assertEquals("A la ciudadanía", dto.whoIsAffected)
+        assertEquals(listOf("1 ley"), dto.keyFigures)
+        assertEquals(URL, dto.officialSource)
+        assertTrue(dto.aiNotice)
+        assertNull(dto.deadline)
     }
 
     @Test
     fun `a publication without category fails fast as corrupt data`() {
         assertFailsWith<IllegalArgumentException> {
-            FeedDtoMapper.toPublicacionDto(publication().copy(categoria = null), summary())
+            FeedDtoMapper.toPublicacionDto(publication().copy(category = null), summary())
         }
     }
 
@@ -94,23 +94,23 @@ class FeedDtoMapperTest {
             listOf(HighlightReasonDto.NORMATIVE_SECTION, HighlightReasonDto.OPEN_DEADLINE),
             dto.reasons,
         )
-        assertEquals("Cambia algo", dto.publication.resumen?.queCambia)
+        assertEquals("Cambia algo", dto.publication.summary?.whatChanges)
     }
 
     private fun publication(): Publicacion = Publicacion(
         id = PUBLICATION_ID,
-        titulo = "Ley de prueba",
-        fechaPublicacion = DATE,
-        organismo = "Jefatura del Estado",
-        seccion = SeccionBoeDto.I,
-        epigrafe = "Disposiciones generales",
+        title = "Ley de prueba",
+        publicationDate = DATE,
+        issuingBody = "Jefatura del Estado",
+        section = SeccionBoeDto.I,
+        heading = "Disposiciones generales",
         texto = null,
-        urlOficial = URL,
+        officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Ley",
-        categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
-        plazo = PlazoDto("2026-10-30"),
+        category = CategoriaDto.NORMAS_Y_LEGISLACION,
+        deadline = DeadlineDto("2026-10-30"),
     )
 
     private fun summary(): SummaryEntity = SummaryEntity(

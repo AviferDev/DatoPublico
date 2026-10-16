@@ -20,7 +20,7 @@ class BoeXmlParserTest {
     private val parser = BoeXmlParser()
 
     @Test
-    fun `los ocho fixtures reales por seccion producen texto no vacio y metadatos`() {
+    fun `los ocho fixtures reales por section producen texto no vacio y metadatos`() {
         EXPECTATIVAS_POR_SECCION.forEach { (nombre, rango) ->
             val documento = parseFixture(nombre)
             val texto = assertNotNull(documento.texto, "$nombre no produjo texto")

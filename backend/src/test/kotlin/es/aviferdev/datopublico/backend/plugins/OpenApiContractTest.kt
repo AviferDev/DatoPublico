@@ -9,10 +9,10 @@ import es.aviferdev.datopublico.model.ChatResponseDto
 import es.aviferdev.datopublico.model.ChatStatusDto
 import es.aviferdev.datopublico.model.HighlightDto
 import es.aviferdev.datopublico.model.HighlightReasonDto
-import es.aviferdev.datopublico.model.PlazoDto
-import es.aviferdev.datopublico.model.PublicacionDto
-import es.aviferdev.datopublico.model.ResumenDiarioDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.DeadlineDto
+import es.aviferdev.datopublico.model.PublicationDto
+import es.aviferdev.datopublico.model.DailySummaryDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.model.SearchResultsDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
@@ -91,10 +91,10 @@ class OpenApiContractTest {
 
 /** Esquemas de objeto del documento y el DTO de `:shared`/`:backend` que espejan. */
 private val SCHEMA_SERIALIZERS: Map<String, KSerializer<*>> = mapOf(
-    "PublicacionDto" to PublicacionDto.serializer(),
-    "ResumenDto" to ResumenDto.serializer(),
-    "PlazoDto" to PlazoDto.serializer(),
-    "ResumenDiarioDto" to ResumenDiarioDto.serializer(),
+    "PublicationDto" to PublicationDto.serializer(),
+    "SummaryDto" to SummaryDto.serializer(),
+    "DeadlineDto" to DeadlineDto.serializer(),
+    "DailySummaryDto" to DailySummaryDto.serializer(),
     "HighlightDto" to HighlightDto.serializer(),
     "SearchResultsDto" to SearchResultsDto.serializer(),
     "ChatRequestDto" to ChatRequestDto.serializer(),

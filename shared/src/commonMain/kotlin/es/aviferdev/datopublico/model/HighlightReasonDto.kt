@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Motivo **objetivo** por el que el feed marca una [PublicacionDto] como destacada.
+ * Motivo **objetivo** por el que el feed marca una [PublicationDto] como destacada.
  *
  * Es la cara de **wire** del vocabulario interno `HighlightReason` de `:backend`
  * (no se comparte el enum interno para no acoplar el contrato a la implementación):

@@ -33,37 +33,37 @@ class BoeSumarioHttpClient(
     private val baseUrl: String = BOE_SUMARIO_BASE_URL,
 ) : BoeSumarioClient {
 
-    override suspend fun obtenerSumario(fecha: LocalDate): List<EntradaSumario> {
-        val response = execute(fecha)
+    override suspend fun obtenerSumario(date: LocalDate): List<EntradaSumario> {
+        val response = execute(date)
         return when (response.status) {
-            HttpStatusCode.OK -> decode(fecha, response)
+            HttpStatusCode.OK -> decode(date, response)
             HttpStatusCode.NotFound -> emptyList()
             else -> throw BoeSumarioException(
-                "El BOE respondió ${response.status.value} al pedir el sumario de $fecha"
+                "El BOE respondió ${response.status.value} al pedir el sumario de $date"
             )
         }
     }
 
-    private suspend fun execute(fecha: LocalDate): HttpResponse = try {
-        httpClient.get(urlDe(fecha)) {
+    private suspend fun execute(date: LocalDate): HttpResponse = try {
+        httpClient.get(urlDe(date)) {
             header(HttpHeaders.Accept, ContentType.Application.Json.toString())
         }
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {
-        throw BoeSumarioException("No se pudo consultar el sumario del BOE para $fecha", error)
+        throw BoeSumarioException("No se pudo consultar el sumario del BOE para $date", error)
     }
 
-    private suspend fun decode(fecha: LocalDate, response: HttpResponse): List<EntradaSumario> = try {
-        response.body<BoeSumarioResponseDto>().toEntradasSumario(fecha)
+    private suspend fun decode(date: LocalDate, response: HttpResponse): List<EntradaSumario> = try {
+        response.body<BoeSumarioResponseDto>().toEntradasSumario(date)
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {
-        throw BoeSumarioException("Respuesta ilegible del sumario del BOE para $fecha", error)
+        throw BoeSumarioException("Respuesta ilegible del sumario del BOE para $date", error)
     }
 
-    private fun urlDe(fecha: LocalDate): String =
-        "$baseUrl/boe/sumario/${fecha.format(DateTimeFormatter.BASIC_ISO_DATE)}"
+    private fun urlDe(date: LocalDate): String =
+        "$baseUrl/boe/sumario/${date.format(DateTimeFormatter.BASIC_ISO_DATE)}"
 }
 
 /**

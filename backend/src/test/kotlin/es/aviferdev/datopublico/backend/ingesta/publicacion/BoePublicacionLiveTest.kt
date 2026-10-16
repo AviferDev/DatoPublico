@@ -44,12 +44,12 @@ class BoePublicacionLiveTest {
     private fun entradaReal(): EntradaSumario = EntradaSumario(
         identificador = IDENTIFICADOR,
         control = "2023/3417",
-        titulo = "Resolución de 21 de diciembre de 2023, de la Subsecretaría",
-        fechaPublicacion = "2024-01-02",
-        seccion = SeccionBoeDto.II_A,
-        organismo = "MINISTERIO DE ASUNTOS EXTERIORES, UNIÓN EUROPEA Y COOPERACIÓN",
-        epigrafe = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$IDENTIFICADOR",
+        title = "Resolución de 21 de diciembre de 2023, de la Subsecretaría",
+        publicationDate = "2024-01-02",
+        section = SeccionBoeDto.II_A,
+        issuingBody = "MINISTERIO DE ASUNTOS EXTERIORES, UNIÓN EUROPEA Y COOPERACIÓN",
+        heading = null,
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$IDENTIFICADOR",
         urlXml = "https://www.boe.es/diario_boe/xml.php?id=$IDENTIFICADOR",
         urlPdf = null,
     )

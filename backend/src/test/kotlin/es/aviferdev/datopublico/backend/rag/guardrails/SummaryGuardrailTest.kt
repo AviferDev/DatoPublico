@@ -3,7 +3,7 @@ package es.aviferdev.datopublico.backend.rag.guardrails
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import es.aviferdev.datopublico.validation.CitizenSummaryViolation
 import kotlin.test.Test
@@ -37,7 +37,7 @@ class SummaryGuardrailTest {
     @Test
     fun `a claim outside the context is not publishable`() = runTest {
         val summary = supportedSummary()
-            .copy(queCambia = "Se aumenta el plazo de solicitud. Se reduce el impuesto especial")
+            .copy(whatChanges = "Se aumenta el plazo de solicitud. Se reduce el impuesto especial")
 
         val result = guardrailCon(reachable = true).evaluate(publication(), summary, context())
 
@@ -48,7 +48,7 @@ class SummaryGuardrailTest {
 
     @Test
     fun `an unsupported figure is not publishable`() = runTest {
-        val summary = supportedSummary().copy(cifrasClave = listOf("5000 euros"))
+        val summary = supportedSummary().copy(keyFigures = listOf("5000 euros"))
 
         val result = guardrailCon(reachable = true).evaluate(publication(), summary, context())
 
@@ -59,7 +59,7 @@ class SummaryGuardrailTest {
     @Test
     fun `an unsupported claim at the review threshold is not publishable`() = runTest {
         val summary = supportedSummary().copy(
-            queCambia = "Se aumenta el plazo de solicitud. Se reduce el impuesto especial. A las personas beneficiarias",
+            whatChanges = "Se aumenta el plazo de solicitud. Se reduce el impuesto especial. A las personas beneficiarias",
         )
 
         val result = guardrailCon(reachable = true).evaluate(publication(), summary, context())
@@ -73,7 +73,7 @@ class SummaryGuardrailTest {
     @Test
     fun `an unsupported figure at the review threshold is not publishable`() = runTest {
         val summary = supportedSummary().copy(
-            queCambia = "Se aumenta el plazo de solicitud. Se aumenta el plazo con 5000 euros. A las personas beneficiarias",
+            whatChanges = "Se aumenta el plazo de solicitud. Se aumenta el plazo con 5000 euros. A las personas beneficiarias",
         )
 
         val result = guardrailCon(reachable = true).evaluate(publication(), summary, context())
@@ -112,7 +112,7 @@ class SummaryGuardrailTest {
 
     @Test
     fun `a contract violation is discarded`() = runTest {
-        val summary = supportedSummary().copy(aQuienAfecta = "")
+        val summary = supportedSummary().copy(whoIsAffected = "")
 
         val result = guardrailCon(reachable = true).evaluate(publication(), summary, context())
 
@@ -124,8 +124,8 @@ class SummaryGuardrailTest {
     fun `a low confidence summary goes to review without publishing`() = runTest {
         val summary = supportedSummary()
             .copy(
-                queCambia = "Se aumenta el plazo de solicitud. Se reduce el impuesto especial",
-                cifrasClave = emptyList(),
+                whatChanges = "Se aumenta el plazo de solicitud. Se reduce el impuesto especial",
+                keyFigures = emptyList(),
             )
 
         val result = guardrailCon(reachable = true).evaluate(publication(), summary, context())
@@ -157,7 +157,7 @@ class SummaryGuardrailTest {
 
     @Test
     fun `a publication without category fails fast`() = runTest {
-        val publication = publication().copy(categoria = null)
+        val publication = publication().copy(category = null)
 
         assertFailsWith<IllegalArgumentException> {
             guardrailCon(reachable = true).evaluate(publication, supportedSummary(), context())
@@ -169,24 +169,24 @@ class SummaryGuardrailTest {
 
     private fun publication(): Publicacion = Publicacion(
         id = "BOE-A-2026-1",
-        titulo = "Real Decreto de prueba",
-        fechaPublicacion = "2026-10-10",
-        organismo = "MINISTERIO DE PRUEBA",
-        seccion = SeccionBoeDto.I,
-        epigrafe = "Disposiciones generales",
+        title = "Real Decreto de prueba",
+        publicationDate = "2026-10-10",
+        issuingBody = "MINISTERIO DE PRUEBA",
+        section = SeccionBoeDto.I,
+        heading = "Disposiciones generales",
         texto = CONTEXT_TEXT,
-        urlOficial = URL,
+        officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoriaDto.NORMAS_Y_LEGISLACION,
     )
 
-    private fun supportedSummary(source: String = URL): ResumenDto = ResumenDto(
-        queCambia = "Se aumenta el plazo de solicitud",
-        aQuienAfecta = "A las personas beneficiarias",
-        cifrasClave = listOf("1000 euros"),
-        fuenteOficial = source,
+    private fun supportedSummary(source: String = URL): SummaryDto = SummaryDto(
+        whatChanges = "Se aumenta el plazo de solicitud",
+        whoIsAffected = "A las personas beneficiarias",
+        keyFigures = listOf("1000 euros"),
+        officialSource = source,
     )
 
     private fun context(): List<FragmentEntity> = listOf(

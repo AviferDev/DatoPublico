@@ -39,11 +39,11 @@ class CitizenSummaryGeneratorTest {
         val result = generator.generate(publication(CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO))
 
         val valid = assertIs<CitizenSummaryResult.Valid>(result)
-        assertEquals(url, valid.summary.fuenteOficial)
-        assertTrue(valid.summary.avisoIA)
-        assertNotNull(valid.summary.plazo)
-        assertEquals("2026-11-01", valid.summary.plazo?.fechaLimite)
-        assertEquals("Cambia el plazo", valid.summary.queCambia)
+        assertEquals(url, valid.summary.officialSource)
+        assertTrue(valid.summary.aiNotice)
+        assertNotNull(valid.summary.deadline)
+        assertEquals("2026-11-01", valid.summary.deadline?.deadlineDate)
+        assertEquals("Cambia el plazo", valid.summary.whatChanges)
     }
 
     @Test
@@ -60,7 +60,7 @@ class CitizenSummaryGeneratorTest {
     @Test
     fun `a blank official source is invalid`() = runTest {
         val provider = FakeTextGenerationProvider(JSON_WITHOUT_DEADLINE)
-        val publication = publication(CategoriaDto.NORMAS_Y_LEGISLACION).copy(urlOficial = " ")
+        val publication = publication(CategoriaDto.NORMAS_Y_LEGISLACION).copy(officialUrl = " ")
         val generator = generatorCon(provider, publication)
 
         val result = generator.generate(publication)
@@ -111,7 +111,7 @@ class CitizenSummaryGeneratorTest {
     @Test
     fun `a publication without category fails fast before invoking the provider`() = runTest {
         val provider = FakeTextGenerationProvider(VALID_EMPLOYMENT_JSON)
-        val publication = publication(CategoriaDto.NORMAS_Y_LEGISLACION).copy(categoria = null)
+        val publication = publication(CategoriaDto.NORMAS_Y_LEGISLACION).copy(category = null)
         val generator = generatorCon(provider, publication)
 
         assertFailsWith<IllegalArgumentException> { generator.generate(publication) }
@@ -140,19 +140,19 @@ class CitizenSummaryGeneratorTest {
         )
     }
 
-    private fun publication(categoria: CategoriaDto?): Publicacion = Publicacion(
+    private fun publication(category: CategoriaDto?): Publicacion = Publicacion(
         id = "BOE-A-2026-1",
-        titulo = "Real Decreto de prueba",
-        fechaPublicacion = "2026-10-10",
-        organismo = "MINISTERIO DE PRUEBA",
-        seccion = SeccionBoeDto.I,
-        epigrafe = "Disposiciones generales",
+        title = "Real Decreto de prueba",
+        publicationDate = "2026-10-10",
+        issuingBody = "MINISTERIO DE PRUEBA",
+        section = SeccionBoeDto.I,
+        heading = "Disposiciones generales",
         texto = "texto",
-        urlOficial = url,
+        officialUrl = url,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        categoria = categoria,
+        category = category,
     )
 
     /** Doble de [TextGenerationProvider]: devuelve [responseText]/[usage] y registra la petición. */

@@ -194,17 +194,17 @@ private fun RetrievalGoldenSetDto.toGoldenSet(): RetrievalGoldenSet = RetrievalG
  */
 private fun RetrievalCorpusItemDto.toPublicacion(): Publicacion = Publicacion(
     id = id,
-    titulo = title,
-    fechaPublicacion = date,
-    organismo = organization,
-    seccion = section,
-    epigrafe = null,
+    title = title,
+    publicationDate = date,
+    issuingBody = organization,
+    section = section,
+    heading = null,
     texto = text,
-    urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+    officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
     urlXml = null,
     urlPdf = null,
     rango = null,
-    categoria = category,
+    category = category,
 )
 
 /** Mapea una consulta del DTO a su modelo interno [RetrievalQuery]. */

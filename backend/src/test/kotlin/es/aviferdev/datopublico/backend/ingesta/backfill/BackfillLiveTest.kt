@@ -155,17 +155,17 @@ class BackfillLiveTest {
 
 /** Sumario de prueba: una entrada por fecha. */
 private class LiveSummaryClient : BoeSumarioClient {
-    override suspend fun obtenerSumario(fecha: LocalDate): List<EntradaSumario> =
+    override suspend fun obtenerSumario(date: LocalDate): List<EntradaSumario> =
         listOf(
             EntradaSumario(
-                identificador = "FT00011-LIVE-$fecha",
+                identificador = "FT00011-LIVE-$date",
                 control = null,
-                titulo = "Publicación de prueba $fecha",
-                fechaPublicacion = fecha.toString(),
-                seccion = SeccionBoeDto.I,
-                organismo = "MINISTERIO DE PRUEBA",
-                epigrafe = null,
-                urlOficial = "https://www.boe.es/diario_boe/txt.php?id=FT00011-LIVE-$fecha",
+                title = "Publicación de prueba $date",
+                publicationDate = date.toString(),
+                section = SeccionBoeDto.I,
+                issuingBody = "MINISTERIO DE PRUEBA",
+                heading = null,
+                officialUrl = "https://www.boe.es/diario_boe/txt.php?id=FT00011-LIVE-$date",
                 urlXml = null,
                 urlPdf = null,
             )
@@ -176,13 +176,13 @@ private class LiveSummaryClient : BoeSumarioClient {
 private class LiveParser : BoePublicacionParser {
     override suspend fun parsear(entrada: EntradaSumario): Publicacion = Publicacion(
         id = entrada.identificador,
-        titulo = entrada.titulo,
-        fechaPublicacion = entrada.fechaPublicacion,
-        organismo = entrada.organismo,
-        seccion = entrada.seccion,
-        epigrafe = entrada.epigrafe,
+        title = entrada.title,
+        publicationDate = entrada.publicationDate,
+        issuingBody = entrada.issuingBody,
+        section = entrada.section,
+        heading = entrada.heading,
         texto = "texto de prueba de ${entrada.identificador}",
-        urlOficial = entrada.urlOficial,
+        officialUrl = entrada.officialUrl,
         urlXml = entrada.urlXml,
         urlPdf = entrada.urlPdf,
         rango = null,

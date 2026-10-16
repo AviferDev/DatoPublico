@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Resumen ciudadano estructurado de una [PublicacionDto].
+ * Resumen ciudadano estructurado de una [PublicationDto].
  *
  * Modela las secciones «¿Qué cambia?», «¿A quién afecta?» y «Cifras clave», más la
  * fuente oficial y el aviso de IA. La obligatoriedad y validación de
@@ -15,17 +15,17 @@ import kotlinx.serialization.Serializable
  * con la clave JSON (regla MUST de `CONSTRAINTS.md` §«Serialización»).
  */
 @Serializable
-data class ResumenDto(
+data class SummaryDto(
     @SerialName("queCambia")
-    val queCambia: String,
+    val whatChanges: String,
     @SerialName("aQuienAfecta")
-    val aQuienAfecta: String,
+    val whoIsAffected: String,
     @SerialName("cifrasClave")
-    val cifrasClave: List<String> = emptyList(),
+    val keyFigures: List<String> = emptyList(),
     @SerialName("fuenteOficial")
-    val fuenteOficial: String,
+    val officialSource: String,
     @SerialName("avisoIA")
-    val avisoIA: Boolean = true,
+    val aiNotice: Boolean = true,
     @SerialName("plazo")
-    val plazo: PlazoDto? = null,
+    val deadline: DeadlineDto? = null,
 )

@@ -25,7 +25,7 @@ object OfficialSourceValidator {
     /**
      * Comprueba que [source] es una fuente oficial válida de [expected].
      *
-     * @param source fuente declarada por el resumen (`ResumenDto.fuenteOficial`).
+     * @param source fuente declarada por el resumen (`SummaryDto.fuenteOficial`).
      * @param expected URL oficial de la publicación (`Publicacion.urlOficial`).
      * @return `true` solo si [source] recortada empieza por `https://`, su host es
      *   del BOE y es exactamente igual a [expected].

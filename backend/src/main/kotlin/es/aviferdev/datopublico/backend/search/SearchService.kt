@@ -6,7 +6,7 @@ import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PublicacionDto
+import es.aviferdev.datopublico.model.PublicationDto
 import es.aviferdev.datopublico.model.SearchResultsDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
  * lista **top-k** de publicaciones deduplicadas y ordenadas por relevancia.
  *
  * La unidad de resultado es la **publicación** (no el fragmento): cada resultado es
- * el **mismo** `PublicacionDto` del feed, con su resumen `publicado`, su categoría
+ * el **mismo** `PublicationDto` del feed, con su resumen `publicado`, su categoría
  * y su enlace oficial (trazabilidad; ADR 0021/0022). **Nunca** se sirve una
  * publicación sin resumen publicado: el filtro `estado = 'publicado'` vive en el
  * repositorio.
@@ -87,7 +87,7 @@ class SearchService(
      * descarta las que el repositorio no devolvió (resumen no publicado o
      * categoría nula) reutilizando el mapeo puro `FeedDtoMapper`.
      */
-    private fun orderedResults(items: List<FeedItem>, rankedIds: List<String>): List<PublicacionDto> {
+    private fun orderedResults(items: List<FeedItem>, rankedIds: List<String>): List<PublicationDto> {
         val itemsById = items.associateBy { item -> item.publication.id }
         return rankedIds.mapNotNull { id ->
             itemsById[id]?.let { item -> FeedDtoMapper.toPublicacionDto(item.publication, item.summary) }

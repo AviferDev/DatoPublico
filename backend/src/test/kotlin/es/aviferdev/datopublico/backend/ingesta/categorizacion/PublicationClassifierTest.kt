@@ -24,43 +24,43 @@ class PublicationClassifierTest {
     private val classifier = PublicationClassifier()
 
     @Test
-    fun `clasifica la muestra real de las ocho secciones por su categoria esperada`() {
+    fun `clasifica la muestra real de las ocho secciones por su category esperada`() {
         val entradas = entradasDelSumario()
 
         EXPECTED_CATEGORIES.forEach { (identificador, category) ->
             val entrada = assertNotNull(entradas[identificador], "sin entrada de sumario para $identificador")
-            val actual = classifier.classify(entrada.seccion, entrada.epigrafe, entrada.titulo)
-            assertEquals(category, actual, "$identificador (sección ${entrada.seccion})")
+            val actual = classifier.classify(entrada.section, entrada.heading, entrada.title)
+            assertEquals(category, actual, "$identificador (sección ${entrada.section})")
         }
     }
 
     @Test
-    fun `conserva el epigrafe real del sumario sin mutarlo`() {
+    fun `conserva el heading real del sumario sin mutarlo`() {
         val entradas = entradasDelSumario()
 
         EXPECTED_HEADINGS.forEach { (identificador, heading) ->
             val entrada = assertNotNull(entradas[identificador], "sin entrada de sumario para $identificador")
-            assertEquals(heading, entrada.epigrafe, "$identificador: epígrafe conservado")
+            assertEquals(heading, entrada.heading, "$identificador: epígrafe conservado")
         }
     }
 
     @Test
-    fun `las entradas reales sin epigrafe caen en la categoria por defecto de su seccion`() {
+    fun `las entradas reales sin heading caen en la category por defecto de su section`() {
         val entradas = entradasDelSumario()
 
         listOf("BOE-B-2024-1", "BOE-B-2024-92").forEach { identificador ->
             val entrada = assertNotNull(entradas[identificador], "sin entrada de sumario para $identificador")
-            assertNull(entrada.epigrafe, "$identificador: sin epígrafe")
+            assertNull(entrada.heading, "$identificador: sin epígrafe")
             assertEquals(
                 CategoriaDto.OTRAS_DISPOSICIONES_Y_ANUNCIOS,
-                classifier.classify(entrada.seccion, entrada.epigrafe, entrada.titulo),
+                classifier.classify(entrada.section, entrada.heading, entrada.title),
                 "$identificador",
             )
         }
     }
 
     @Test
-    fun `los casos ambiguos sin palabras clave usan la categoria por defecto de la seccion`() {
+    fun `los casos ambiguos sin palabras clave usan la category por defecto de la section`() {
         SeccionBoeDto.entries.forEach { section ->
             val actual = classifier.classify(section, null, "Anuncio sin palabras clave reconocibles")
             assertEquals(DEFAULTS_POR_SECCION[section], actual, "sección $section")
@@ -79,8 +79,8 @@ class PublicationClassifierTest {
     fun `es determinista para la misma entrada`() {
         val entrada = assertNotNull(entradasDelSumario()["BOE-A-2024-93"], "sin entrada de la convocatoria")
 
-        val primera = classifier.classify(entrada.seccion, entrada.epigrafe, entrada.titulo)
-        val segunda = classifier.classify(entrada.seccion, entrada.epigrafe, entrada.titulo)
+        val primera = classifier.classify(entrada.section, entrada.heading, entrada.title)
+        val segunda = classifier.classify(entrada.section, entrada.heading, entrada.title)
 
         assertEquals(primera, segunda)
     }
@@ -90,8 +90,8 @@ class PublicationClassifierTest {
             "sumario-20261009.json" to LocalDate.of(2026, 10, 9),
             "sumario-20240102.json" to LocalDate.of(2024, 1, 2),
         )
-            .flatMap { (nombre, fecha) ->
-                DatoPublicoJson.decodeFromString<BoeSumarioResponseDto>(recurso(nombre)).toEntradasSumario(fecha)
+            .flatMap { (nombre, date) ->
+                DatoPublicoJson.decodeFromString<BoeSumarioResponseDto>(recurso(nombre)).toEntradasSumario(date)
             }
             .associateBy { it.identificador }
 

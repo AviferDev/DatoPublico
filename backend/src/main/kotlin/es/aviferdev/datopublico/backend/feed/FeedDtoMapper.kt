@@ -6,8 +6,8 @@ import es.aviferdev.datopublico.backend.relevance.Highlight
 import es.aviferdev.datopublico.backend.relevance.HighlightReason
 import es.aviferdev.datopublico.model.HighlightDto
 import es.aviferdev.datopublico.model.HighlightReasonDto
-import es.aviferdev.datopublico.model.PublicacionDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.PublicationDto
+import es.aviferdev.datopublico.model.SummaryDto
 
 /**
  * Mapeo **puro** (sin red, base de datos ni Ktor) del dominio al contrato de
@@ -17,8 +17,8 @@ import es.aviferdev.datopublico.model.ResumenDto
  * repositorios. Es reutilizable por `api-detalle-norma` (FT00027) para el mapeo de
  * la publicación.
  *
- * **Trazabilidad**: la [PublicacionDto.urlOficial] y la
- * [ResumenDto.fuenteOficial] siempre viajan; el `avisoIA` viaja tal cual lo
+ * **Trazabilidad**: la [PublicationDto.urlOficial] y la
+ * [SummaryDto.fuenteOficial] siempre viajan; el `avisoIA` viaja tal cual lo
  * persistió la disposición (el aviso **visible** es FT00033).
  */
 object FeedDtoMapper {
@@ -29,35 +29,35 @@ object FeedDtoMapper {
      * @throws IllegalArgumentException si [publication] no tiene categoría
      *   (dato corrupto: el repositorio ya lo excluye; aquí es fail-fast).
      */
-    fun toPublicacionDto(publication: Publicacion, summary: SummaryEntity): PublicacionDto =
-        PublicacionDto(
+    fun toPublicacionDto(publication: Publicacion, summary: SummaryEntity): PublicationDto =
+        PublicationDto(
             id = publication.id,
-            titulo = publication.titulo,
-            fechaPublicacion = publication.fechaPublicacion,
-            organismo = publication.organismo,
-            seccion = publication.seccion,
-            epigrafe = publication.epigrafe,
-            categoria = requireNotNull(publication.categoria) {
+            title = publication.title,
+            publicationDate = publication.publicationDate,
+            issuingBody = publication.issuingBody,
+            section = publication.section,
+            heading = publication.heading,
+            category = requireNotNull(publication.category) {
                 "La publicación ${publication.id} no tiene categoría (dato corrupto)."
             },
-            urlOficial = publication.urlOficial,
-            resumen = toResumenDto(summary),
-            plazo = publication.plazo,
+            officialUrl = publication.officialUrl,
+            summary = toResumenDto(summary),
+            deadline = publication.deadline,
         )
 
     /**
      * Proyecta el resumen persistido al DTO ciudadano.
      *
      * `plazo` queda `null`: la tabla `resumen` no guarda plazo; el plazo fiable
-     * viaja en [PublicacionDto.plazo].
+     * viaja en [PublicationDto.plazo].
      */
-    fun toResumenDto(summary: SummaryEntity): ResumenDto = ResumenDto(
-        queCambia = summary.whatChanges,
-        aQuienAfecta = summary.whomItAffects,
-        cifrasClave = summary.keyFigures,
-        fuenteOficial = summary.officialSource,
-        avisoIA = summary.aiNotice,
-        plazo = null,
+    fun toResumenDto(summary: SummaryEntity): SummaryDto = SummaryDto(
+        whatChanges = summary.whatChanges,
+        whoIsAffected = summary.whomItAffects,
+        keyFigures = summary.keyFigures,
+        officialSource = summary.officialSource,
+        aiNotice = summary.aiNotice,
+        deadline = null,
     )
 
     /**

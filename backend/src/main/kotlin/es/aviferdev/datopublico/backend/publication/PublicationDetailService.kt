@@ -4,7 +4,7 @@ import es.aviferdev.datopublico.backend.feed.FeedDtoMapper
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryRepository
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
-import es.aviferdev.datopublico.model.PublicacionDto
+import es.aviferdev.datopublico.model.PublicationDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -14,7 +14,7 @@ import kotlinx.coroutines.withContext
  *
  * Compone los repositorios de lectura ya existentes ([PublicationRepository] y
  * [SummaryRepository]) y **reutiliza** el mapeo puro [FeedDtoMapper] de FT00026:
- * el detalle devuelve el **mismo** `PublicacionDto` que el feed. **Solo** se sirve
+ * el detalle devuelve el **mismo** `PublicationDto` que el feed. **Solo** se sirve
  * una publicación cuyo resumen está `publicado` (token [SummaryState.PUBLISHED]
  * que escribe FT00023); en cualquier otro caso el detalle es `null` (⇒ `404`).
  *
@@ -39,12 +39,12 @@ class PublicationDetailService(
      * resumen `estado = "publicado"`; en caso contrario mapea con [FeedDtoMapper].
      *
      * @param id identificador oficial del BOE (`BOE-A-2026-20979`).
-     * @return el [PublicacionDto] completo, o `null` (la ruta responde `404`).
+     * @return el [PublicationDto] completo, o `null` (la ruta responde `404`).
      */
-    suspend fun detail(id: String): PublicacionDto? = withContext(Dispatchers.IO) {
+    suspend fun detail(id: String): PublicationDto? = withContext(Dispatchers.IO) {
         val publication = publicationRepository.findById(id)
         val summary = summaryRepository.findByPublication(id)
-        val servable = publication?.takeIf { item -> item.categoria != null }
+        val servable = publication?.takeIf { item -> item.category != null }
         val published = summary?.takeIf { item -> item.status == SummaryState.PUBLISHED.persistedValue }
         if (servable == null || published == null) {
             null

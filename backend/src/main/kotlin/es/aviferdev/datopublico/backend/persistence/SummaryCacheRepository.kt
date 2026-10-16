@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.persistence
 
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -11,7 +11,7 @@ import javax.sql.DataSource
  * FT00021).
  *
  * Es una tabla **propia y separada** de `resumen` (que guarda el resumen
- * publicado): aquí se cachea el `ResumenDto` serializado por
+ * publicado): aquí se cachea el `SummaryDto` serializado por
  * `publicationId + modelo + versión del prompt`. La escritura es un *upsert*
  * idempotente por `cache_key`; la lectura devuelve el resumen cacheado o `null`.
  */
@@ -36,7 +36,7 @@ interface SummaryCacheRepository {
 /**
  * Fila de la tabla `resumen_cache`.
  *
- * [summary] es el contrato [ResumenDto] completo; se guarda serializado a JSON en
+ * [summary] es el contrato [SummaryDto] completo; se guarda serializado a JSON en
  * la columna `resumen` (ver [encodeSummaryCache]/[decodeSummaryCache]).
  */
 data class SummaryCacheEntity(
@@ -44,7 +44,7 @@ data class SummaryCacheEntity(
     val publicationId: String,
     val model: String,
     val promptVersion: String,
-    val summary: ResumenDto,
+    val summary: SummaryDto,
 )
 
 /**
@@ -53,17 +53,17 @@ data class SummaryCacheEntity(
  * Reutiliza [DatoPublicoJson] (misma configuración que el resto del proyecto) y
  * no toca red ni BD.
  */
-internal fun encodeSummaryCache(summary: ResumenDto): String =
-    DatoPublicoJson.encodeToString(ResumenDto.serializer(), summary)
+internal fun encodeSummaryCache(summary: SummaryDto): String =
+    DatoPublicoJson.encodeToString(SummaryDto.serializer(), summary)
 
 /**
- * Deserializa el JSON de la columna `resumen` al contrato [ResumenDto].
+ * Deserializa el JSON de la columna `resumen` al contrato [SummaryDto].
  *
  * @throws kotlinx.serialization.SerializationException si el JSON no es un
- *   `ResumenDto` válido (dato corrupto: fail-fast).
+ *   `SummaryDto` válido (dato corrupto: fail-fast).
  */
-internal fun decodeSummaryCache(json: String): ResumenDto =
-    DatoPublicoJson.decodeFromString(ResumenDto.serializer(), json)
+internal fun decodeSummaryCache(json: String): SummaryDto =
+    DatoPublicoJson.decodeFromString(SummaryDto.serializer(), json)
 
 /** Lee la fila actual del [ResultSet] como [SummaryCacheEntity]. */
 internal fun ResultSet.toSummaryCacheEntity(): SummaryCacheEntity = SummaryCacheEntity(

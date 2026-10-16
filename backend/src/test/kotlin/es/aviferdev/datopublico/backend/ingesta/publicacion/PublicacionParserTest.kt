@@ -20,31 +20,31 @@ class PublicacionParserTest {
     private val parser = PublicacionParser()
 
     @Test
-    fun `mapea una entrada del sumario y usa la categoria por defecto de la seccion`() {
+    fun `mapea una entrada del sumario y usa la category por defecto de la section`() {
         val publicacion = parser.parsear(entrada(), documento())
 
         assertEquals("BOE-A-1", publicacion.id)
-        assertEquals("Título de prueba", publicacion.titulo)
-        assertEquals("2026-10-09", publicacion.fechaPublicacion)
-        assertEquals(SeccionBoeDto.I, publicacion.seccion)
-        assertEquals("Epígrafe", publicacion.epigrafe)
+        assertEquals("Título de prueba", publicacion.title)
+        assertEquals("2026-10-09", publicacion.publicationDate)
+        assertEquals(SeccionBoeDto.I, publicacion.section)
+        assertEquals("Epígrafe", publicacion.heading)
         assertEquals("Texto oficial completo.", publicacion.texto)
-        assertEquals("https://www.boe.es/diario_boe/txt.php?id=BOE-A-1", publicacion.urlOficial)
+        assertEquals("https://www.boe.es/diario_boe/txt.php?id=BOE-A-1", publicacion.officialUrl)
         assertEquals(URL_XML, publicacion.urlXml)
         assertEquals("Real Decreto", publicacion.rango)
-        assertEquals(CategoriaDto.NORMAS_Y_LEGISLACION, publicacion.categoria)
-        assertNull(publicacion.plazo, "El texto de prueba no es una convocatoria con plazo")
+        assertEquals(CategoriaDto.NORMAS_Y_LEGISLACION, publicacion.category)
+        assertNull(publicacion.deadline, "El texto de prueba no es una convocatoria con plazo")
     }
 
     @Test
-    fun `clasifica por el epigrafe y extrae el plazo del texto de la convocatoria`() {
+    fun `clasifica por el heading y extrae el deadline del texto de la convocatoria`() {
         val publicacion = parser.parsear(
-            entrada(epigrafe = "Subvenciones", fechaPublicacion = "2024-01-02"),
+            entrada(heading = "Subvenciones", publicationDate = "2024-01-02"),
             documento(texto = TEXTO_CONVOCATORIA_CON_PLAZO),
         )
 
-        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, publicacion.categoria)
-        assertEquals("2024-01-23", publicacion.plazo?.fechaLimite)
+        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, publicacion.category)
+        assertEquals("2024-01-23", publicacion.deadline?.deadlineDate)
     }
 
     @Test
@@ -53,45 +53,45 @@ class PublicacionParserTest {
 
         assertNull(publicacion.texto)
         assertNull(publicacion.rango)
-        assertNull(publicacion.plazo)
+        assertNull(publicacion.deadline)
         assertEquals("BOE-A-1", publicacion.id)
-        assertTrue(publicacion.urlOficial.isNotBlank())
-        assertEquals("MINISTERIO DEL SUMARIO", publicacion.organismo)
+        assertTrue(publicacion.officialUrl.isNotBlank())
+        assertEquals("MINISTERIO DEL SUMARIO", publicacion.issuingBody)
     }
 
     @Test
-    fun `prioriza el organismo y el pdf del sumario frente a los del xml`() {
+    fun `prioriza el issuingBody y el pdf del sumario frente a los del xml`() {
         val publicacion = parser.parsear(entrada(), documento())
 
-        assertEquals("MINISTERIO DEL SUMARIO", publicacion.organismo)
+        assertEquals("MINISTERIO DEL SUMARIO", publicacion.issuingBody)
         assertEquals(URL_PDF_SUMARIO, publicacion.urlPdf)
     }
 
     @Test
-    fun `completa organismo y pdf desde el xml si el sumario no los trae`() {
+    fun `completa issuingBody y pdf desde el xml si el sumario no los trae`() {
         val publicacion = parser.parsear(
-            entrada(organismo = null, urlPdf = null),
+            entrada(issuingBody = null, urlPdf = null),
             documento(),
         )
 
-        assertEquals("MINISTERIO DEL XML", publicacion.organismo)
+        assertEquals("MINISTERIO DEL XML", publicacion.issuingBody)
         assertEquals(URL_PDF_XML, publicacion.urlPdf)
     }
 
     private fun entrada(
-        organismo: String? = "MINISTERIO DEL SUMARIO",
+        issuingBody: String? = "MINISTERIO DEL SUMARIO",
         urlPdf: String? = URL_PDF_SUMARIO,
-        epigrafe: String? = "Epígrafe",
-        fechaPublicacion: String = "2026-10-09",
+        heading: String? = "Epígrafe",
+        publicationDate: String = "2026-10-09",
     ): EntradaSumario = EntradaSumario(
         identificador = "BOE-A-1",
         control = "2026/1",
-        titulo = "Título de prueba",
-        fechaPublicacion = fechaPublicacion,
-        seccion = SeccionBoeDto.I,
-        organismo = organismo,
-        epigrafe = epigrafe,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",
+        title = "Título de prueba",
+        publicationDate = publicationDate,
+        section = SeccionBoeDto.I,
+        issuingBody = issuingBody,
+        heading = heading,
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",
         urlXml = URL_XML,
         urlPdf = urlPdf,
     )

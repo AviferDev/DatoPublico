@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.rag.summary
 
 import es.aviferdev.datopublico.backend.rag.generation.TokenUsage
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.validation.CitizenSummaryViolation
 
 /**
@@ -21,7 +21,7 @@ sealed interface CitizenSummaryResult {
      * @property usage consumo de tokens del proveedor, si lo aportó (FT00021);
      *   `null` cuando el proveedor no devolvió bloque `usage`.
      */
-    data class Valid(val summary: ResumenDto, val usage: TokenUsage? = null) : CitizenSummaryResult
+    data class Valid(val summary: SummaryDto, val usage: TokenUsage? = null) : CitizenSummaryResult
 
     /**
      * Resumen que **no** cumple el contrato y no debe publicarse.

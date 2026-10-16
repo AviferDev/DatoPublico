@@ -28,7 +28,7 @@ import kotlinx.coroutines.test.runTest
  */
 class BoeSumarioClientTest {
 
-    private val fecha = LocalDate.of(2026, 10, 9)
+    private val date = LocalDate.of(2026, 10, 9)
 
     @Test
     fun `pide GET YYYYMMDD con Accept application json e incluye todas las secciones`() = runTest {
@@ -43,7 +43,7 @@ class BoeSumarioClientTest {
         })
 
         val entradas = BoeSumarioHttpClient(client, baseUrl = "https://www.boe.es/datosabiertos/api")
-            .obtenerSumario(fecha)
+            .obtenerSumario(date)
 
         val request = checkNotNull(capturada)
         assertEquals(HttpMethod.Get, request.method)
@@ -62,7 +62,7 @@ class BoeSumarioClientTest {
                 SeccionBoeDto.V_A,
                 SeccionBoeDto.V_B,
             ),
-            entradas.map { it.seccion }.toSet(),
+            entradas.map { it.section }.toSet(),
         )
         assertTrue(entradas.any { it.identificador == "BOE-B-2026-32742" }) // Sección V.A (32 en la fuente)
     }
@@ -72,21 +72,21 @@ class BoeSumarioClientTest {
         val entrada = EntradaSumario(
             identificador = "BOE-A-1",
             control = "2026/1",
-            titulo = "T",
-            fechaPublicacion = "2026-10-09",
-            seccion = SeccionBoeDto.I,
-            organismo = "MINISTERIO X",
-            epigrafe = "Epi",
-            urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",
+            title = "T",
+            publicationDate = "2026-10-09",
+            section = SeccionBoeDto.I,
+            issuingBody = "MINISTERIO X",
+            heading = "Epi",
+            officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",
             urlXml = "https://www.boe.es/diario_boe/xml.php?id=BOE-A-1",
             urlPdf = "https://www.boe.es/boe/dias/2026/10/09/pdfs/BOE-A-1.pdf",
         )
 
         val conObjeto = clientCon(engineDeTexto(SUMARIO_ITEM_OBJETO)).let {
-            BoeSumarioHttpClient(it).obtenerSumario(fecha)
+            BoeSumarioHttpClient(it).obtenerSumario(date)
         }
         val conArray = clientCon(engineDeTexto(SUMARIO_ITEM_ARRAY)).let {
-            BoeSumarioHttpClient(it).obtenerSumario(fecha)
+            BoeSumarioHttpClient(it).obtenerSumario(date)
         }
 
         assertEquals(listOf(entrada), conObjeto)
@@ -97,7 +97,7 @@ class BoeSumarioClientTest {
     fun `un 404 devuelve lista vacia`() = runTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.NotFound, "<error>No hay BOE</error>") })
 
-        val entradas = BoeSumarioHttpClient(client).obtenerSumario(fecha)
+        val entradas = BoeSumarioHttpClient(client).obtenerSumario(date)
 
         assertTrue(entradas.isEmpty())
     }
@@ -107,7 +107,7 @@ class BoeSumarioClientTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.InternalServerError, "boom") })
 
         val error = assertFailsWith<BoeSumarioException> {
-            BoeSumarioHttpClient(client).obtenerSumario(fecha)
+            BoeSumarioHttpClient(client).obtenerSumario(date)
         }
 
         assertTrue(error.message!!.contains("500"), error.message!!)
@@ -119,7 +119,7 @@ class BoeSumarioClientTest {
         val client = clientCon(MockEngine { throw IOException("sin conexión") })
 
         val error = assertFailsWith<BoeSumarioException> {
-            BoeSumarioHttpClient(client).obtenerSumario(fecha)
+            BoeSumarioHttpClient(client).obtenerSumario(date)
         }
 
         assertTrue(error.message!!.contains("2026-10-09"), error.message!!)

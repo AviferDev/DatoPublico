@@ -4,7 +4,7 @@ import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import java.io.File
 import javax.sql.DataSource
@@ -50,27 +50,27 @@ class SummaryCachePersistenceLiveTest {
         }
     }
 
-    /** Escenario: guardar y leer la caché devuelve el mismo `ResumenDto`. */
+    /** Escenario: guardar y leer la caché devuelve el mismo `SummaryDto`. */
     private fun checkCacheRoundTrip(dataSource: DataSource) {
         val repository = SummaryCacheRepositoryJdbc(dataSource)
-        repository.put(cacheEntity(queCambia = "Resumen cacheado"))
+        repository.put(cacheEntity(whatChanges = "Resumen cacheado"))
 
         val retrieved = repository.find(CACHE_KEY)
 
         assertEquals(CACHE_KEY, retrieved?.cacheKey)
         assertEquals(PUBLICATION_ID, retrieved?.publicationId)
-        assertEquals(summary(queCambia = "Resumen cacheado"), retrieved?.summary)
+        assertEquals(summary(whatChanges = "Resumen cacheado"), retrieved?.summary)
         println("SummaryCachePersistenceLiveTest: cache round-trip OK (cacheKey=$CACHE_KEY)")
     }
 
     /** Escenario: reescribir la misma clave actualiza y **no** duplica la fila. */
     private fun checkCacheUpsertIsIdempotent(dataSource: DataSource) {
         val repository = SummaryCacheRepositoryJdbc(dataSource)
-        repository.put(cacheEntity(queCambia = "Resumen actualizado"))
+        repository.put(cacheEntity(whatChanges = "Resumen actualizado"))
 
         val retrieved = repository.find(CACHE_KEY)
 
-        assertEquals(summary(queCambia = "Resumen actualizado"), retrieved?.summary)
+        assertEquals(summary(whatChanges = "Resumen actualizado"), retrieved?.summary)
         assertEquals(1L, dataSource.cacheRowCount(CACHE_KEY))
         println("SummaryCachePersistenceLiveTest: upsert idempotente OK (filas=1)")
     }
@@ -89,20 +89,20 @@ class SummaryCachePersistenceLiveTest {
         println("SummaryCachePersistenceLiveTest: uso OK (registros=${records.size}, delta=${repository.totalTokens() - before})")
     }
 
-    private fun cacheEntity(queCambia: String): SummaryCacheEntity = SummaryCacheEntity(
+    private fun cacheEntity(whatChanges: String): SummaryCacheEntity = SummaryCacheEntity(
         cacheKey = CACHE_KEY,
         publicationId = PUBLICATION_ID,
         model = MODEL,
         promptVersion = PROMPT_VERSION,
-        summary = summary(queCambia),
+        summary = summary(whatChanges),
     )
 
-    private fun summary(queCambia: String): ResumenDto = ResumenDto(
-        queCambia = queCambia,
-        aQuienAfecta = "A la ciudadanía",
-        cifrasClave = listOf("30 días"),
-        fuenteOficial = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",
-        avisoIA = true,
+    private fun summary(whatChanges: String): SummaryDto = SummaryDto(
+        whatChanges = whatChanges,
+        whoIsAffected = "A la ciudadanía",
+        keyFigures = listOf("30 días"),
+        officialSource = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",
+        aiNotice = true,
     )
 
     private fun usageEntity(
@@ -122,17 +122,17 @@ class SummaryCachePersistenceLiveTest {
 
     private fun publication(): Publicacion = Publicacion(
         id = PUBLICATION_ID,
-        titulo = "Resolución de prueba de caché de resumen",
-        fechaPublicacion = DATE,
-        organismo = null,
-        seccion = SeccionBoeDto.II_A,
-        epigrafe = null,
+        title = "Resolución de prueba de caché de resumen",
+        publicationDate = DATE,
+        issuingBody = null,
+        section = SeccionBoeDto.II_A,
+        heading = null,
         texto = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        categoria = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
     )
 
     /** Borra la publicación (cascada limpia la caché) y el log de uso (sin FK). */

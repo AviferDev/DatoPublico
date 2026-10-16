@@ -45,8 +45,8 @@ class SearchRouteTest {
         val results = DatoPublicoJson.decodeFromString<SearchResultsDto>(response.bodyAsText())
         assertEquals("becas", results.query)
         assertEquals(listOf("BOE-A-1"), results.results.map { publication -> publication.id })
-        assertTrue(results.results.first().resumen != null)
-        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, results.results.first().categoria)
+        assertTrue(results.results.first().summary != null)
+        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, results.results.first().category)
     }
 
     @Test
@@ -121,17 +121,17 @@ class SearchRouteTest {
     private fun item(id: String): FeedItem = FeedItem(
         publication = Publicacion(
             id = id,
-            titulo = "Publicación $id",
-            fechaPublicacion = DATE,
-            organismo = "Ministerio de prueba",
-            seccion = SeccionBoeDto.I,
-            epigrafe = null,
+            title = "Publicación $id",
+            publicationDate = DATE,
+            issuingBody = "Ministerio de prueba",
+            section = SeccionBoeDto.I,
+            heading = null,
             texto = null,
-            urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+            officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
             urlXml = null,
             urlPdf = null,
             rango = null,
-            categoria = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+            category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
         ),
         summary = SummaryEntity(
             publicationId = id,

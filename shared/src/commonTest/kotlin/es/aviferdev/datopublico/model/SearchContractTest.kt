@@ -14,21 +14,21 @@ import kotlin.test.assertTrue
  */
 class SearchContractTest {
 
-    private val publication = PublicacionDto(
+    private val publication = PublicationDto(
         id = "BOE-A-2026-1",
-        titulo = "Real Decreto de prueba",
-        fechaPublicacion = "2026-10-11",
-        organismo = "Ministerio de la Presidencia",
-        seccion = SeccionBoeDto.I,
-        epigrafe = "Disposiciones generales",
-        categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
-        resumen = ResumenDto(
-            queCambia = "Cambia algo",
-            aQuienAfecta = "A la ciudadanía",
-            fuenteOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
+        title = "Real Decreto de prueba",
+        publicationDate = "2026-10-11",
+        issuingBody = "Ministerio de la Presidencia",
+        section = SeccionBoeDto.I,
+        heading = "Disposiciones generales",
+        category = CategoriaDto.NORMAS_Y_LEGISLACION,
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
+        summary = SummaryDto(
+            whatChanges = "Cambia algo",
+            whoIsAffected = "A la ciudadanía",
+            officialSource = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
         ),
-        plazo = PlazoDto(fechaLimite = "2026-10-30"),
+        deadline = DeadlineDto(deadlineDate = "2026-10-30"),
     )
 
     @Test

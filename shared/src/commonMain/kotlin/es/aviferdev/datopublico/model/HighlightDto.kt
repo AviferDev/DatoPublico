@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Publicación **destacada** del día dentro del feed diario ([ResumenDiarioDto]).
+ * Publicación **destacada** del día dentro del feed diario ([DailySummaryDto]).
  *
  * Lleva la [publication] completa (con su resumen, categoría, enlace oficial y
  * plazo) y los [reasons] objetivos que justifican el destacado. **No** se expone
@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class HighlightDto(
     @SerialName("publicacion")
-    val publication: PublicacionDto,
+    val publication: PublicationDto,
     @SerialName("motivos")
     val reasons: List<HighlightReasonDto>,
 )

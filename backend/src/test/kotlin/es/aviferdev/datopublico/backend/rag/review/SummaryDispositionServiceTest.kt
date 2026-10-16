@@ -9,7 +9,7 @@ import es.aviferdev.datopublico.backend.rag.guardrails.GuardrailDecision
 import es.aviferdev.datopublico.backend.rag.guardrails.SummaryGuardrailResult
 import es.aviferdev.datopublico.backend.rag.guardrails.SummaryGuardrailViolation
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -99,7 +99,7 @@ class SummaryDispositionServiceTest {
         assertFailsWith<IllegalArgumentException> {
             service.dispose(
                 publication(),
-                summary().copy(avisoIA = false),
+                summary().copy(aiNotice = false),
                 result(GuardrailDecision.PUBLISHABLE, groundingScore = 0.95),
             )
         }
@@ -119,25 +119,25 @@ class SummaryDispositionServiceTest {
 
     private fun publication(): Publicacion = Publicacion(
         id = PUBLICATION_ID,
-        titulo = "Real Decreto de prueba",
-        fechaPublicacion = DATE,
-        organismo = "MINISTERIO DE PRUEBA",
-        seccion = SeccionBoeDto.I,
-        epigrafe = "Disposiciones generales",
+        title = "Real Decreto de prueba",
+        publicationDate = DATE,
+        issuingBody = "MINISTERIO DE PRUEBA",
+        section = SeccionBoeDto.I,
+        heading = "Disposiciones generales",
         texto = null,
-        urlOficial = URL,
+        officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoriaDto.NORMAS_Y_LEGISLACION,
     )
 
-    private fun summary(): ResumenDto = ResumenDto(
-        queCambia = "Se aumenta el plazo de solicitud",
-        aQuienAfecta = "A las personas beneficiarias",
-        cifrasClave = listOf("1000 euros"),
-        fuenteOficial = URL,
-        avisoIA = true,
+    private fun summary(): SummaryDto = SummaryDto(
+        whatChanges = "Se aumenta el plazo de solicitud",
+        whoIsAffected = "A las personas beneficiarias",
+        keyFigures = listOf("1000 euros"),
+        officialSource = URL,
+        aiNotice = true,
     )
 
     /** Doble en memoria de [SummaryRepository] con `id` autoincremental por publicación. */

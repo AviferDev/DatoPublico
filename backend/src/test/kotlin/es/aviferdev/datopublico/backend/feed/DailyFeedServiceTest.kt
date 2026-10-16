@@ -5,7 +5,7 @@ import es.aviferdev.datopublico.backend.persistence.FeedItem
 import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PlazoDto
+import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -24,7 +24,7 @@ class DailyFeedServiceTest {
 
     private val published = listOf(
         item("BOE-A-3", section = SeccionBoeDto.II_A),
-        item("BOE-A-1", section = SeccionBoeDto.I, rank = "Ley", deadline = PlazoDto("2026-10-30")),
+        item("BOE-A-1", section = SeccionBoeDto.I, rank = "Ley", deadline = DeadlineDto("2026-10-30")),
         item("BOE-A-2", section = SeccionBoeDto.II_B),
     )
 
@@ -32,18 +32,18 @@ class DailyFeedServiceTest {
     fun `a day with published summaries returns a paginated feed with highlights`() = runTest {
         val feed = service(published).feed(DATE)
 
-        assertEquals(DATE, feed.fecha)
+        assertEquals(DATE, feed.date)
         assertEquals(1, feed.page)
         assertEquals(DailyFeedService.DEFAULT_PAGE_SIZE, feed.pageSize)
         assertEquals(3, feed.total)
         assertEquals(1, feed.totalPages)
-        assertEquals(listOf("BOE-A-1", "BOE-A-2", "BOE-A-3"), feed.publicaciones.map { it.id })
-        assertTrue(feed.publicaciones.all { publication -> publication.resumen != null })
-        assertTrue(feed.publicaciones.all { publication -> publication.urlOficial.isNotBlank() })
+        assertEquals(listOf("BOE-A-1", "BOE-A-2", "BOE-A-3"), feed.publications.map { it.id })
+        assertTrue(feed.publications.all { publication -> publication.summary != null })
+        assertTrue(feed.publications.all { publication -> publication.officialUrl.isNotBlank() })
         assertEquals(1, feed.highlights.size)
         assertEquals("BOE-A-1", feed.highlights.first().publication.id)
         assertTrue(feed.highlights.first().reasons.isNotEmpty())
-        assertEquals(PlazoDto("2026-10-30"), feed.highlights.first().publication.plazo)
+        assertEquals(DeadlineDto("2026-10-30"), feed.highlights.first().publication.deadline)
     }
 
     @Test
@@ -51,7 +51,7 @@ class DailyFeedServiceTest {
         val feed = service(listOf(item("BOE-A-1"), item("BOE-A-2"))).feed(DATE)
 
         assertEquals(2, feed.total)
-        assertEquals(listOf("BOE-A-1", "BOE-A-2"), feed.publicaciones.map { it.id })
+        assertEquals(listOf("BOE-A-1", "BOE-A-2"), feed.publications.map { it.id })
     }
 
     @Test
@@ -62,7 +62,7 @@ class DailyFeedServiceTest {
         assertEquals(1, feed.pageSize)
         assertEquals(3, feed.total)
         assertEquals(3, feed.totalPages)
-        assertEquals(listOf("BOE-A-2"), feed.publicaciones.map { it.id })
+        assertEquals(listOf("BOE-A-2"), feed.publications.map { it.id })
     }
 
     @Test
@@ -70,7 +70,7 @@ class DailyFeedServiceTest {
         val feed = service(published).feed(DATE, page = 99, pageSize = 1)
 
         assertEquals(99, feed.page)
-        assertTrue(feed.publicaciones.isEmpty())
+        assertTrue(feed.publications.isEmpty())
         assertEquals(3, feed.total)
         assertEquals(3, feed.totalPages)
     }
@@ -81,7 +81,7 @@ class DailyFeedServiceTest {
 
         assertEquals(0, feed.total)
         assertEquals(0, feed.totalPages)
-        assertTrue(feed.publicaciones.isEmpty())
+        assertTrue(feed.publications.isEmpty())
         assertTrue(feed.highlights.isEmpty())
     }
 
@@ -106,7 +106,7 @@ class DailyFeedServiceTest {
         assertEquals(first, second)
         assertEquals(
             listOf("BOE-A-1", "BOE-A-2", "BOE-A-3"),
-            first.publicaciones.map { it.id },
+            first.publications.map { it.id },
         )
         assertTrue(first.highlights.all { highlight -> highlight.reasons.isNotEmpty() })
         assertNotNull(first.highlights.firstOrNull())
@@ -119,22 +119,22 @@ class DailyFeedServiceTest {
         id: String,
         section: SeccionBoeDto = SeccionBoeDto.II_A,
         rank: String? = null,
-        deadline: PlazoDto? = null,
+        deadline: DeadlineDto? = null,
     ): FeedItem = FeedItem(
         publication = Publicacion(
             id = id,
-            titulo = "Publicación $id",
-            fechaPublicacion = DATE,
-            organismo = null,
-            seccion = section,
-            epigrafe = null,
+            title = "Publicación $id",
+            publicationDate = DATE,
+            issuingBody = null,
+            section = section,
+            heading = null,
             texto = null,
-            urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+            officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
             urlXml = null,
             urlPdf = null,
             rango = rank,
-            categoria = CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
-            plazo = deadline,
+            category = CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
+            deadline = deadline,
         ),
         summary = SummaryEntity(
             publicationId = id,
@@ -148,7 +148,7 @@ class DailyFeedServiceTest {
     /** Doble en memoria de [FeedRepository] filtrado por fecha de publicación. */
     private class InMemoryFeedRepository(private val items: List<FeedItem>) : FeedRepository {
         override fun listPublishedByDate(publicationDate: String): List<FeedItem> =
-            items.filter { item -> item.publication.fechaPublicacion == publicationDate }
+            items.filter { item -> item.publication.publicationDate == publicationDate }
 
         override fun listPublishedByIds(ids: List<String>): List<FeedItem> =
             items.filter { item -> item.publication.id in ids }

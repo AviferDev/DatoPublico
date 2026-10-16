@@ -57,12 +57,12 @@ class CitizenSummaryGeneratorLiveTest {
             )
             val result = generator.generate(publication())
             val valid = assertIs<CitizenSummaryResult.Valid>(result)
-            assertEquals(URL, valid.summary.fuenteOficial)
-            assertTrue(valid.summary.avisoIA)
+            assertEquals(URL, valid.summary.officialSource)
+            assertTrue(valid.summary.aiNotice)
             println(
-                "CitizenSummaryGeneratorLiveTest: queCambia='${valid.summary.queCambia}' " +
-                    "aQuienAfecta='${valid.summary.aQuienAfecta}' " +
-                    "cifras=${valid.summary.cifrasClave.size}"
+                "CitizenSummaryGeneratorLiveTest: queCambia='${valid.summary.whatChanges}' " +
+                    "aQuienAfecta='${valid.summary.whoIsAffected}' " +
+                    "cifras=${valid.summary.keyFigures.size}"
             )
         } finally {
             client.close()
@@ -71,17 +71,17 @@ class CitizenSummaryGeneratorLiveTest {
 
     private fun publication(): Publicacion = Publicacion(
         id = "BOE-A-2026-1",
-        titulo = "Real Decreto de prueba sobre el régimen de ayudas",
-        fechaPublicacion = "2026-10-10",
-        organismo = "MINISTERIO DE PRUEBA",
-        seccion = SeccionBoeDto.I,
-        epigrafe = "Disposiciones generales",
+        title = "Real Decreto de prueba sobre el régimen de ayudas",
+        publicationDate = "2026-10-10",
+        issuingBody = "MINISTERIO DE PRUEBA",
+        section = SeccionBoeDto.I,
+        heading = "Disposiciones generales",
         texto = CONTEXT,
-        urlOficial = URL,
+        officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoriaDto.NORMAS_Y_LEGISLACION,
     )
 
     /** Proveedor de embeddings simulado: la recuperación no usa el modelo real. */

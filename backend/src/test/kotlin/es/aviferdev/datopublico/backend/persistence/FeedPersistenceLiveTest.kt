@@ -66,17 +66,17 @@ class FeedPersistenceLiveTest {
 
     private fun publication(id: String): Publicacion = Publicacion(
         id = id,
-        titulo = "Publicación de prueba del feed",
-        fechaPublicacion = DATE,
-        organismo = null,
-        seccion = SeccionBoeDto.II_A,
-        epigrafe = null,
+        title = "Publicación de prueba del feed",
+        publicationDate = DATE,
+        issuingBody = null,
+        section = SeccionBoeDto.II_A,
+        heading = null,
         texto = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        categoria = CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
+        category = CategoriaDto.INFORMACION_PUBLICA_Y_CONCESIONES,
     )
 
     private fun summary(publicationId: String, status: String): SummaryEntity = SummaryEntity(

@@ -14,9 +14,9 @@ import kotlinx.serialization.Serializable
  * con la clave JSON (regla MUST de `CONSTRAINTS.md` §«Serialización»).
  */
 @Serializable
-data class PlazoDto(
+data class DeadlineDto(
     @SerialName("fechaLimite")
-    val fechaLimite: String,
+    val deadlineDate: String,
     @SerialName("descripcion")
-    val descripcion: String? = null,
+    val description: String? = null,
 )

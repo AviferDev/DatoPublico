@@ -7,7 +7,7 @@ import es.aviferdev.datopublico.backend.rag.generation.TokenUsage
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.validation.CitizenSummaryValidation
 import es.aviferdev.datopublico.validation.CitizenSummaryValidator
 
@@ -57,13 +57,13 @@ class CitizenSummaryGenerator(
         val category = requireCategory(publication)
         val request = promptBuilder.build(publication, retrieve(publication, limit))
         val response = textGenerationProvider.generate(request)
-        val summary = parser.parse(response.text).toResumenDto(publication.urlOficial)
+        val summary = parser.parse(response.text).toResumenDto(publication.officialUrl)
         return resultOf(summary, CitizenSummaryValidator.validate(summary, category), response.usage)
     }
 
     /** Categoría obligatoria de la publicación (fail-fast si falta). */
     private fun requireCategory(publication: Publicacion): CategoriaDto =
-        publication.categoria
+        publication.category
             ?: throw IllegalArgumentException(
                 "La publicación ${publication.id} no tiene categoría; no se puede generar el resumen."
             )
@@ -71,13 +71,13 @@ class CitizenSummaryGenerator(
     /** Recupera el contexto de la publicación con un filtro por sus metadatos. */
     private fun retrieve(publication: Publicacion, limit: Int): List<FragmentEntity> {
         val filter = SearchFilter(
-            publishedFrom = publication.fechaPublicacion,
-            publishedTo = publication.fechaPublicacion,
-            category = publication.categoria,
-            section = publication.seccion,
-            organization = publication.organismo,
+            publishedFrom = publication.publicationDate,
+            publishedTo = publication.publicationDate,
+            category = publication.category,
+            section = publication.section,
+            organization = publication.issuingBody,
         )
-        return hybridSearch.search(publication.titulo, filter, limit).map { match -> match.fragment }
+        return hybridSearch.search(publication.title, filter, limit).map { match -> match.fragment }
     }
 
     /**
@@ -85,7 +85,7 @@ class CitizenSummaryGenerator(
      * propagando el uso de tokens ([usage]) que aporte el proveedor (FT00021).
      */
     private fun resultOf(
-        summary: ResumenDto,
+        summary: SummaryDto,
         validation: CitizenSummaryValidation,
         usage: TokenUsage?,
     ): CitizenSummaryResult =

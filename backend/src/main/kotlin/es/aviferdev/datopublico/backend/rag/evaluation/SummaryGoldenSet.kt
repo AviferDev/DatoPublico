@@ -112,19 +112,19 @@ object SummaryGoldenSetLoader {
 
     /** Comprueba que [entry] trae publicación y resumen de referencia utilizables. */
     private fun validateEntry(entry: SummaryGoldenSetEntry) {
-        require(entry.publication.categoria != null) {
+        require(entry.publication.category != null) {
             "La entrada '${entry.id}' no tiene categoría."
         }
-        require(entry.publication.titulo.isNotBlank()) {
+        require(entry.publication.title.isNotBlank()) {
             "La entrada '${entry.id}' no tiene título."
         }
         require(entry.publication.texto.orEmpty().isNotBlank()) {
             "La entrada '${entry.id}' no tiene texto."
         }
-        require(entry.reference.queCambia.isNotBlank()) {
+        require(entry.reference.whatChanges.isNotBlank()) {
             "La referencia de '${entry.id}' no tiene «¿Qué cambia?»."
         }
-        require(entry.reference.aQuienAfecta.isNotBlank()) {
+        require(entry.reference.whoIsAffected.isNotBlank()) {
             "La referencia de '${entry.id}' no tiene «¿A quién afecta?»."
         }
     }
@@ -167,17 +167,17 @@ private fun SummaryGoldenSetEntryDto.toEntry(): SummaryGoldenSetEntry = SummaryG
     id = id,
     publication = Publicacion(
         id = id,
-        titulo = title,
-        fechaPublicacion = date,
-        organismo = organization,
-        seccion = section,
-        epigrafe = null,
+        title = title,
+        publicationDate = date,
+        issuingBody = organization,
+        section = section,
+        heading = null,
         texto = text,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        categoria = category,
+        category = category,
     ),
     reference = reference,
 )

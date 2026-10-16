@@ -51,7 +51,7 @@
             "description": "Feed del día; un día sin publicaciones devuelve listas vacías.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ResumenDiarioDto" }
+                "schema": { "$ref": "#/components/schemas/DailySummaryDto" }
               }
             }
           },
@@ -100,7 +100,7 @@
             "description": "Detalle de la publicación.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/PublicacionDto" }
+                "schema": { "$ref": "#/components/schemas/PublicationDto" }
               }
             }
           },
@@ -375,7 +375,7 @@
         },
         "required": ["codigo", "mensaje"]
       },
-      "PlazoDto": {
+      "DeadlineDto": {
         "type": "object",
         "description": "Plazo de solicitud de una convocatoria.",
         "properties": {
@@ -384,7 +384,7 @@
         },
         "required": ["fechaLimite"]
       },
-      "ResumenDto": {
+      "SummaryDto": {
         "type": "object",
         "description": "Resumen ciudadano estructurado de una publicación.",
         "properties": {
@@ -394,12 +394,12 @@
           "fuenteOficial": { "type": "string", "format": "uri" },
           "avisoIA": { "type": "boolean" },
           "plazo": {
-            "anyOf": [{ "$ref": "#/components/schemas/PlazoDto" }, { "type": "null" }]
+            "anyOf": [{ "$ref": "#/components/schemas/DeadlineDto" }, { "type": "null" }]
           }
         },
         "required": ["queCambia", "aQuienAfecta", "fuenteOficial"]
       },
-      "PublicacionDto": {
+      "PublicationDto": {
         "type": "object",
         "description": "Publicación del BOE: unidad base del contrato.",
         "properties": {
@@ -412,10 +412,10 @@
           "categoria": { "$ref": "#/components/schemas/CategoriaDto" },
           "urlOficial": { "type": "string", "format": "uri" },
           "resumen": {
-            "anyOf": [{ "$ref": "#/components/schemas/ResumenDto" }, { "type": "null" }]
+            "anyOf": [{ "$ref": "#/components/schemas/SummaryDto" }, { "type": "null" }]
           },
           "plazo": {
-            "anyOf": [{ "$ref": "#/components/schemas/PlazoDto" }, { "type": "null" }]
+            "anyOf": [{ "$ref": "#/components/schemas/DeadlineDto" }, { "type": "null" }]
           }
         },
         "required": [
@@ -433,7 +433,7 @@
         "type": "object",
         "description": "Publicación destacada del día, con los motivos que la justifican.",
         "properties": {
-          "publicacion": { "$ref": "#/components/schemas/PublicacionDto" },
+          "publicacion": { "$ref": "#/components/schemas/PublicationDto" },
           "motivos": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/HighlightReasonDto" }
@@ -441,14 +441,14 @@
         },
         "required": ["publicacion", "motivos"]
       },
-      "ResumenDiarioDto": {
+      "DailySummaryDto": {
         "type": "object",
         "description": "Feed diario: página solicitada, destacados del día completo y totales.",
         "properties": {
           "fecha": { "type": "string", "format": "date" },
           "publicaciones": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/PublicacionDto" }
+            "items": { "$ref": "#/components/schemas/PublicationDto" }
           },
           "destacados": {
             "type": "array",
@@ -468,7 +468,7 @@
           "q": { "type": "string" },
           "resultados": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/PublicacionDto" }
+            "items": { "$ref": "#/components/schemas/PublicationDto" }
           }
         },
         "required": ["q"]

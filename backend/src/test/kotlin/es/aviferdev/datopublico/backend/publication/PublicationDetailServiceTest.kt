@@ -6,7 +6,7 @@ import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.persistence.SummaryRepository
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PlazoDto
+import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -34,21 +34,21 @@ class PublicationDetailServiceTest {
 
         assertNotNull(detail)
         assertEquals(PUBLISHED_ID, detail.id)
-        assertEquals("Convocatoria de prueba", detail.titulo)
-        assertEquals(DATE, detail.fechaPublicacion)
-        assertEquals("Ministerio de prueba", detail.organismo)
-        assertEquals(SeccionBoeDto.II_B, detail.seccion)
-        assertEquals("Becas y ayudas", detail.epigrafe)
-        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, detail.categoria)
-        assertEquals("https://www.boe.es/diario_boe/txt.php?id=$PUBLISHED_ID", detail.urlOficial)
-        assertEquals(PlazoDto("2026-10-30", "20 días hábiles"), detail.plazo)
-        val summary = detail.resumen
+        assertEquals("Convocatoria de prueba", detail.title)
+        assertEquals(DATE, detail.publicationDate)
+        assertEquals("Ministerio de prueba", detail.issuingBody)
+        assertEquals(SeccionBoeDto.II_B, detail.section)
+        assertEquals("Becas y ayudas", detail.heading)
+        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, detail.category)
+        assertEquals("https://www.boe.es/diario_boe/txt.php?id=$PUBLISHED_ID", detail.officialUrl)
+        assertEquals(DeadlineDto("2026-10-30", "20 días hábiles"), detail.deadline)
+        val summary = detail.summary
         assertNotNull(summary)
-        assertEquals("Cambia algo en $PUBLISHED_ID", summary.queCambia)
-        assertEquals("A la ciudadanía", summary.aQuienAfecta)
-        assertEquals(listOf("20 días"), summary.cifrasClave)
-        assertEquals("https://www.boe.es/diario_boe/txt.php?id=$PUBLISHED_ID", summary.fuenteOficial)
-        assertTrue(summary.avisoIA)
+        assertEquals("Cambia algo en $PUBLISHED_ID", summary.whatChanges)
+        assertEquals("A la ciudadanía", summary.whoIsAffected)
+        assertEquals(listOf("20 días"), summary.keyFigures)
+        assertEquals("https://www.boe.es/diario_boe/txt.php?id=$PUBLISHED_ID", summary.officialSource)
+        assertTrue(summary.aiNotice)
     }
 
     @Test
@@ -113,9 +113,9 @@ class PublicationDetailServiceTest {
 
         assertEquals(first, second)
         assertNotNull(first)
-        assertTrue(first.urlOficial.startsWith("https://www.boe.es"))
-        assertEquals(first.urlOficial, first.resumen?.fuenteOficial)
-        assertTrue(first.resumen?.avisoIA == true)
+        assertTrue(first.officialUrl.startsWith("https://www.boe.es"))
+        assertEquals(first.officialUrl, first.summary?.officialSource)
+        assertTrue(first.summary?.aiNotice == true)
     }
 
     private fun service(
@@ -131,18 +131,18 @@ class PublicationDetailServiceTest {
         category: CategoriaDto? = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
     ): Publicacion = Publicacion(
         id = id,
-        titulo = "Convocatoria de prueba",
-        fechaPublicacion = DATE,
-        organismo = "Ministerio de prueba",
-        seccion = SeccionBoeDto.II_B,
-        epigrafe = "Becas y ayudas",
+        title = "Convocatoria de prueba",
+        publicationDate = DATE,
+        issuingBody = "Ministerio de prueba",
+        section = SeccionBoeDto.II_B,
+        heading = "Becas y ayudas",
         texto = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = "Resolución",
-        categoria = category,
-        plazo = PlazoDto("2026-10-30", "20 días hábiles"),
+        category = category,
+        deadline = DeadlineDto("2026-10-30", "20 días hábiles"),
     )
 
     private fun summary(publicationId: String, status: String): SummaryEntity = SummaryEntity(
@@ -165,7 +165,7 @@ class PublicationDetailServiceTest {
             publications.firstOrNull { publication -> publication.id == id }
 
         override fun listByDate(publicationDate: String): List<Publicacion> =
-            publications.filter { publication -> publication.fechaPublicacion == publicationDate }
+            publications.filter { publication -> publication.publicationDate == publicationDate }
     }
 
     /** Doble en memoria de [SummaryRepository] para el gate. */

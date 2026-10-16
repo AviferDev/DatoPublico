@@ -2,7 +2,7 @@ package es.aviferdev.datopublico.backend.rag
 
 /**
  * Fragmento de dominio de una
- * [es.aviferdev.datopublico.backend.ingesta.publicacion.Publication], listo para
+ * [es.aviferdev.datopublico.backend.ingestion.publication.Publication], listo para
  * vectorizar (FT00015) y persistir (FT00016+).
  *
  * Es el modelo **interno** de la capa RAG (ni serializable, ni `Entity`, ni `Ui`),

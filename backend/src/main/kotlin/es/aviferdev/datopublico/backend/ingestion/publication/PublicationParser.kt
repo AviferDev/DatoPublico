@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.ingestion.publication
 
-import es.aviferdev.datopublico.backend.ingesta.categorizacion.DeadlineExtractor
-import es.aviferdev.datopublico.backend.ingesta.categorizacion.PublicationClassifier
+import es.aviferdev.datopublico.backend.ingestion.categorization.DeadlineExtractor
+import es.aviferdev.datopublico.backend.ingestion.categorization.PublicationClassifier
 import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 
 /**

@@ -49,7 +49,7 @@ class PublicationDetailService(
         if (servable == null || published == null) {
             null
         } else {
-            FeedDtoMapper.toPublicacionDto(servable, published)
+            FeedDtoMapper.toPublicationDto(servable, published)
         }
     }
 

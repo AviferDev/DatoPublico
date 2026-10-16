@@ -29,7 +29,7 @@ object FeedDtoMapper {
      * @throws IllegalArgumentException si [publication] no tiene categoría
      *   (dato corrupto: el repositorio ya lo excluye; aquí es fail-fast).
      */
-    fun toPublicacionDto(publication: Publication, summary: SummaryEntity): PublicationDto =
+    fun toPublicationDto(publication: Publication, summary: SummaryEntity): PublicationDto =
         PublicationDto(
             id = publication.id,
             title = publication.title,
@@ -41,7 +41,7 @@ object FeedDtoMapper {
                 "La publicación ${publication.id} no tiene categoría (dato corrupto)."
             },
             officialUrl = publication.officialUrl,
-            summary = toResumenDto(summary),
+            summary = toSummaryDto(summary),
             deadline = publication.deadline,
         )
 
@@ -51,7 +51,7 @@ object FeedDtoMapper {
      * `plazo` queda `null`: la tabla `resumen` no guarda plazo; el plazo fiable
      * viaja en [PublicationDto.plazo].
      */
-    fun toResumenDto(summary: SummaryEntity): SummaryDto = SummaryDto(
+    fun toSummaryDto(summary: SummaryEntity): SummaryDto = SummaryDto(
         whatChanges = summary.whatChanges,
         whoIsAffected = summary.whomItAffects,
         keyFigures = summary.keyFigures,
@@ -65,7 +65,7 @@ object FeedDtoMapper {
      * objetivos y **sin** exponer el `score` numérico.
      */
     fun toHighlightDto(highlight: Highlight, summary: SummaryEntity): HighlightDto = HighlightDto(
-        publication = toPublicacionDto(highlight.publication, summary),
+        publication = toPublicationDto(highlight.publication, summary),
         reasons = highlight.reasons.map { reason -> toHighlightReasonDto(reason) },
     )
 

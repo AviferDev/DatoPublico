@@ -27,12 +27,12 @@ interface BoePublicationParser {
  * @param publicacionParser combinador puro sumario + documento → publicación.
  */
 class BoePublicationHttpParser(
-    private val textoClient: BoeTextClient,
-    private val publicacionParser: PublicationParser = PublicationParser(),
+    private val textClient: BoeTextClient,
+    private val publicationParser: PublicationParser = PublicationParser(),
 ) : BoePublicationParser {
 
     override suspend fun parse(entry: SummaryEntry): Publication {
-        val document = entry.xmlUrl?.let { textoClient.fetchDocument(it) }
-        return publicacionParser.parse(entry, document)
+        val document = entry.xmlUrl?.let { textClient.fetchDocument(it) }
+        return publicationParser.parse(entry, document)
     }
 }

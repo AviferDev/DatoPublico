@@ -20,8 +20,8 @@ class BoeXmlParserTest {
     private val parser = BoeXmlParser()
 
     @Test
-    fun `los ocho fixtures reales por section producen body no vacio y metadata`() {
-        EXPECTATIVAS_POR_SECCION.forEach { (name, rank) ->
+    fun `the eight real fixtures per section produce a non-empty body and metadata`() {
+        EXPECTATIONS_BY_SECTION.forEach { (name, rank) ->
             val document = parseFixture(name)
             val body = assertNotNull(document.body, "$name no produjo texto")
             assertTrue(body.isNotBlank(), "$name produjo texto vacío")
@@ -34,7 +34,7 @@ class BoeXmlParserTest {
     }
 
     @Test
-    fun `la publication extensa de la Seccion I conserva el body y los parrafos`() {
+    fun `the long Section I publication keeps the body and paragraphs`() {
         val document = parseFixture("texto-I-2026-20979")
         val body = assertNotNull(document.body)
 
@@ -47,27 +47,27 @@ class BoeXmlParserTest {
     }
 
     @Test
-    fun `extrae el body de tablas y listas de definicion de las secciones con estructura irregular`() {
+    fun `extracts the body from tables and definition lists of sections with irregular structure`() {
         val tabla = parseFixture("texto-IIA-2024-87")
-        val lista = parseFixture("texto-VA-2024-25")
+        val list = parseFixture("texto-VA-2024-25")
 
         assertTrue(assertNotNull(tabla.body).contains("ALARCON CHARLO"), "tabla II.A sin filas")
-        assertTrue(assertNotNull(lista.body).contains("Poder adjudicador"), "dl de V.A sin contenido")
+        assertTrue(assertNotNull(list.body).contains("Poder adjudicador"), "dl de V.A sin contenido")
     }
 
     @Test
-    fun `normaliza el espacio duro y los espacios repetidos`() {
+    fun `normalizes hard spaces and repeated spaces`() {
         val document = "<documento><metadatos><rango>Real\u00a0Decreto</rango></metadatos>" +
             "<texto><p class=\"parrafo\">Dos  espacios\u00a0y   más</p></texto></documento>"
 
-        val resultado = parser.parse(document)
+        val result = parser.parse(document)
 
-        assertEquals("Real Decreto", resultado.metadata.rank)
-        assertEquals("Dos espacios y más", resultado.body)
+        assertEquals("Real Decreto", result.metadata.rank)
+        assertEquals("Dos espacios y más", result.body)
     }
 
     @Test
-    fun `un body vacio produce null sin excepcion`() {
+    fun `an empty body produces null without exception`() {
         val document = parseFixture("texto-sin-texto")
 
         assertNull(document.body)
@@ -76,7 +76,7 @@ class BoeXmlParserTest {
     }
 
     @Test
-    fun `un document sin node body produce null`() {
+    fun `a document without a body node produces null`() {
         val document = parser.parse("<documento><metadatos><rango>Orden</rango></metadatos></documento>")
 
         assertNull(document.body)
@@ -84,7 +84,7 @@ class BoeXmlParserTest {
     }
 
     @Test
-    fun `un xml malformado lanza BoeTextException`() {
+    fun `a malformed xml throws BoeTextException`() {
         val error = assertFailsWith<BoeTextException> {
             parser.parse("<documento><texto><p class=\"parrafo\">sin cerrar")
         }
@@ -93,7 +93,7 @@ class BoeXmlParserTest {
     }
 
     @Test
-    fun `un xml con doctype o entidades externas se rechaza por seguridad`() {
+    fun `an xml with doctype or external entities is rejected for security`() {
         val malicioso = """
             <?xml version="1.0"?>
             <!DOCTYPE documento [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
@@ -108,8 +108,8 @@ class BoeXmlParserTest {
     private fun parseFixture(name: String): BoeDocument = parser.parse(recurso("$name.xml"))
 
     /** Lee un recurso de `src/test/resources/boe` como texto UTF-8. */
-    private fun recurso(ruta: String): String =
-        checkNotNull(javaClass.getResourceAsStream("/boe/$ruta")) { "No se encontró /boe/$ruta" }
+    private fun recurso(path: String): String =
+        checkNotNull(javaClass.getResourceAsStream("/boe/$path")) { "No se encontró /boe/$path" }
             .readBytes()
             .decodeToString()
 
@@ -117,7 +117,7 @@ class BoeXmlParserTest {
         const val HARD_SPACE = '\u00a0'
 
         /** Rango normativo esperado por fixture; `null` en las secciones sin rango. */
-        val EXPECTATIVAS_POR_SECCION: Map<String, String?> = mapOf(
+        val EXPECTATIONS_BY_SECTION: Map<String, String?> = mapOf(
             "texto-I-2026-20979" to "Real Decreto",
             "texto-IIA-2024-87" to "Resolución",
             "texto-IIB-2024-93" to "Resolución",

@@ -33,11 +33,11 @@ import kotlinx.coroutines.test.runTest
 class BoePublicationParserTest {
 
     @Test
-    fun `fixture real de cada section produce una publication completa`() = runTest {
-        val entries = entradasDelSumario()
+    fun `real fixture of each section produces a complete publication`() = runTest {
+        val entries = summaryEntries()
         val parser = BoePublicationHttpParser(BoeTextHttpClient(clientQueSirveFixtures()))
 
-        RANGOS_POR_ID.forEach { (identifier, rank) ->
+        RANKS_BY_ID.forEach { (identifier, rank) ->
             val entry = assertNotNull(entries[identifier], "sin entrada de sumario para $identifier")
             val publication = parser.parse(entry)
 
@@ -47,28 +47,28 @@ class BoePublicationParserTest {
             assertEquals(entry.section, publication.section)
             assertEquals(entry.officialUrl, publication.officialUrl)
             assertEquals(rank, publication.rank, "$identifier: rango")
-            assertEquals(CATEGORIAS_POR_ID[identifier], publication.category, "$identifier: categoría")
-            assertEquals(PLAZOS_POR_ID[identifier], publication.deadline?.deadlineDate, "$identifier: plazo")
+            assertEquals(CATEGORIES_BY_ID[identifier], publication.category, "$identifier: categoría")
+            assertEquals(DEADLINES_BY_ID[identifier], publication.deadline?.deadlineDate, "$identifier: plazo")
             val body = assertNotNull(publication.body, "$identifier sin texto")
             assertTrue(body.isNotBlank(), "$identifier con texto vacío")
         }
     }
 
     @Test
-    fun `cubre las ocho secciones del BOE`() = runTest {
-        val entries = entradasDelSumario()
+    fun `covers the eight BOE sections`() = runTest {
+        val entries = summaryEntries()
         val parser = BoePublicationHttpParser(BoeTextHttpClient(clientQueSirveFixtures()))
 
-        val secciones = FIXTURES_POR_ID.keys
+        val sections = FIXTURES_BY_ID.keys
             .map { identifier -> assertNotNull(entries[identifier], "sin entrada $identifier") }
             .map { parser.parse(it).section }
             .toSet()
 
-        assertEquals(BoeSectionDto.entries.toSet(), secciones)
+        assertEquals(BoeSectionDto.entries.toSet(), sections)
     }
 
     @Test
-    fun `una entry sin xmlUrl no hace ninguna peticion y deja body null`() = runTest {
+    fun `an entry without xmlUrl makes no request and leaves body null`() = runTest {
         var peticiones = 0
         val client = clientCon(MockEngine { peticiones += 1; respond("", HttpStatusCode.OK) })
         val parser = BoePublicationHttpParser(BoeTextHttpClient(client))
@@ -82,7 +82,7 @@ class BoePublicationParserTest {
     }
 
     @Test
-    fun `un 404 produce una publication valida con body null`() = runTest {
+    fun `a 404 produces a valid publication with null body`() = runTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.NotFound, "sin texto") })
         val parser = BoePublicationHttpParser(BoeTextHttpClient(client))
 
@@ -94,24 +94,24 @@ class BoePublicationParserTest {
         assertEquals(BoeSectionDto.I, publication.section)
     }
 
-    private fun entradasDelSumario(): Map<String, SummaryEntry> =
+    private fun summaryEntries(): Map<String, SummaryEntry> =
         listOf(
             "sumario-20261009.json" to LocalDate.of(2026, 10, 9),
             "sumario-20240102.json" to LocalDate.of(2024, 1, 2),
         )
-            .flatMap { (name, date) -> parseSumario(name, date) }
+            .flatMap { (name, date) -> parseSummary(name, date) }
             .associateBy { it.identifier }
 
-    private fun parseSumario(name: String, date: LocalDate): List<SummaryEntry> =
+    private fun parseSummary(name: String, date: LocalDate): List<SummaryEntry> =
         DatoPublicoJson.decodeFromString<BoeSummaryResponseDto>(recurso(name)).toSummaryEntries(date)
 
     /** Sirve el fixture XML local cuyo `id` coincide con el `urlXml` pedido. */
     private fun clientQueSirveFixtures(): HttpClient = clientCon(
         MockEngine { request ->
-            val ruta = FIXTURES_POR_ID[request.url.parameters["id"]]
-            if (ruta != null) {
+            val path = FIXTURES_BY_ID[request.url.parameters["id"]]
+            if (path != null) {
                 respond(
-                    content = recurso(ruta),
+                    content = recurso(path),
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/xml"),
                 )
@@ -141,8 +141,8 @@ class BoePublicationParserTest {
     )
 
     /** Lee un recurso de `src/test/resources/boe` como texto UTF-8. */
-    private fun recurso(ruta: String): String =
-        checkNotNull(javaClass.getResourceAsStream("/boe/$ruta")) { "No se encontró /boe/$ruta" }
+    private fun recurso(path: String): String =
+        checkNotNull(javaClass.getResourceAsStream("/boe/$path")) { "No se encontró /boe/$path" }
             .readBytes()
             .decodeToString()
 
@@ -150,7 +150,7 @@ class BoePublicationParserTest {
         const val URL_XML = "https://www.boe.es/diario_boe/xml.php?id=BOE-A-1"
 
         /** Identificador del BOE → fixture XML real en `src/test/resources/boe`. */
-        val FIXTURES_POR_ID: Map<String, String> = mapOf(
+        val FIXTURES_BY_ID: Map<String, String> = mapOf(
             "BOE-A-2026-20979" to "texto-I-2026-20979.xml",
             "BOE-A-2024-87" to "texto-IIA-2024-87.xml",
             "BOE-A-2024-93" to "texto-IIB-2024-93.xml",
@@ -162,7 +162,7 @@ class BoePublicationParserTest {
         )
 
         /** Rango normativo esperado por identificador (`null` si la sección no lo trae). */
-        val RANGOS_POR_ID: Map<String, String?> = mapOf(
+        val RANKS_BY_ID: Map<String, String?> = mapOf(
             "BOE-A-2026-20979" to "Real Decreto",
             "BOE-A-2024-87" to "Resolución",
             "BOE-A-2024-93" to "Resolución",
@@ -174,7 +174,7 @@ class BoePublicationParserTest {
         )
 
         /** Categoría curada esperada por identificador (FT00012, escenario 1). */
-        val CATEGORIAS_POR_ID: Map<String, CategoryDto> = mapOf(
+        val CATEGORIES_BY_ID: Map<String, CategoryDto> = mapOf(
             "BOE-A-2026-20979" to CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
             "BOE-A-2024-87" to CategoryDto.APPOINTMENTS_AND_DISMISSALS,
             "BOE-A-2024-93" to CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,
@@ -186,7 +186,7 @@ class BoePublicationParserTest {
         )
 
         /** Fecha límite esperada por identificador (FT00012, escenarios 2 y 3). */
-        val PLAZOS_POR_ID: Map<String, String?> = mapOf(
+        val DEADLINES_BY_ID: Map<String, String?> = mapOf(
             "BOE-A-2026-20979" to null,
             "BOE-A-2024-87" to null,
             "BOE-A-2024-93" to "2024-01-23",

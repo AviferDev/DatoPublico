@@ -28,32 +28,32 @@ import kotlin.test.assertTrue
  */
 class SearchServiceTest {
 
-    private val becas = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID
-    private val normas = CategoryDto.NORMS_AND_LEGISLATION
+    private val scholarships = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID
+    private val norms = CategoryDto.NORMS_AND_LEGISLATION
 
     @Test
     fun `category filter returns only that category with published summaries`() = runTest {
         val specs = listOf(
-            spec("BOE-A-1", becas, DATE_1),
-            spec("BOE-A-2", normas, DATE_1),
+            spec("BOE-A-1", scholarships, DATE_1),
+            spec("BOE-A-2", norms, DATE_1),
         )
         val items = specs.map { fragment -> published(fragment.publicationId, fragment.category, fragment.date) }
 
-        val result = service(specs, items).search("becas para jóvenes", category = becas)
+        val result = service(specs, items).search("becas para jóvenes", category = scholarships)
 
         assertEquals("becas para jóvenes", result.query)
         assertEquals(listOf("BOE-A-1"), result.results.map { publication -> publication.id })
         assertTrue(result.results.all { publication -> publication.summary != null })
         assertTrue(result.results.all { publication -> publication.officialUrl.isNotBlank() })
-        assertEquals(becas, result.results.first().category)
+        assertEquals(scholarships, result.results.first().category)
     }
 
     @Test
     fun `date range is inclusive on both ends`() = runTest {
         val specs = listOf(
-            spec("BOE-A-1", becas, "2026-01-01"),
-            spec("BOE-A-2", becas, "2026-03-15"),
-            spec("BOE-A-3", becas, "2026-06-01"),
+            spec("BOE-A-1", scholarships, "2026-01-01"),
+            spec("BOE-A-2", scholarships, "2026-03-15"),
+            spec("BOE-A-3", scholarships, "2026-06-01"),
         )
         val items = specs.map { fragment -> published(fragment.publicationId, fragment.category, fragment.date) }
 
@@ -66,11 +66,11 @@ class SearchServiceTest {
     @Test
     fun `only publications with a published summary are served`() = runTest {
         val specs = listOf(
-            spec("BOE-A-PUBLISHED", becas, DATE_1),
-            spec("BOE-A-QUEUED", becas, DATE_1),
-            spec("BOE-A-PENDING", becas, DATE_1),
+            spec("BOE-A-PUBLISHED", scholarships, DATE_1),
+            spec("BOE-A-QUEUED", scholarships, DATE_1),
+            spec("BOE-A-PENDING", scholarships, DATE_1),
         )
-        val items = listOf(published("BOE-A-PUBLISHED", becas, DATE_1))
+        val items = listOf(published("BOE-A-PUBLISHED", scholarships, DATE_1))
 
         val result = service(specs, items).search("tema")
 
@@ -87,8 +87,8 @@ class SearchServiceTest {
 
     @Test
     fun `an inverted date range returns an empty result`() = runTest {
-        val specs = listOf(spec("BOE-A-1", becas, DATE_1))
-        val items = listOf(published("BOE-A-1", becas, DATE_1))
+        val specs = listOf(spec("BOE-A-1", scholarships, DATE_1))
+        val items = listOf(published("BOE-A-1", scholarships, DATE_1))
 
         val result = service(specs, items)
             .search("tema", publishedFrom = "2026-06-01", publishedTo = "2026-01-01")
@@ -99,13 +99,13 @@ class SearchServiceTest {
     @Test
     fun `the same publication is deduplicated preserving the relevance order`() = runTest {
         val specs = listOf(
-            spec("BOE-A-2", becas, DATE_1),
-            spec("BOE-A-1", becas, DATE_1),
-            spec("BOE-A-2", becas, DATE_1),
+            spec("BOE-A-2", scholarships, DATE_1),
+            spec("BOE-A-1", scholarships, DATE_1),
+            spec("BOE-A-2", scholarships, DATE_1),
         )
         val items = listOf(
-            published("BOE-A-1", becas, DATE_1),
-            published("BOE-A-2", becas, DATE_1),
+            published("BOE-A-1", scholarships, DATE_1),
+            published("BOE-A-2", scholarships, DATE_1),
         )
 
         val result = service(specs, items).search("tema")
@@ -115,11 +115,11 @@ class SearchServiceTest {
 
     @Test
     fun `the candidate window allows filling the limit with distinct publications`() = runTest {
-        val duplicated = List(6) { spec("BOE-A-1", becas, DATE_1) }
-        val specs = duplicated + spec("BOE-A-2", becas, DATE_1)
+        val duplicated = List(6) { spec("BOE-A-1", scholarships, DATE_1) }
+        val specs = duplicated + spec("BOE-A-2", scholarships, DATE_1)
         val items = listOf(
-            published("BOE-A-1", becas, DATE_1),
-            published("BOE-A-2", becas, DATE_1),
+            published("BOE-A-1", scholarships, DATE_1),
+            published("BOE-A-2", scholarships, DATE_1),
         )
 
         val result = service(specs, items).search("tema", limit = 2)
@@ -129,7 +129,7 @@ class SearchServiceTest {
 
     @Test
     fun `the result never exceeds the requested limit`() = runTest {
-        val specs = (1..10).map { index -> spec("BOE-A-$index", becas, DATE_1) }
+        val specs = (1..10).map { index -> spec("BOE-A-$index", scholarships, DATE_1) }
         val items = specs.map { fragment -> published(fragment.publicationId, fragment.category, fragment.date) }
 
         val result = service(specs, items).search("tema", limit = 3)

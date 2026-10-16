@@ -55,7 +55,7 @@ class DailyFeedService(
         return DailySummaryDto(
             date = date,
             publications = pageItems.map { item ->
-                FeedDtoMapper.toPublicacionDto(item.publication, item.summary)
+                FeedDtoMapper.toPublicationDto(item.publication, item.summary)
             },
             highlights = highlights.mapNotNull { highlight ->
                 summariesById[highlight.publication.id]?.let { summary ->

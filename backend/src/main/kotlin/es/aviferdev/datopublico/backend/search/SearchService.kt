@@ -90,7 +90,7 @@ class SearchService(
     private fun orderedResults(items: List<FeedItem>, rankedIds: List<String>): List<PublicationDto> {
         val itemsById = items.associateBy { item -> item.publication.id }
         return rankedIds.mapNotNull { id ->
-            itemsById[id]?.let { item -> FeedDtoMapper.toPublicacionDto(item.publication, item.summary) }
+            itemsById[id]?.let { item -> FeedDtoMapper.toPublicationDto(item.publication, item.summary) }
         }
     }
 

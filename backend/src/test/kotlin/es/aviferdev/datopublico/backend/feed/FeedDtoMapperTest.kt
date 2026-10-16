@@ -24,7 +24,7 @@ class FeedDtoMapperTest {
 
     @Test
     fun `a publication is projected with its summary category url and deadline`() {
-        val dto = FeedDtoMapper.toPublicacionDto(publication(), summary())
+        val dto = FeedDtoMapper.toPublicationDto(publication(), summary())
 
         assertEquals(PUBLICATION_ID, dto.id)
         assertEquals(CategoryDto.NORMS_AND_LEGISLATION, dto.category)
@@ -37,7 +37,7 @@ class FeedDtoMapperTest {
 
     @Test
     fun `the summary is projected without deadline because the table does not store it`() {
-        val dto = FeedDtoMapper.toResumenDto(summary())
+        val dto = FeedDtoMapper.toSummaryDto(summary())
 
         assertEquals("Cambia algo", dto.whatChanges)
         assertEquals("A la ciudadanía", dto.whoIsAffected)
@@ -50,7 +50,7 @@ class FeedDtoMapperTest {
     @Test
     fun `a publication without category fails fast as corrupt data`() {
         assertFailsWith<IllegalArgumentException> {
-            FeedDtoMapper.toPublicacionDto(publication().copy(category = null), summary())
+            FeedDtoMapper.toPublicationDto(publication().copy(category = null), summary())
         }
     }
 

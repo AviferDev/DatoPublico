@@ -41,7 +41,7 @@ data class SummaryGenerationDto(
  * @param source URL oficial de la publicación de origen.
  * @return el resumen listo para validar con `CitizenSummaryValidator`.
  */
-fun SummaryGenerationDto.toResumenDto(source: String): SummaryDto = SummaryDto(
+fun SummaryGenerationDto.toSummaryDto(source: String): SummaryDto = SummaryDto(
     whatChanges = whatChanges,
     whoIsAffected = whoIsAffected,
     keyFigures = keyFigures,

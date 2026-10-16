@@ -19,7 +19,7 @@ class DeadlineExtractorTest {
     private val extractor = DeadlineExtractor()
 
     @Test
-    fun `extrae el deadline de dias habiles de la convocatoria real de II_B`() {
+    fun `extracts the working-day deadline from the real Section II B convocation`() {
         val deadline = assertNotNull(
             extractor.extract(body("texto-IIB-2024-93.xml"), PUBLISHED_2024_01_02),
             "la convocatoria de II.B debe exponer plazo",
@@ -30,7 +30,7 @@ class DeadlineExtractorTest {
     }
 
     @Test
-    fun `extrae el deadline de dias habiles de la convocatoria real de III`() {
+    fun `extracts the working-day deadline from the real Section III convocation`() {
         val deadline = assertNotNull(
             extractor.extract(body("texto-III-2024-117.xml"), PUBLISHED_2024_01_02),
             "la convocatoria de III debe exponer plazo",
@@ -40,28 +40,28 @@ class DeadlineExtractorTest {
     }
 
     @Test
-    fun `no extrae deadline de la disposicion real de I`() {
+    fun `does not extract a deadline from the real Section I provision`() {
         assertNull(extractor.extract(body("texto-I-2026-20979.xml"), "2026-10-09"))
     }
 
     @Test
-    fun `no extrae deadline de la resolucion real de II_A`() {
+    fun `does not extract a deadline from the real Section II A resolution`() {
         assertNull(extractor.extract(body("texto-IIA-2024-87.xml"), PUBLISHED_2024_01_02))
     }
 
     @Test
-    fun `no extrae deadline de la informacion publica real de V_B`() {
+    fun `does not extract a deadline from the real Section V B public information`() {
         assertNull(extractor.extract(body("texto-VB-2024-76.xml"), PUBLISHED_2024_01_02))
     }
 
     @Test
-    fun `sin body devuelve un deadline vacio`() {
+    fun `without body returns an empty deadline`() {
         assertNull(extractor.extract(null, PUBLISHED_2024_01_02))
         assertNull(extractor.extract("   ", PUBLISHED_2024_01_02))
     }
 
     @Test
-    fun `calcula el deadline en dias naturales`() {
+    fun `computes the deadline in calendar days`() {
         val deadline = assertNotNull(
             extractor.extract(
                 "El plazo de presentación de solicitudes será de diez días naturales a contar " +
@@ -74,7 +74,7 @@ class DeadlineExtractorTest {
     }
 
     @Test
-    fun `extrae una date explicita con contexto de solicitud`() {
+    fun `extracts an explicit date with application context`() {
         val deadline = assertNotNull(
             extractor.extract(
                 "Las solicitudes se presentarán hasta el 15 de marzo de 2024.",
@@ -86,7 +86,7 @@ class DeadlineExtractorTest {
     }
 
     @Test
-    fun `descarta el deadline cuando el contexto lo excluye`() {
+    fun `discards the deadline when the context excludes it`() {
         assertNull(
             extractor.extract(
                 "Para presentar solicitud de recurso, el plazo de quince días hábiles a contar " +
@@ -104,7 +104,7 @@ class DeadlineExtractorTest {
     }
 
     @Test
-    fun `es determinista para la misma entry`() {
+    fun `is deterministic for the same entry`() {
         val body = body("texto-IIB-2024-93.xml")
 
         val primera = extractor.extract(body, PUBLISHED_2024_01_02)
@@ -118,8 +118,8 @@ class DeadlineExtractorTest {
         assertNotNull(BoeXmlParser().parse(recurso(fixture)).body, "$fixture sin texto")
 
     /** Lee un recurso de `src/test/resources/boe` como texto UTF-8. */
-    private fun recurso(ruta: String): String =
-        checkNotNull(javaClass.getResourceAsStream("/boe/$ruta")) { "No se encontró /boe/$ruta" }
+    private fun recurso(path: String): String =
+        checkNotNull(javaClass.getResourceAsStream("/boe/$path")) { "No se encontró /boe/$path" }
             .readBytes()
             .decodeToString()
 

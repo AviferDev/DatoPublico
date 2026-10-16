@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 class HealthTest {
 
     @Test
-    fun `health responde 200 con estado ok en JSON`() = testApplication {
+    fun `health responds 200 with ok status in JSON`() = testApplication {
         application { module() }
 
         val response = client.get("/health")
@@ -26,7 +26,7 @@ class HealthTest {
     }
 
     @Test
-    fun `una ruta desconocida responde 404`() = testApplication {
+    fun `an unknown route responds 404`() = testApplication {
         application { module() }
 
         val response = client.get("/no-existe")

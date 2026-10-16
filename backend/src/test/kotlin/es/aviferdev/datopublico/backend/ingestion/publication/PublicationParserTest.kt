@@ -20,7 +20,7 @@ class PublicationParserTest {
     private val parser = PublicationParser()
 
     @Test
-    fun `mapea una entry del summary y usa la category por defecto de la section`() {
+    fun `maps a summary entry and uses the section default category`() {
         val publication = parser.parse(entry(), document())
 
         assertEquals("BOE-A-1", publication.id)
@@ -37,10 +37,10 @@ class PublicationParserTest {
     }
 
     @Test
-    fun `clasifica por el heading y extrae el deadline del body de la convocatoria`() {
+    fun `classifies by the heading and extracts the deadline from the convocation body`() {
         val publication = parser.parse(
             entry(heading = "Subvenciones", publicationDate = "2024-01-02"),
-            document(body = TEXTO_CONVOCATORIA_CON_PLAZO),
+            document(body = CONVOCATION_TEXT_WITH_DEADLINE),
         )
 
         assertEquals(CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID, publication.category)
@@ -48,7 +48,7 @@ class PublicationParserTest {
     }
 
     @Test
-    fun `sin document produce una publication valida con body y rank nulos`() {
+    fun `without document produces a valid publication with null body and rank`() {
         val publication = parser.parse(entry(), null)
 
         assertNull(publication.body)
@@ -60,15 +60,15 @@ class PublicationParserTest {
     }
 
     @Test
-    fun `prioriza el issuingBody y el pdf del summary frente a los del xml`() {
+    fun `prioritizes the summary issuingBody and pdf over the xml ones`() {
         val publication = parser.parse(entry(), document())
 
         assertEquals("MINISTERIO DEL SUMARIO", publication.issuingBody)
-        assertEquals(URL_PDF_SUMARIO, publication.pdfUrl)
+        assertEquals(SUMMARY_PDF_URL, publication.pdfUrl)
     }
 
     @Test
-    fun `completa issuingBody y pdf desde el xml si el summary no los trae`() {
+    fun `fills issuingBody and pdf from the xml when the summary does not provide them`() {
         val publication = parser.parse(
             entry(issuingBody = null, pdfUrl = null),
             document(),
@@ -80,7 +80,7 @@ class PublicationParserTest {
 
     private fun entry(
         issuingBody: String? = "MINISTERIO DEL SUMARIO",
-        pdfUrl: String? = URL_PDF_SUMARIO,
+        pdfUrl: String? = SUMMARY_PDF_URL,
         heading: String? = "Epígrafe",
         publicationDate: String = "2026-10-09",
     ): SummaryEntry = SummaryEntry(
@@ -110,11 +110,11 @@ class PublicationParserTest {
 
     private companion object {
         const val URL_XML = "https://www.boe.es/diario_boe/xml.php?id=BOE-A-1"
-        const val URL_PDF_SUMARIO = "https://www.boe.es/boe/dias/2026/10/09/pdfs/BOE-A-1.pdf"
+        const val SUMMARY_PDF_URL = "https://www.boe.es/boe/dias/2026/10/09/pdfs/BOE-A-1.pdf"
         const val URL_PDF_XML = "https://www.boe.es/boe/dias/2026/10/09/pdfs/BOE-A-1.pdf.xml"
 
         /** Frase real del fixture `texto-IIB-2024-93.xml` (convocatoria con plazo hábil). */
-        const val TEXTO_CONVOCATORIA_CON_PLAZO =
+        const val CONVOCATION_TEXT_WITH_DEADLINE =
             "La documentación se deberá presentar en el plazo de quince días hábiles a contar " +
                 "desde el día siguiente al de la publicación del anuncio de esta convocatoria en el BOE."
     }

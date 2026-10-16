@@ -183,7 +183,7 @@ data class RetrievalRelevantDto(
 private fun RetrievalGoldenSetDto.toGoldenSet(): RetrievalGoldenSet = RetrievalGoldenSet(
     version = version,
     k = k,
-    corpus = corpus.map { item -> item.toPublicacion() },
+    corpus = corpus.map { item -> item.toPublication() },
     queries = queries.map { item -> item.toQuery() },
 )
 
@@ -192,7 +192,7 @@ private fun RetrievalGoldenSetDto.toGoldenSet(): RetrievalGoldenSet = RetrievalG
  * existente; los campos no presentes en el dataset quedan `null` y la URL oficial
  * se deriva del `id`.
  */
-private fun RetrievalCorpusItemDto.toPublicacion(): Publication = Publication(
+private fun RetrievalCorpusItemDto.toPublication(): Publication = Publication(
     id = id,
     title = title,
     publicationDate = date,

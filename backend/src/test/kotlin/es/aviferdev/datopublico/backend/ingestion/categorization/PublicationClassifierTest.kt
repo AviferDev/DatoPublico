@@ -24,8 +24,8 @@ class PublicationClassifierTest {
     private val classifier = PublicationClassifier()
 
     @Test
-    fun `clasifica la muestra real de las ocho secciones por su category esperada`() {
-        val entries = entradasDelSumario()
+    fun `classifies the real sample of the eight sections by its expected category`() {
+        val entries = summaryEntries()
 
         EXPECTED_CATEGORIES.forEach { (identifier, category) ->
             val entry = assertNotNull(entries[identifier], "sin entrada de sumario para $identifier")
@@ -35,8 +35,8 @@ class PublicationClassifierTest {
     }
 
     @Test
-    fun `conserva el heading real del summary sin mutarlo`() {
-        val entries = entradasDelSumario()
+    fun `keeps the real summary heading without mutating it`() {
+        val entries = summaryEntries()
 
         EXPECTED_HEADINGS.forEach { (identifier, heading) ->
             val entry = assertNotNull(entries[identifier], "sin entrada de sumario para $identifier")
@@ -45,8 +45,8 @@ class PublicationClassifierTest {
     }
 
     @Test
-    fun `las entries reales sin heading caen en la category por defecto de su section`() {
-        val entries = entradasDelSumario()
+    fun `real entries without heading fall back to their section default category`() {
+        val entries = summaryEntries()
 
         listOf("BOE-B-2024-1", "BOE-B-2024-92").forEach { identifier ->
             val entry = assertNotNull(entries[identifier], "sin entrada de sumario para $identifier")
@@ -60,15 +60,15 @@ class PublicationClassifierTest {
     }
 
     @Test
-    fun `los casos ambiguos sin palabras clave usan la category por defecto de la section`() {
+    fun `ambiguous cases without keywords use the section default category`() {
         BoeSectionDto.entries.forEach { section ->
             val actual = classifier.classify(section, null, "Anuncio sin palabras clave reconocibles")
-            assertEquals(DEFAULTS_POR_SECCION[section], actual, "sección $section")
+            assertEquals(DEFAULTS_BY_SECTION[section], actual, "sección $section")
         }
     }
 
     @Test
-    fun `ante varias reglas aplicables gana la primera del orden documentado`() {
+    fun `with several applicable rules the first in the documented order wins`() {
         // «Ayudas» (BECAS) precede en el orden a «premios» (AWARDS).
         val actual = classifier.classify(BoeSectionDto.I, "Ayudas y premios", "Título de la publicación")
 
@@ -76,8 +76,8 @@ class PublicationClassifierTest {
     }
 
     @Test
-    fun `es determinista para la misma entry`() {
-        val entry = assertNotNull(entradasDelSumario()["BOE-A-2024-93"], "sin entrada de la convocatoria")
+    fun `is deterministic for the same entry`() {
+        val entry = assertNotNull(summaryEntries()["BOE-A-2024-93"], "sin entrada de la convocatoria")
 
         val primera = classifier.classify(entry.section, entry.heading, entry.title)
         val segunda = classifier.classify(entry.section, entry.heading, entry.title)
@@ -85,7 +85,7 @@ class PublicationClassifierTest {
         assertEquals(primera, segunda)
     }
 
-    private fun entradasDelSumario(): Map<String, SummaryEntry> =
+    private fun summaryEntries(): Map<String, SummaryEntry> =
         listOf(
             "sumario-20261009.json" to LocalDate.of(2026, 10, 9),
             "sumario-20240102.json" to LocalDate.of(2024, 1, 2),
@@ -96,8 +96,8 @@ class PublicationClassifierTest {
             .associateBy { it.identifier }
 
     /** Lee un recurso de `src/test/resources/boe` como texto UTF-8. */
-    private fun recurso(ruta: String): String =
-        checkNotNull(javaClass.getResourceAsStream("/boe/$ruta")) { "No se encontró /boe/$ruta" }
+    private fun recurso(path: String): String =
+        checkNotNull(javaClass.getResourceAsStream("/boe/$path")) { "No se encontró /boe/$path" }
             .readBytes()
             .decodeToString()
 
@@ -127,7 +127,7 @@ class PublicationClassifierTest {
         )
 
         /** Categoría por defecto por sección (misma tabla que el clasificador). */
-        val DEFAULTS_POR_SECCION: Map<BoeSectionDto, CategoryDto> = mapOf(
+        val DEFAULTS_BY_SECTION: Map<BoeSectionDto, CategoryDto> = mapOf(
             BoeSectionDto.I to CategoryDto.NORMS_AND_LEGISLATION,
             BoeSectionDto.II_A to CategoryDto.APPOINTMENTS_AND_DISMISSALS,
             BoeSectionDto.II_B to CategoryDto.PUBLIC_EMPLOYMENT_AND_JOB_OFFERS,

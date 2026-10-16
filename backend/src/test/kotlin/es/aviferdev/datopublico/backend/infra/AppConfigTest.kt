@@ -7,7 +7,7 @@ import kotlin.test.assertFailsWith
 class AppConfigTest {
 
     @Test
-    fun `usa valores por defecto sin entorno`() {
+    fun `uses default values without environment`() {
         val config = AppConfig.fromEnv(emptyMap())
 
         assertEquals("0.0.0.0", config.host)
@@ -17,7 +17,7 @@ class AppConfigTest {
     }
 
     @Test
-    fun `lee los overrides del entorno`() {
+    fun `reads the environment overrides`() {
         val config = AppConfig.fromEnv(
             mapOf(
                 "SERVER_HOST" to "127.0.0.1",
@@ -34,14 +34,14 @@ class AppConfigTest {
     }
 
     @Test
-    fun `acepta PORT como alternativa a SERVER_PORT`() {
+    fun `accepts PORT as an alternative to SERVER_PORT`() {
         val config = AppConfig.fromEnv(mapOf("PORT" to "9090"))
 
         assertEquals(9090, config.port)
     }
 
     @Test
-    fun `ignora valores en blanco y usa los defaults`() {
+    fun `ignores blank values and uses the defaults`() {
         val config = AppConfig.fromEnv(mapOf("SERVER_HOST" to "  ", "SERVER_PORT" to "", "APP_ENV" to " "))
 
         assertEquals("0.0.0.0", config.host)
@@ -50,7 +50,7 @@ class AppConfigTest {
     }
 
     @Test
-    fun `falla con un puerto no numerico`() {
+    fun `fails with a non-numeric port`() {
         val error = assertFailsWith<IllegalArgumentException> {
             AppConfig.fromEnv(mapOf("SERVER_PORT" to "no-es-un-numero"))
         }
@@ -59,7 +59,7 @@ class AppConfigTest {
     }
 
     @Test
-    fun `falla con un puerto fuera de rank`() {
+    fun `fails with a port out of range`() {
         assertFailsWith<IllegalArgumentException> { AppConfig.fromEnv(mapOf("SERVER_PORT" to "0")) }
         assertFailsWith<IllegalArgumentException> { AppConfig.fromEnv(mapOf("SERVER_PORT" to "70000")) }
     }

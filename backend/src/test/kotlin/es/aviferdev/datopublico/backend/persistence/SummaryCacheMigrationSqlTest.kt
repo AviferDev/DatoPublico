@@ -12,7 +12,7 @@ import kotlin.test.assertFalse
  * referencia a `publicacion` en cascada, que el log de uso **no** tiene FK y que
  * **no** anticipa lo diferido. No ejecuta SQL.
  */
-class ResumenCacheMigrationSqlTest {
+class SummaryCacheMigrationSqlTest {
 
     @Test
     fun `creates the cache and usage tables`() {

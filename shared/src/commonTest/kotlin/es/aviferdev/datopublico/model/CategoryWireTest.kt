@@ -20,7 +20,7 @@ class CategoryWireTest {
         CategoryDto.OTHER_PROVISIONS_AND_ANNOUNCEMENTS to "otras_disposiciones_y_anuncios",
     )
 
-    private val tokensSeccion = mapOf(
+    private val sectionTokens = mapOf(
         BoeSectionDto.I to "I",
         BoeSectionDto.II_A to "II.A",
         BoeSectionDto.II_B to "II.B",
@@ -32,7 +32,7 @@ class CategoryWireTest {
     )
 
     @Test
-    fun categoriasUseStableSnakeCaseWireTokens() {
+    fun categoriesUseStableSnakeCaseWireTokens() {
         assertEquals(11, CategoryDto.entries.size)
         tokensEsperados.forEach { (category, token) ->
             val json = DatoPublicoJson.encodeToString(CategoryDto.serializer(), category)
@@ -45,14 +45,14 @@ class CategoryWireTest {
     }
 
     @Test
-    fun categoriasHaveUniqueTokens() {
+    fun categoriesHaveUniqueTokens() {
         assertEquals(tokensEsperados.size, tokensEsperados.values.toSet().size)
     }
 
     @Test
-    fun seccionBoeUsesOfficialNotation() {
+    fun sectionBoeUsesOfficialNotation() {
         assertEquals(8, BoeSectionDto.entries.size)
-        tokensSeccion.forEach { (section, token) ->
+        sectionTokens.forEach { (section, token) ->
             val json = DatoPublicoJson.encodeToString(BoeSectionDto.serializer(), section)
             assertEquals("\"$token\"", json)
             assertEquals(

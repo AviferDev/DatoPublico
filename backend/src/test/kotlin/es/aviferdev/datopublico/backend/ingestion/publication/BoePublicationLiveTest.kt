@@ -20,16 +20,16 @@ import kotlinx.coroutines.test.runTest
 class BoePublicationLiveTest {
 
     @Test
-    fun `descarga una publication real del BOE y produce body no vacio`() = runTest {
+    fun `downloads a real BOE publication and produces a non-empty body`() = runTest {
         if (System.getenv("BOE_LIVE_TEST") != "1") {
             println("BoePublicacionLiveTest omitido: exporta BOE_LIVE_TEST=1 para el test real.")
         } else {
             val httpClient = boeTextHttpClient()
             try {
                 val publication = BoePublicationHttpParser(BoeTextHttpClient(httpClient))
-                    .parse(entradaReal())
+                    .parse(realEntry())
 
-                assertEquals(IDENTIFICADOR, publication.id)
+                assertEquals(IDENTIFIER, publication.id)
                 assertEquals("Resolución", publication.rank)
                 assertTrue(
                     publication.body?.isNotBlank() == true,
@@ -41,21 +41,21 @@ class BoePublicationLiveTest {
         }
     }
 
-    private fun entradaReal(): SummaryEntry = SummaryEntry(
-        identifier = IDENTIFICADOR,
+    private fun realEntry(): SummaryEntry = SummaryEntry(
+        identifier = IDENTIFIER,
         control = "2023/3417",
         title = "Resolución de 21 de diciembre de 2023, de la Subsecretaría",
         publicationDate = "2024-01-02",
         section = BoeSectionDto.II_A,
         issuingBody = "MINISTERIO DE ASUNTOS EXTERIORES, UNIÓN EUROPEA Y COOPERACIÓN",
         heading = null,
-        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$IDENTIFICADOR",
-        xmlUrl = "https://www.boe.es/diario_boe/xml.php?id=$IDENTIFICADOR",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$IDENTIFIER",
+        xmlUrl = "https://www.boe.es/diario_boe/xml.php?id=$IDENTIFIER",
         pdfUrl = null,
     )
 
     private companion object {
         /** Publicación real de la Sección II.A, estable y verificada con `curl`. */
-        const val IDENTIFICADOR = "BOE-A-2024-87"
+        const val IDENTIFIER = "BOE-A-2024-87"
     }
 }

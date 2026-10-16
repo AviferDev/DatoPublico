@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 class SummaryParsingTest {
 
     @Test
-    fun `fixture real 20261009 devuelve todas las secciones presentes`() {
+    fun `real 20261009 fixture returns all present sections`() {
         val entries = parse("sumario-20261009.json", LocalDate.of(2026, 10, 9))
 
         assertEquals(
@@ -40,7 +40,7 @@ class SummaryParsingTest {
     }
 
     @Test
-    fun `fixture real 20261009 conserva los campos de una entry de la Seccion I`() {
+    fun `real 20261009 fixture keeps the fields of a Section I entry`() {
         val entry = parse("sumario-20261009.json", LocalDate.of(2026, 10, 9))
             .first { it.identifier == "BOE-A-2026-20976" }
 
@@ -58,7 +58,7 @@ class SummaryParsingTest {
     }
 
     @Test
-    fun `fixture real 20240102 con item y department en forma de objeto se parsea`() {
+    fun `real 20240102 fixture with item and department as an object is parsed`() {
         val entries = parse("sumario-20240102.json", LocalDate.of(2024, 1, 2))
 
         assertEquals(
@@ -83,7 +83,7 @@ class SummaryParsingTest {
     }
 
     @Test
-    fun `la envoltura text de la Seccion IV produce entries del modelo interno`() {
+    fun `the Section IV text wrapper produces internal-model entries`() {
         val entry = parse("sumario-20240102.json", LocalDate.of(2024, 1, 2))
             .first { it.identifier == "BOE-B-2024-1" }
 
@@ -100,15 +100,15 @@ class SummaryParsingTest {
     }
 
     @Test
-    fun `la union de las secciones de ambos fixtures cubre las ocho del BOE`() {
-        val secciones = listOf(
+    fun `the union of sections from both fixtures covers the eight BOE sections`() {
+        val sections = listOf(
             parse("sumario-20261009.json", LocalDate.of(2026, 10, 9)),
             parse("sumario-20240102.json", LocalDate.of(2024, 1, 2)),
         ).flatMap { entries -> entries.map { it.section } }.toSet()
 
         assertEquals(
             BoeSectionDto.entries.toSet(),
-            secciones,
+            sections,
             "Ningún fixture trae las 8 secciones por separado; su unión debe cubrirlas.",
         )
     }

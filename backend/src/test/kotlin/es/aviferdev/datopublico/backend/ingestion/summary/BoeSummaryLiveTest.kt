@@ -20,17 +20,17 @@ import kotlinx.coroutines.test.runTest
 class BoeSummaryLiveTest {
 
     @Test
-    fun `la API real devuelve 200 y entries de todas las secciones del BOE`() = runTest {
+    fun `the real API returns 200 and entries from all BOE sections`() = runTest {
         if (System.getenv("BOE_LIVE_TEST") != "1") {
             println("BoeSummaryLiveTest omitido: exporta BOE_LIVE_TEST=1 para el test real.")
         } else {
             val httpClient = boeSummaryHttpClient()
             try {
-                val entries = BoeSummaryHttpClient(httpClient).fetchSummary(FECHA_CON_TODAS_LAS_SECCIONES)
+                val entries = BoeSummaryHttpClient(httpClient).fetchSummary(DATE_WITH_ALL_SECTIONS)
 
                 assertTrue(
                     entries.isNotEmpty(),
-                    "La API real no devolvió entradas para $FECHA_CON_TODAS_LAS_SECCIONES",
+                    "La API real no devolvió entradas para $DATE_WITH_ALL_SECTIONS",
                 )
                 assertEquals(
                     BoeSectionDto.entries.toSet(),
@@ -46,6 +46,6 @@ class BoeSummaryLiveTest {
 
     private companion object {
         /** 2024-01-09 es un día laborable con las ocho secciones del sumario. */
-        val FECHA_CON_TODAS_LAS_SECCIONES: LocalDate = LocalDate.of(2024, 1, 9)
+        val DATE_WITH_ALL_SECTIONS: LocalDate = LocalDate.of(2024, 1, 9)
     }
 }

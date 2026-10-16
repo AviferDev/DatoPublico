@@ -25,7 +25,7 @@ import kotlinx.coroutines.test.runTest
 class BoeTextClientTest {
 
     @Test
-    fun `pide GET a la url absoluta con Accept application xml y parsea el document`() = runTest {
+    fun `requests GET the absolute url with Accept application xml and parses the document`() = runTest {
         var capturada: HttpRequestData? = null
         val client = clientCon(
             MockEngine { request ->
@@ -49,7 +49,7 @@ class BoeTextClientTest {
     }
 
     @Test
-    fun `decodifica el cuerpo como UTF-8 conservando acentos`() = runTest {
+    fun `decodes the body as UTF-8 keeping accents`() = runTest {
         val client = clientCon(
             MockEngine {
                 respond(
@@ -66,14 +66,14 @@ class BoeTextClientTest {
     }
 
     @Test
-    fun `un 404 devuelve null`() = runTest {
+    fun `a 404 returns null`() = runTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.NotFound, "sin texto") })
 
         assertNull(BoeTextHttpClient(client).fetchDocument(URL_XML))
     }
 
     @Test
-    fun `un estado distinto de 200 y 404 lanza BoeTextException`() = runTest {
+    fun `a status other than 200 and 404 throws BoeTextException`() = runTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.InternalServerError, "boom") })
 
         val error = assertFailsWith<BoeTextException> {
@@ -85,7 +85,7 @@ class BoeTextClientTest {
     }
 
     @Test
-    fun `un fallo de red lanza BoeTextException`() = runTest {
+    fun `a network failure throws BoeTextException`() = runTest {
         val client = clientCon(MockEngine { throw IOException("sin conexión") })
 
         val error = assertFailsWith<BoeTextException> {
@@ -97,7 +97,7 @@ class BoeTextClientTest {
     }
 
     @Test
-    fun `un cuerpo xml malformado lanza BoeTextException`() = runTest {
+    fun `a malformed xml body throws BoeTextException`() = runTest {
         val client = clientCon(
             MockEngine {
                 respond(
@@ -118,8 +118,8 @@ class BoeTextClientTest {
     private fun clientCon(engine: MockEngine): HttpClient = HttpClient(engine) { expectSuccess = false }
 
     /** Lee un recurso de `src/test/resources/boe` como texto UTF-8. */
-    private fun recurso(ruta: String): String =
-        checkNotNull(javaClass.getResourceAsStream("/boe/$ruta")) { "No se encontró /boe/$ruta" }
+    private fun recurso(path: String): String =
+        checkNotNull(javaClass.getResourceAsStream("/boe/$path")) { "No se encontró /boe/$path" }
             .readBytes()
             .decodeToString()
 

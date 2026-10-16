@@ -57,7 +57,7 @@ class CitizenSummaryGenerator(
         val category = requireCategory(publication)
         val request = promptBuilder.build(publication, retrieve(publication, limit))
         val response = textGenerationProvider.generate(request)
-        val summary = parser.parse(response.text).toResumenDto(publication.officialUrl)
+        val summary = parser.parse(response.text).toSummaryDto(publication.officialUrl)
         return resultOf(summary, CitizenSummaryValidator.validate(summary, category), response.usage)
     }
 

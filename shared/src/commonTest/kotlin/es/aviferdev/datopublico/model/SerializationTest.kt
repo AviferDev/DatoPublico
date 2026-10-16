@@ -16,7 +16,7 @@ class SerializationTest {
         deadline = DeadlineDto(deadlineDate = "2026-10-30", description = "20 días hábiles"),
     )
 
-    private val publicacion = PublicationDto(
+    private val publication = PublicationDto(
         id = "BOE-B-2026-1234",
         title = "Resolución de convocatoria de plazas",
         publicationDate = "2026-10-09",
@@ -30,11 +30,11 @@ class SerializationTest {
     )
 
     @Test
-    fun publicationWithResumenRoundTrips() {
-        val json = DatoPublicoJson.encodeToString(PublicationDto.serializer(), publicacion)
+    fun publicationWithSummaryRoundTrips() {
+        val json = DatoPublicoJson.encodeToString(PublicationDto.serializer(), publication)
         val decoded = DatoPublicoJson.decodeFromString(PublicationDto.serializer(), json)
 
-        assertEquals(publicacion, decoded)
+        assertEquals(publication, decoded)
         assertTrue(json.contains("\"oposiciones_y_empleo_publico\""))
         assertTrue(json.contains("\"II.B\""))
     }
@@ -64,7 +64,7 @@ class SerializationTest {
     }
 
     @Test
-    fun plazoKeepsIsoDateAsString() {
+    fun deadlineKeepsIsoDateAsString() {
         val deadline = DeadlineDto(deadlineDate = "2026-10-30")
         val decoded = DatoPublicoJson.decodeFromString(
             DeadlineDto.serializer(),
@@ -77,7 +77,7 @@ class SerializationTest {
     }
 
     @Test
-    fun resumenDefaultsRoundTrip() {
+    fun summaryDefaultsRoundTrip() {
         val minimo = SummaryDto(
             whatChanges = "Cambio",
             whoIsAffected = "Afectados",
@@ -97,7 +97,7 @@ class SerializationTest {
 
     @Test
     fun dailySummaryRoundTrips() {
-        val summary = DailySummaryDto(date = "2026-10-09", publications = listOf(publicacion))
+        val summary = DailySummaryDto(date = "2026-10-09", publications = listOf(publication))
 
         val decoded = DatoPublicoJson.decodeFromString(
             DailySummaryDto.serializer(),
@@ -123,7 +123,7 @@ class SerializationTest {
     }
 
     @Test
-    fun dailySummaryWithoutPublicacionesDefaults() {
+    fun dailySummaryWithoutPublicationsDefaults() {
         val decoded = DatoPublicoJson.decodeFromString(
             DailySummaryDto.serializer(),
             """{"fecha":"2026-10-09"}""",

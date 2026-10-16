@@ -6,7 +6,7 @@ import es.aviferdev.datopublico.backend.persistence.FeedItem
 import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.ResumenDiarioDto
+import es.aviferdev.datopublico.model.DailySummaryDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.client.statement.bodyAsText
@@ -37,13 +37,13 @@ class FeedRouteTest {
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
-        val feed = DatoPublicoJson.decodeFromString<ResumenDiarioDto>(response.bodyAsText())
-        assertEquals(DATE, feed.fecha)
+        val feed = DatoPublicoJson.decodeFromString<DailySummaryDto>(response.bodyAsText())
+        assertEquals(DATE, feed.date)
         assertEquals(1, feed.page)
         assertEquals(20, feed.pageSize)
         assertEquals(1, feed.total)
         assertEquals(1, feed.totalPages)
-        assertEquals(listOf("BOE-A-1"), feed.publicaciones.map { it.id })
+        assertEquals(listOf("BOE-A-1"), feed.publications.map { it.id })
         assertTrue(feed.highlights.isNotEmpty())
     }
 
@@ -54,10 +54,10 @@ class FeedRouteTest {
         val response = client.get("/v1/feed?fecha=2026-01-01")
 
         assertEquals(HttpStatusCode.OK, response.status)
-        val feed = DatoPublicoJson.decodeFromString<ResumenDiarioDto>(response.bodyAsText())
+        val feed = DatoPublicoJson.decodeFromString<DailySummaryDto>(response.bodyAsText())
         assertEquals(0, feed.total)
         assertEquals(0, feed.totalPages)
-        assertTrue(feed.publicaciones.isEmpty())
+        assertTrue(feed.publications.isEmpty())
     }
 
     @Test
@@ -108,17 +108,17 @@ class FeedRouteTest {
     private fun item(id: String): FeedItem = FeedItem(
         publication = Publicacion(
             id = id,
-            titulo = "Ley de prueba",
-            fechaPublicacion = DATE,
-            organismo = "Jefatura del Estado",
-            seccion = SeccionBoeDto.I,
-            epigrafe = null,
+            title = "Ley de prueba",
+            publicationDate = DATE,
+            issuingBody = "Jefatura del Estado",
+            section = SeccionBoeDto.I,
+            heading = null,
             texto = null,
-            urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+            officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
             urlXml = null,
             urlPdf = null,
             rango = "Ley",
-            categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
+            category = CategoriaDto.NORMAS_Y_LEGISLACION,
         ),
         summary = SummaryEntity(
             publicationId = id,
@@ -132,7 +132,7 @@ class FeedRouteTest {
     /** Doble en memoria de [FeedRepository]. */
     private class InMemoryFeedRepository(private val items: List<FeedItem>) : FeedRepository {
         override fun listPublishedByDate(publicationDate: String): List<FeedItem> =
-            items.filter { item -> item.publication.fechaPublicacion == publicationDate }
+            items.filter { item -> item.publication.publicationDate == publicationDate }
 
         override fun listPublishedByIds(ids: List<String>): List<FeedItem> =
             items.filter { item -> item.publication.id in ids }

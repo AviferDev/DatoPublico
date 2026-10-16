@@ -64,17 +64,17 @@ class PublicationCitationResolverLiveTest {
 
     private fun publication(): Publicacion = Publicacion(
         id = PUBLICATION_ID,
-        titulo = "Real Decreto de prueba del chat",
-        fechaPublicacion = DATE,
-        organismo = null,
-        seccion = SeccionBoeDto.I,
-        epigrafe = null,
+        title = "Real Decreto de prueba del chat",
+        publicationDate = DATE,
+        issuingBody = null,
+        section = SeccionBoeDto.I,
+        heading = null,
         texto = null,
-        urlOficial = URL,
+        officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoriaDto.NORMAS_Y_LEGISLACION,
     )
 
     /** Borra la publicación de prueba. */

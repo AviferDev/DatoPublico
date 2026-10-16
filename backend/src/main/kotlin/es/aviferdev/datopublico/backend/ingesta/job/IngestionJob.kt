@@ -34,7 +34,7 @@ data class IngestionResult(
  *
  * Reejecutar la misma fecha **no duplica** filas: `PublicationRepository.save` es
  * un *upsert* por `id`. [es.aviferdev.datopublico.model.CategoriaDto] y
- * [es.aviferdev.datopublico.model.PlazoDto] llegan siempre `null` aquí; los
+ * [es.aviferdev.datopublico.model.DeadlineDto] llegan siempre `null` aquí; los
  * clasifica FT00012.
  */
 interface IngestionJob {

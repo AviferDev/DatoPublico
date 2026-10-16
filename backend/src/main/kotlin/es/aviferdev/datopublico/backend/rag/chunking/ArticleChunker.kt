@@ -44,7 +44,7 @@ class ArticleChunker(
      * @return fragmentos con `order` contiguo desde `0`; lista vacía sin texto.
      */
     fun chunk(publicacion: Publicacion): List<Fragment> {
-        val sectionReference = SECTION_REFERENCE_PREFIX + publicacion.seccion.name
+        val sectionReference = SECTION_REFERENCE_PREFIX + publicacion.section.name
         val lines = nonEmptyLines(publicacion.texto)
         val blocks = blocksOf(lines, sectionReference)
         return blocks

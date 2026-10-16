@@ -64,19 +64,19 @@ class HighlightRanker {
      * cada razón devuelta, así que puntuación y explicación no pueden divergir.
      */
     private fun reasonsOf(publication: Publicacion): List<HighlightReason> = buildList {
-        if (publication.seccion == SeccionBoeDto.I) {
+        if (publication.section == SeccionBoeDto.I) {
             add(HighlightReason.NORMATIVE_SECTION)
         }
         if (rankScoreOf(publication.rango) > NO_WEIGHT) {
             add(HighlightReason.NORMATIVE_RANK)
         }
-        if (publication.categoria in THEMATIC_CATEGORIES) {
+        if (publication.category in THEMATIC_CATEGORIES) {
             add(HighlightReason.THEMATIC_KEYWORD)
         }
-        if (publication.plazo != null) {
+        if (publication.deadline != null) {
             add(HighlightReason.OPEN_DEADLINE)
         }
-        if (isRelevantBody(publication.organismo)) {
+        if (isRelevantBody(publication.issuingBody)) {
             add(HighlightReason.RELEVANT_BODY)
         }
     }

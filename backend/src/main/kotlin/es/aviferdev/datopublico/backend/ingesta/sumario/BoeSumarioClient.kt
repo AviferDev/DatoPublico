@@ -19,7 +19,7 @@ interface BoeSumarioClient {
      * @throws BoeSumarioException si la fuente falla (red) o responde con un
      *   estado distinto de `200`/`404`, o con un cuerpo ilegible.
      */
-    suspend fun obtenerSumario(fecha: LocalDate): List<EntradaSumario>
+    suspend fun obtenerSumario(date: LocalDate): List<EntradaSumario>
 }
 
 /** Error al obtener el sumario del BOE (red, estado inesperado o cuerpo ilegible). */
@@ -29,10 +29,10 @@ class BoeSumarioException(message: String, cause: Throwable? = null) : Exception
  * Traduce el sobre de wire del BOE al modelo interno, aplanando la jerarquía
  * sección → departamento → (epígrafe →) entrada. No se descarta ninguna sección.
  */
-internal fun BoeSumarioResponseDto.toEntradasSumario(fecha: LocalDate): List<EntradaSumario> {
-    val fechaIso = fecha.toString()
+internal fun BoeSumarioResponseDto.toEntradasSumario(date: LocalDate): List<EntradaSumario> {
+    val fechaIso = date.toString()
     return data?.sumario?.diario.orEmpty().flatMap { diario ->
-        diario.seccion.flatMap { seccion -> seccion.entradas(fechaIso) }
+        diario.section.flatMap { section -> section.entradas(fechaIso) }
     }
 }
 
@@ -43,33 +43,33 @@ private fun BoeSeccionDto.entradas(fechaIso: String): List<EntradaSumario> =
 
 private fun BoeDepartamentoDto.entradas(
     fechaIso: String,
-    seccion: SeccionBoeDto,
+    section: SeccionBoeDto,
 ): List<EntradaSumario> = buildList {
-    item.forEach { add(it.toEntrada(fechaIso, seccion, organismo = nombre, epigrafe = null)) }
-    epigrafe.forEach { epigrafeDto ->
+    item.forEach { add(it.toEntrada(fechaIso, section, issuingBody = nombre, heading = null)) }
+    heading.forEach { epigrafeDto ->
         epigrafeDto.item.forEach {
-            add(it.toEntrada(fechaIso, seccion, organismo = nombre, epigrafe = epigrafeDto.nombre))
+            add(it.toEntrada(fechaIso, section, issuingBody = nombre, heading = epigrafeDto.nombre))
         }
     }
     texto?.item.orEmpty().forEach {
-        add(it.toEntrada(fechaIso, seccion, organismo = nombre, epigrafe = null))
+        add(it.toEntrada(fechaIso, section, issuingBody = nombre, heading = null))
     }
 }
 
 private fun BoeSumarioItemDto.toEntrada(
     fechaIso: String,
-    seccion: SeccionBoeDto,
-    organismo: String?,
-    epigrafe: String?,
+    section: SeccionBoeDto,
+    issuingBody: String?,
+    heading: String?,
 ): EntradaSumario = EntradaSumario(
     identificador = identificador.orEmpty(),
     control = control,
-    titulo = titulo.orEmpty(),
-    fechaPublicacion = fechaIso,
-    seccion = seccion,
-    organismo = organismo,
-    epigrafe = epigrafe,
-    urlOficial = urlHtml ?: urlPdf?.texto.orEmpty(),
+    title = title.orEmpty(),
+    publicationDate = fechaIso,
+    section = section,
+    issuingBody = issuingBody,
+    heading = heading,
+    officialUrl = urlHtml ?: urlPdf?.texto.orEmpty(),
     urlXml = urlXml,
     urlPdf = urlPdf?.texto,
 )

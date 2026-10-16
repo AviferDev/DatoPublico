@@ -4,7 +4,7 @@ import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.rag.summary.CitizenSummaryGenerator
 import es.aviferdev.datopublico.backend.rag.summary.CitizenSummaryResult
 import es.aviferdev.datopublico.backend.rag.summary.SummaryGenerationDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 
 /**
  * Generador **inyectable** de la evaluación de resúmenes (FT00024).
@@ -94,9 +94,9 @@ class SummaryQualityEvaluator(
     }
 
     /** Puntúa un resumen **válido** contra su referencia. */
-    private fun validEntryResult(entry: SummaryGoldenSetEntry, summary: ResumenDto): SummaryEntryResult {
-        val whatChangesF1 = SummaryQualityMetrics.tokenF1(summary.queCambia, entry.reference.queCambia)
-        val whoIsAffectedF1 = SummaryQualityMetrics.tokenF1(summary.aQuienAfecta, entry.reference.aQuienAfecta)
+    private fun validEntryResult(entry: SummaryGoldenSetEntry, summary: SummaryDto): SummaryEntryResult {
+        val whatChangesF1 = SummaryQualityMetrics.tokenF1(summary.whatChanges, entry.reference.whatChanges)
+        val whoIsAffectedF1 = SummaryQualityMetrics.tokenF1(summary.whoIsAffected, entry.reference.whoIsAffected)
         return SummaryEntryResult(
             entryId = entry.id,
             whatChangesF1 = whatChangesF1,
@@ -183,15 +183,15 @@ data class SummaryEntryResult(
 )
 
 /**
- * Mapea el resumen publicado [ResumenDto] a la forma comparable
+ * Mapea el resumen publicado [SummaryDto] a la forma comparable
  * [SummaryGenerationDto] (los campos que la métrica necesita).
  *
  * Es una extensión **privada** y pura: solo cierra el encaje de tipos entre el
  * contrato de wire y el DTO que consumen las métricas.
  */
-private fun ResumenDto.toGenerationDto(): SummaryGenerationDto = SummaryGenerationDto(
-    queCambia = queCambia,
-    aQuienAfecta = aQuienAfecta,
-    cifrasClave = cifrasClave,
-    plazo = plazo,
+private fun SummaryDto.toGenerationDto(): SummaryGenerationDto = SummaryGenerationDto(
+    whatChanges = whatChanges,
+    whoIsAffected = whoIsAffected,
+    keyFigures = keyFigures,
+    deadline = deadline,
 )

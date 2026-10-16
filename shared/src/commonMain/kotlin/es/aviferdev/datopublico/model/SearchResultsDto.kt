@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
  * [query] es el **eco** de la consulta recibida (token de wire `q`) y [results]
  * son las publicaciones más relevantes, ya **deduplicadas** por publicación y
  * ordenadas por similitud semántica descendente. Cada resultado es el **mismo**
- * [PublicacionDto] del feed (con su `resumen` publicado, `categoria`, `urlOficial`
+ * [PublicationDto] del feed (con su `resumen` publicado, `categoria`, `urlOficial`
  * y `plazo`), no un DTO nuevo por ítem.
  *
  * No expone `total` ni paginación: la búsqueda es **top-k** (ANN), no paginable de
@@ -23,5 +23,5 @@ data class SearchResultsDto(
     @SerialName("q")
     val query: String,
     @SerialName("resultados")
-    val results: List<PublicacionDto> = emptyList(),
+    val results: List<PublicationDto> = emptyList(),
 )

@@ -36,17 +36,17 @@ class PublicationCitationResolverTest {
 
     private fun publication(): Publicacion = Publicacion(
         id = PUBLICATION_ID,
-        titulo = "Real Decreto de prueba",
-        fechaPublicacion = "2026-10-11",
-        organismo = null,
-        seccion = SeccionBoeDto.I,
-        epigrafe = null,
+        title = "Real Decreto de prueba",
+        publicationDate = "2026-10-11",
+        issuingBody = null,
+        section = SeccionBoeDto.I,
+        heading = null,
         texto = null,
-        urlOficial = URL,
+        officialUrl = URL,
         urlXml = null,
         urlPdf = null,
         rango = "Real Decreto",
-        categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
+        category = CategoriaDto.NORMAS_Y_LEGISLACION,
     )
 
     /** Doble en memoria de [PublicationRepository] para el gate. */
@@ -59,7 +59,7 @@ class PublicationCitationResolverTest {
             publications.firstOrNull { publication -> publication.id == id }
 
         override fun listByDate(publicationDate: String): List<Publicacion> =
-            publications.filter { publication -> publication.fechaPublicacion == publicationDate }
+            publications.filter { publication -> publication.publicationDate == publicationDate }
     }
 
     private companion object {

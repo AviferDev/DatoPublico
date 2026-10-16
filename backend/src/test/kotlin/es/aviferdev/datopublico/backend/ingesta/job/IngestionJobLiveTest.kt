@@ -72,7 +72,7 @@ class IngestionJobLiveTest {
 
     /** Sumario de prueba con dos entradas de la sección I. */
     private fun testSummary(): BoeSumarioClient = object : BoeSumarioClient {
-        override suspend fun obtenerSumario(fecha: LocalDate): List<EntradaSumario> =
+        override suspend fun obtenerSumario(date: LocalDate): List<EntradaSumario> =
             listOf(entry(ID_1), entry(ID_2))
     }
 
@@ -80,13 +80,13 @@ class IngestionJobLiveTest {
     private fun testParser(): BoePublicacionParser = object : BoePublicacionParser {
         override suspend fun parsear(entrada: EntradaSumario): Publicacion = Publicacion(
             id = entrada.identificador,
-            titulo = entrada.titulo,
-            fechaPublicacion = entrada.fechaPublicacion,
-            organismo = entrada.organismo,
-            seccion = entrada.seccion,
-            epigrafe = entrada.epigrafe,
+            title = entrada.title,
+            publicationDate = entrada.publicationDate,
+            issuingBody = entrada.issuingBody,
+            section = entrada.section,
+            heading = entrada.heading,
             texto = "texto de prueba de ${entrada.identificador}",
-            urlOficial = entrada.urlOficial,
+            officialUrl = entrada.officialUrl,
             urlXml = entrada.urlXml,
             urlPdf = entrada.urlPdf,
             rango = null,
@@ -96,12 +96,12 @@ class IngestionJobLiveTest {
     private fun entry(id: String): EntradaSumario = EntradaSumario(
         identificador = id,
         control = null,
-        titulo = "Publicación de prueba $id",
-        fechaPublicacion = DATE.toString(),
-        seccion = SeccionBoeDto.I,
-        organismo = "MINISTERIO DE PRUEBA",
-        epigrafe = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        title = "Publicación de prueba $id",
+        publicationDate = DATE.toString(),
+        section = SeccionBoeDto.I,
+        issuingBody = "MINISTERIO DE PRUEBA",
+        heading = null,
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = "https://www.boe.es/diario_boe/xml.php?id=$id",
         urlPdf = null,
     )

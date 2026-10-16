@@ -54,10 +54,12 @@ class CitizenSummaryPromptBuilder {
     /** Prompt de usuario: metadatos, contexto delimitado y esquema de salida. */
     private fun renderUserPrompt(publication: Publicacion, context: String): String = buildString {
         appendLine("Publicación del BOE:")
-        appendLine("- Título: ${publication.titulo}")
-        appendLine("- Fecha de publicación: ${publication.fechaPublicacion}")
-        publication.organismo?.takeIf { it.isNotBlank() }?.let { organismo -> appendLine("- Organismo: $organismo") }
-        publication.categoria?.let { categoria -> appendLine("- Categoría: ${categoria.name}") }
+        appendLine("- Título: ${publication.title}")
+        appendLine("- Fecha de publicación: ${publication.publicationDate}")
+        publication.issuingBody
+            ?.takeIf { it.isNotBlank() }
+            ?.let { body -> appendLine("- Organismo: $body") }
+        publication.category?.let { category -> appendLine("- Categoría: ${category.name}") }
         appendLine()
         appendLine(CONTEXT_HEADER)
         appendLine(context)
@@ -70,7 +72,7 @@ class CitizenSummaryPromptBuilder {
 
     /** Variante del contrato; sin categoría se asume la general. */
     private fun variantOf(publication: Publicacion): CitizenSummaryVariant =
-        publication.categoria?.let { categoria -> CitizenSummaryVariantResolver.variantFor(categoria) }
+        publication.category?.let { category -> CitizenSummaryVariantResolver.variantFor(category) }
             ?: CitizenSummaryVariant.GENERAL
 
     companion object {

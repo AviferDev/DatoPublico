@@ -61,9 +61,9 @@ class SummaryQualityMetricsTest {
     @Test
     fun `figures of a summary come from all comparable fields`() {
         val summary = summary(
-            queCambia = "Se convocan 2.000 ayudas",
-            aQuienAfecta = "Estudiantes de master",
-            cifrasClave = listOf("6 meses"),
+            whatChanges = "Se convocan 2.000 ayudas",
+            whoIsAffected = "Estudiantes de master",
+            keyFigures = listOf("6 meses"),
         )
 
         assertEquals(listOf("2", "000", "6"), SummaryQualityMetrics.figuresOf(summary))
@@ -72,9 +72,9 @@ class SummaryQualityMetricsTest {
     @Test
     fun `figures recall is the fraction of required figures present`() {
         val summary = summary(
-            queCambia = "Se convocan 2.000 ayudas",
-            aQuienAfecta = "Estudiantes de master",
-            cifrasClave = listOf("6 meses"),
+            whatChanges = "Se convocan 2.000 ayudas",
+            whoIsAffected = "Estudiantes de master",
+            keyFigures = listOf("6 meses"),
         )
 
         assertEquals(1.0, SummaryQualityMetrics.figuresRecall(summary, listOf("2", "6")), TOLERANCE)
@@ -84,27 +84,27 @@ class SummaryQualityMetricsTest {
 
     @Test
     fun `figures recall ignores duplicated reference figures`() {
-        val summary = summary(queCambia = "Se convocan 2.000 ayudas")
+        val summary = summary(whatChanges = "Se convocan 2.000 ayudas")
 
         assertEquals(1.0, SummaryQualityMetrics.figuresRecall(summary, listOf("2", "2", "000")), TOLERANCE)
     }
 
     @Test
     fun `a reference without figures is vacuously satisfied`() {
-        val summary = summary(queCambia = "Convocatoria sin cifras")
+        val summary = summary(whatChanges = "Convocatoria sin cifras")
 
         assertEquals(1.0, SummaryQualityMetrics.figuresRecall(summary, emptyList()), TOLERANCE)
     }
 
     /** Resumen de prueba con la forma del DTO de generación. */
     private fun summary(
-        queCambia: String = "Que cambia",
-        aQuienAfecta: String = "A quien afecta",
-        cifrasClave: List<String> = emptyList(),
+        whatChanges: String = "Que cambia",
+        whoIsAffected: String = "A quien afecta",
+        keyFigures: List<String> = emptyList(),
     ): SummaryGenerationDto = SummaryGenerationDto(
-        queCambia = queCambia,
-        aQuienAfecta = aQuienAfecta,
-        cifrasClave = cifrasClave,
+        whatChanges = whatChanges,
+        whoIsAffected = whoIsAffected,
+        keyFigures = keyFigures,
     )
 
     private companion object {

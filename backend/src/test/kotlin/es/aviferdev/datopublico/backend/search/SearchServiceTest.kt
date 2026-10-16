@@ -11,7 +11,7 @@ import es.aviferdev.datopublico.backend.rag.embeddings.EmbeddingProvider
 import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PlazoDto
+import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -43,9 +43,9 @@ class SearchServiceTest {
 
         assertEquals("becas para jóvenes", result.query)
         assertEquals(listOf("BOE-A-1"), result.results.map { publication -> publication.id })
-        assertTrue(result.results.all { publication -> publication.resumen != null })
-        assertTrue(result.results.all { publication -> publication.urlOficial.isNotBlank() })
-        assertEquals(becas, result.results.first().categoria)
+        assertTrue(result.results.all { publication -> publication.summary != null })
+        assertTrue(result.results.all { publication -> publication.officialUrl.isNotBlank() })
+        assertEquals(becas, result.results.first().category)
     }
 
     @Test
@@ -158,18 +158,18 @@ class SearchServiceTest {
     private fun published(publicationId: String, category: CategoriaDto, date: String): FeedItem = FeedItem(
         publication = Publicacion(
             id = publicationId,
-            titulo = "Publicación $publicationId",
-            fechaPublicacion = date,
-            organismo = "Ministerio de prueba",
-            seccion = SeccionBoeDto.I,
-            epigrafe = null,
+            title = "Publicación $publicationId",
+            publicationDate = date,
+            issuingBody = "Ministerio de prueba",
+            section = SeccionBoeDto.I,
+            heading = null,
             texto = null,
-            urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$publicationId",
+            officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$publicationId",
             urlXml = null,
             urlPdf = null,
             rango = null,
-            categoria = category,
-            plazo = PlazoDto(fechaLimite = "2026-12-31"),
+            category = category,
+            deadline = DeadlineDto(deadlineDate = "2026-12-31"),
         ),
         summary = SummaryEntity(
             publicationId = publicationId,

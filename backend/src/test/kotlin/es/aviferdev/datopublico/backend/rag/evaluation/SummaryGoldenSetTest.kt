@@ -24,11 +24,11 @@ class SummaryGoldenSetTest {
         assertEquals(ids.toSet().size, ids.size, "los ids deben ser únicos")
         assertTrue(ids.all { id -> id.startsWith(ID_PREFIX) }, "los ids deben usar el prefijo $ID_PREFIX")
         dataset.entries.forEach { entry ->
-            assertNotNull(entry.publication.categoria, "la entrada ${entry.id} necesita categoría")
-            assertTrue(entry.publication.titulo.isNotBlank(), "la entrada ${entry.id} necesita título")
+            assertNotNull(entry.publication.category, "la entrada ${entry.id} necesita categoría")
+            assertTrue(entry.publication.title.isNotBlank(), "la entrada ${entry.id} necesita título")
             assertTrue(entry.publication.texto.orEmpty().isNotBlank(), "la entrada ${entry.id} necesita texto")
-            assertTrue(entry.reference.queCambia.isNotBlank(), "la referencia de ${entry.id} necesita «Qué cambia»")
-            assertTrue(entry.reference.aQuienAfecta.isNotBlank(), "la referencia de ${entry.id} necesita «A quién afecta»")
+            assertTrue(entry.reference.whatChanges.isNotBlank(), "la referencia de ${entry.id} necesita «Qué cambia»")
+            assertTrue(entry.reference.whoIsAffected.isNotBlank(), "la referencia de ${entry.id} necesita «A quién afecta»")
         }
     }
 
@@ -38,7 +38,7 @@ class SummaryGoldenSetTest {
         val entry = dataset.entries.first()
 
         assertEquals(entry.id, entry.publication.id)
-        assertTrue(entry.publication.urlOficial.contains(entry.id))
+        assertTrue(entry.publication.officialUrl.contains(entry.id))
     }
 
     @Test

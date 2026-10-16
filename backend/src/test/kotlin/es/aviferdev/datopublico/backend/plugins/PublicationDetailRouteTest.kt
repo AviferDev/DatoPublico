@@ -7,8 +7,8 @@ import es.aviferdev.datopublico.backend.persistence.SummaryRepository
 import es.aviferdev.datopublico.backend.publication.PublicationDetailService
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PlazoDto
-import es.aviferdev.datopublico.model.PublicacionDto
+import es.aviferdev.datopublico.model.DeadlineDto
+import es.aviferdev.datopublico.model.PublicationDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import es.aviferdev.datopublico.serialization.DatoPublicoJson
 import io.ktor.client.request.get
@@ -25,7 +25,7 @@ import kotlin.test.assertTrue
 
 /**
  * Tests de gate de la ruta `GET /v1/publicacion/{id}` (FT00027) con `testApplication`
- * y repositorios en memoria: `200` con el JSON `PublicacionDto` (resumen,
+ * y repositorios en memoria: `200` con el JSON `PublicationDto` (resumen,
  * categoría, `urlOficial` y plazo), `400` por id en blanco/desmesurado, `404` por
  * id desconocido o resumen no publicado y `404` cuando el servicio no se registra
  * (sin base de datos).
@@ -43,16 +43,16 @@ class PublicationDetailRouteTest {
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
-        val detail = DatoPublicoJson.decodeFromString<PublicacionDto>(response.bodyAsText())
+        val detail = DatoPublicoJson.decodeFromString<PublicationDto>(response.bodyAsText())
         assertEquals(PUBLISHED_ID, detail.id)
-        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, detail.categoria)
-        assertEquals("https://www.boe.es/diario_boe/txt.php?id=$PUBLISHED_ID", detail.urlOficial)
-        assertEquals(PlazoDto("2026-10-30", "20 días hábiles"), detail.plazo)
-        val summary = detail.resumen
+        assertEquals(CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS, detail.category)
+        assertEquals("https://www.boe.es/diario_boe/txt.php?id=$PUBLISHED_ID", detail.officialUrl)
+        assertEquals(DeadlineDto("2026-10-30", "20 días hábiles"), detail.deadline)
+        val summary = detail.summary
         assertNotNull(summary)
-        assertEquals("Cambia algo en $PUBLISHED_ID", summary.queCambia)
-        assertEquals("https://www.boe.es/diario_boe/txt.php?id=$PUBLISHED_ID", summary.fuenteOficial)
-        assertTrue(summary.avisoIA)
+        assertEquals("Cambia algo en $PUBLISHED_ID", summary.whatChanges)
+        assertEquals("https://www.boe.es/diario_boe/txt.php?id=$PUBLISHED_ID", summary.officialSource)
+        assertTrue(summary.aiNotice)
     }
 
     @Test
@@ -108,18 +108,18 @@ class PublicationDetailRouteTest {
 
     private fun publication(id: String): Publicacion = Publicacion(
         id = id,
-        titulo = "Convocatoria de prueba",
-        fechaPublicacion = DATE,
-        organismo = "Ministerio de prueba",
-        seccion = SeccionBoeDto.II_B,
-        epigrafe = "Becas y ayudas",
+        title = "Convocatoria de prueba",
+        publicationDate = DATE,
+        issuingBody = "Ministerio de prueba",
+        section = SeccionBoeDto.II_B,
+        heading = "Becas y ayudas",
         texto = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = "Resolución",
-        categoria = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
-        plazo = PlazoDto("2026-10-30", "20 días hábiles"),
+        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        deadline = DeadlineDto("2026-10-30", "20 días hábiles"),
     )
 
     private fun summary(publicationId: String, status: String): SummaryEntity = SummaryEntity(
@@ -140,7 +140,7 @@ class PublicationDetailRouteTest {
             publications.firstOrNull { publication -> publication.id == id }
 
         override fun listByDate(publicationDate: String): List<Publicacion> =
-            publications.filter { publication -> publication.fechaPublicacion == publicationDate }
+            publications.filter { publication -> publication.publicationDate == publicationDate }
     }
 
     /** Doble en memoria de [SummaryRepository] para el gate. */

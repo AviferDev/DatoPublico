@@ -4,7 +4,7 @@ import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.rag.summary.CitizenSummaryResult
 import es.aviferdev.datopublico.backend.rag.summary.SummaryGenerationDto
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -143,42 +143,42 @@ class SummaryQualityEvaluatorTest {
     /** Publicación mínima con categoría y texto (el evaluador solo usa el id). */
     private fun publication(id: String): Publicacion = Publicacion(
         id = id,
-        titulo = "Título",
-        fechaPublicacion = "2026-10-09",
-        organismo = "Organismo",
-        seccion = SeccionBoeDto.III,
-        epigrafe = null,
+        title = "Título",
+        publicationDate = "2026-10-09",
+        issuingBody = "Organismo",
+        section = SeccionBoeDto.III,
+        heading = null,
         texto = "Artículo 1\nTexto.",
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        categoria = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
     )
 
     /** Resumen de referencia de prueba. */
     private fun reference(
-        queCambia: String,
-        aQuienAfecta: String,
-        cifrasClave: List<String> = emptyList(),
+        whatChanges: String,
+        whoIsAffected: String,
+        keyFigures: List<String> = emptyList(),
     ): SummaryGenerationDto = SummaryGenerationDto(
-        queCambia = queCambia,
-        aQuienAfecta = aQuienAfecta,
-        cifrasClave = cifrasClave,
+        whatChanges = whatChanges,
+        whoIsAffected = whoIsAffected,
+        keyFigures = keyFigures,
     )
 
     /** Resumen válido de prueba con la fuente inyectada. */
     private fun valid(
-        queCambia: String,
-        aQuienAfecta: String,
-        cifrasClave: List<String> = emptyList(),
+        whatChanges: String,
+        whoIsAffected: String,
+        keyFigures: List<String> = emptyList(),
     ): CitizenSummaryResult.Valid = CitizenSummaryResult.Valid(
-        ResumenDto(
-            queCambia = queCambia,
-            aQuienAfecta = aQuienAfecta,
-            cifrasClave = cifrasClave,
-            fuenteOficial = "https://www.boe.es/diario_boe/txt.php?id=$ENTRY_A",
-            avisoIA = true,
+        SummaryDto(
+            whatChanges = whatChanges,
+            whoIsAffected = whoIsAffected,
+            keyFigures = keyFigures,
+            officialSource = "https://www.boe.es/diario_boe/txt.php?id=$ENTRY_A",
+            aiNotice = true,
         )
     )
 

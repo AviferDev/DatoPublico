@@ -1,8 +1,8 @@
 package es.aviferdev.datopublico.validation
 
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PlazoDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.DeadlineDto
+import es.aviferdev.datopublico.model.SummaryDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -10,17 +10,17 @@ import kotlin.test.assertTrue
 
 class CitizenSummaryValidatorTest {
 
-    private val validSummary = ResumenDto(
-        queCambia = "Se convocan 120 plazas de auxiliar administrativo.",
-        aQuienAfecta = "Personas con título de ESO o equivalente.",
-        cifrasClave = listOf("120 plazas", "20 días hábiles"),
-        fuenteOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-B-2026-1234",
-        plazo = PlazoDto(fechaLimite = "2026-10-30"),
+    private val validSummary = SummaryDto(
+        whatChanges = "Se convocan 120 plazas de auxiliar administrativo.",
+        whoIsAffected = "Personas con título de ESO o equivalente.",
+        keyFigures = listOf("120 plazas", "20 días hábiles"),
+        officialSource = "https://www.boe.es/diario_boe/txt.php?id=BOE-B-2026-1234",
+        deadline = DeadlineDto(deadlineDate = "2026-10-30"),
     )
 
     @Test
     fun blankOfficialSourceFails() {
-        val summary = validSummary.copy(fuenteOficial = "   ")
+        val summary = validSummary.copy(officialSource = "   ")
 
         val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
 
@@ -30,7 +30,7 @@ class CitizenSummaryValidatorTest {
 
     @Test
     fun sourceWithoutAbsoluteSchemeFails() {
-        val summary = validSummary.copy(fuenteOficial = "www.boe.es/diario_boe/txt.php?id=BOE-B-2026-1234")
+        val summary = validSummary.copy(officialSource = "www.boe.es/diario_boe/txt.php?id=BOE-B-2026-1234")
 
         val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
 
@@ -39,7 +39,7 @@ class CitizenSummaryValidatorTest {
 
     @Test
     fun employmentSummaryWithoutDeadlineFails() {
-        val summary = validSummary.copy(plazo = null)
+        val summary = validSummary.copy(deadline = null)
 
         val result = CitizenSummaryValidator.validate(summary, CategoriaDto.OPOSICIONES_Y_EMPLEO_PUBLICO)
 
@@ -49,7 +49,7 @@ class CitizenSummaryValidatorTest {
 
     @Test
     fun scholarshipSummaryWithBlankDeadlineFails() {
-        val summary = validSummary.copy(plazo = PlazoDto(fechaLimite = "  "))
+        val summary = validSummary.copy(deadline = DeadlineDto(deadlineDate = "  "))
 
         val result = CitizenSummaryValidator.validate(summary, CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS)
 
@@ -58,7 +58,7 @@ class CitizenSummaryValidatorTest {
 
     @Test
     fun generalNormWithoutDeadlineIsValid() {
-        val summary = validSummary.copy(plazo = null)
+        val summary = validSummary.copy(deadline = null)
 
         val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
 
@@ -68,7 +68,7 @@ class CitizenSummaryValidatorTest {
 
     @Test
     fun blankWhatChangesFails() {
-        val summary = validSummary.copy(queCambia = "")
+        val summary = validSummary.copy(whatChanges = "")
 
         val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
 
@@ -77,7 +77,7 @@ class CitizenSummaryValidatorTest {
 
     @Test
     fun blankWhoIsAffectedFails() {
-        val summary = validSummary.copy(aQuienAfecta = "   ")
+        val summary = validSummary.copy(whoIsAffected = "   ")
 
         val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
 
@@ -86,7 +86,7 @@ class CitizenSummaryValidatorTest {
 
     @Test
     fun blankKeyFigureFails() {
-        val summary = validSummary.copy(cifrasClave = listOf("120 plazas", ""))
+        val summary = validSummary.copy(keyFigures = listOf("120 plazas", ""))
 
         val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
 
@@ -95,7 +95,7 @@ class CitizenSummaryValidatorTest {
 
     @Test
     fun emptyKeyFiguresAreAllowed() {
-        val summary = validSummary.copy(cifrasClave = emptyList())
+        val summary = validSummary.copy(keyFigures = emptyList())
 
         val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
 
@@ -104,7 +104,7 @@ class CitizenSummaryValidatorTest {
 
     @Test
     fun violationsAccumulate() {
-        val summary = validSummary.copy(queCambia = "", aQuienAfecta = "", fuenteOficial = "")
+        val summary = validSummary.copy(whatChanges = "", whoIsAffected = "", officialSource = "")
 
         val result = CitizenSummaryValidator.validate(summary, CategoriaDto.NORMAS_Y_LEGISLACION)
 

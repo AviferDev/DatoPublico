@@ -19,7 +19,7 @@ import es.aviferdev.datopublico.backend.rag.retrieval.HybridSearch
 import es.aviferdev.datopublico.backend.rag.retrieval.SearchFilter
 import es.aviferdev.datopublico.backend.rag.review.SummaryDispositionService
 import es.aviferdev.datopublico.backend.rag.review.SummaryReviewOutcome
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import io.ktor.client.HttpClient
 import javax.sql.DataSource
 
@@ -124,7 +124,7 @@ private suspend fun generateOutcome(
 private suspend fun disposeSummary(
     pipeline: SummaryGenerationPipeline,
     publication: Publicacion,
-    summary: ResumenDto,
+    summary: SummaryDto,
     context: List<FragmentEntity>,
 ): SummaryOutcome {
     val guardrail = pipeline.guardrail.evaluate(publication, summary, context)
@@ -140,16 +140,16 @@ private fun contextFor(
     pipeline: SummaryGenerationPipeline,
     publication: Publicacion,
 ): List<FragmentEntity> =
-    pipeline.hybridSearch.search(publication.titulo, filterFor(publication), CONTEXT_LIMIT)
+    pipeline.hybridSearch.search(publication.title, filterFor(publication), CONTEXT_LIMIT)
         .map { match -> match.fragment }
 
 /** Filtro de recuperación por los metadatos de [publication]. */
 private fun filterFor(publication: Publicacion): SearchFilter = SearchFilter(
-    publishedFrom = publication.fechaPublicacion,
-    publishedTo = publication.fechaPublicacion,
-    category = publication.categoria,
-    section = publication.seccion,
-    organization = publication.organismo,
+    publishedFrom = publication.publicationDate,
+    publishedTo = publication.publicationDate,
+    category = publication.category,
+    section = publication.section,
+    organization = publication.issuingBody,
 )
 
 /**

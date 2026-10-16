@@ -2,7 +2,7 @@ package es.aviferdev.datopublico.backend.feed
 
 import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.relevance.HighlightRanker
-import es.aviferdev.datopublico.model.ResumenDiarioDto
+import es.aviferdev.datopublico.model.DailySummaryDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -41,7 +41,7 @@ class DailyFeedService(
         date: String,
         page: Int = 1,
         pageSize: Int = DEFAULT_PAGE_SIZE,
-    ): ResumenDiarioDto {
+    ): DailySummaryDto {
         require(page >= 1) { "La página debe ser >= 1 (recibida: $page)." }
         require(pageSize in 1..MAX_PAGE_SIZE) {
             "El tamaño de página debe estar entre 1 y $MAX_PAGE_SIZE (recibido: $pageSize)."
@@ -52,9 +52,9 @@ class DailyFeedService(
         val summariesById = items.associate { item -> item.publication.id to item.summary }
         val total = items.size
         val pageItems = items.drop((page - 1) * pageSize).take(pageSize)
-        return ResumenDiarioDto(
-            fecha = date,
-            publicaciones = pageItems.map { item ->
+        return DailySummaryDto(
+            date = date,
+            publications = pageItems.map { item ->
                 FeedDtoMapper.toPublicacionDto(item.publication, item.summary)
             },
             highlights = highlights.mapNotNull { highlight ->

@@ -121,17 +121,17 @@ class FragmentIndexerLiveTest {
     /** Publicación de prueba con dos artículos (uno relevante para [QUERY]). */
     private fun publication(): Publicacion = Publicacion(
         id = PUBLICATION_ID,
-        titulo = "Convocatoria de ayudas para prácticas formativas",
-        fechaPublicacion = DATE,
-        organismo = "Ministerio de Universidades",
-        seccion = SeccionBoeDto.III,
-        epigrafe = null,
+        title = "Convocatoria de ayudas para prácticas formativas",
+        publicationDate = DATE,
+        issuingBody = "Ministerio de Universidades",
+        section = SeccionBoeDto.III,
+        heading = null,
         texto = RELEVANT_ARTICLE + "\n" + UNRELATED_ARTICLE,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        categoria = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
+        category = CategoriaDto.BECAS_SUBVENCIONES_Y_AYUDAS,
     )
 
     /** Resuelve las rutas del modelo/tokenizador desde el entorno o el directorio por defecto. */

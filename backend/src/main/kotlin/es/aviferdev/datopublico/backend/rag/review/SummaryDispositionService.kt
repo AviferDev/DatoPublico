@@ -7,7 +7,7 @@ import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.persistence.SummaryRepository
 import es.aviferdev.datopublico.backend.rag.guardrails.GuardrailDecision
 import es.aviferdev.datopublico.backend.rag.guardrails.SummaryGuardrailResult
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 
 /**
  * Servicio de **disposición del resumen ciudadano tras los guardrails** (FT00023).
@@ -46,10 +46,10 @@ class SummaryDispositionService(
      */
     fun dispose(
         publication: Publicacion,
-        summary: ResumenDto,
+        summary: SummaryDto,
         guardrail: SummaryGuardrailResult,
     ): SummaryReviewOutcome {
-        require(summary.avisoIA) {
+        require(summary.aiNotice) {
             "El resumen de ${publication.id} no lleva el aviso de IA obligatorio."
         }
         return when (guardrail.decision) {
@@ -62,7 +62,7 @@ class SummaryDispositionService(
     /** Publica el resumen: `estado = publicado`, sin crear entrada en la cola. */
     private fun publish(
         publication: Publicacion,
-        summary: ResumenDto,
+        summary: SummaryDto,
         guardrail: SummaryGuardrailResult,
     ): SummaryReviewOutcome {
         val persisted = persist(publication, summary, guardrail, SummaryState.PUBLISHED)
@@ -72,7 +72,7 @@ class SummaryDispositionService(
     /** Encola el resumen de baja confianza: `en_cola_revision` + entrada pendiente. */
     private fun queue(
         publication: Publicacion,
-        summary: ResumenDto,
+        summary: SummaryDto,
         guardrail: SummaryGuardrailResult,
     ): SummaryReviewOutcome {
         val persisted = persist(publication, summary, guardrail, SummaryState.IN_REVIEW)
@@ -86,7 +86,7 @@ class SummaryDispositionService(
     /** Descarta el resumen: `estado = descartado`, ni publicación ni cola. */
     private fun discard(
         publication: Publicacion,
-        summary: ResumenDto,
+        summary: SummaryDto,
         guardrail: SummaryGuardrailResult,
     ): SummaryReviewOutcome {
         val persisted = persist(publication, summary, guardrail, SummaryState.DISCARDED)
@@ -99,17 +99,17 @@ class SummaryDispositionService(
      */
     private fun persist(
         publication: Publicacion,
-        summary: ResumenDto,
+        summary: SummaryDto,
         guardrail: SummaryGuardrailResult,
         state: SummaryState,
     ): SummaryEntity = summaries.save(
         SummaryEntity(
             publicationId = publication.id,
-            whatChanges = summary.queCambia,
-            whomItAffects = summary.aQuienAfecta,
-            keyFigures = summary.cifrasClave,
-            officialSource = summary.fuenteOficial,
-            aiNotice = summary.avisoIA,
+            whatChanges = summary.whatChanges,
+            whomItAffects = summary.whoIsAffected,
+            keyFigures = summary.keyFigures,
+            officialSource = summary.officialSource,
+            aiNotice = summary.aiNotice,
             status = state.persistedValue,
             confidence = guardrail.groundingScore,
         ),

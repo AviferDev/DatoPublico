@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.rag.guardrails
 
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 
 /**
  * Evaluación de **grounding** de un resumen contra el contexto recuperado.
@@ -45,7 +45,7 @@ object SummaryGroundingChecker {
      * @param context fragmentos recuperados que sustentan la generación.
      * @return la puntuación de grounding y las violaciones detectadas.
      */
-    fun check(summary: ResumenDto, context: List<FragmentEntity>): GroundingAssessment {
+    fun check(summary: SummaryDto, context: List<FragmentEntity>): GroundingAssessment {
         val contextTokens = context.flatMap { fragment -> fragmentContentTokens(fragment) }.toSet()
         val contextFigures = context.flatMap { fragment -> fragmentFigures(fragment) }.toSet()
         val claims = claimsOf(summary)
@@ -54,10 +54,10 @@ object SummaryGroundingChecker {
     }
 
     /** Afirmaciones del resumen: oraciones de las dos secciones y cada cifra clave. */
-    private fun claimsOf(summary: ResumenDto): List<String> =
-        SummaryTextNormalizer.sentences(summary.queCambia) +
-            SummaryTextNormalizer.sentences(summary.aQuienAfecta) +
-            summary.cifrasClave.filter { figure -> figure.isNotBlank() }
+    private fun claimsOf(summary: SummaryDto): List<String> =
+        SummaryTextNormalizer.sentences(summary.whatChanges) +
+            SummaryTextNormalizer.sentences(summary.whoIsAffected) +
+            summary.keyFigures.filter { figure -> figure.isNotBlank() }
 
     /** Fracción de afirmaciones sustentadas; `1.0` si no hay afirmaciones. */
     private fun scoreOf(claims: List<String>, contextTokens: Set<String>, contextFigures: Set<String>): Double =

@@ -164,17 +164,17 @@ class HybridSearchLiveTest {
         organization: String,
     ): Publicacion = Publicacion(
         id = id,
-        titulo = "Publicación de prueba $id",
-        fechaPublicacion = date,
-        organismo = organization,
-        seccion = section,
-        epigrafe = null,
+        title = "Publicación de prueba $id",
+        publicationDate = date,
+        issuingBody = organization,
+        section = section,
+        heading = null,
         texto = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = null,
-        categoria = category,
+        category = category,
     )
 
     /** Vector unitario de 384 dims con `1` en [position] (distancia coseno bien definida). */

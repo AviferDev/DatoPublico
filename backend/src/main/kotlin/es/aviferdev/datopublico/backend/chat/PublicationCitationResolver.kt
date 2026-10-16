@@ -37,8 +37,8 @@ class PublicationCitationResolver(
         publicationRepository.findById(publicationId)?.let { publication ->
             ChatCitation(
                 publicationId = publication.id,
-                title = publication.titulo,
-                officialUrl = publication.urlOficial,
+                title = publication.title,
+                officialUrl = publication.officialUrl,
             )
         }
 }

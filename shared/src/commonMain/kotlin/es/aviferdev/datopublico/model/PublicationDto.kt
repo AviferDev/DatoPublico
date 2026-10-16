@@ -15,25 +15,25 @@ import kotlinx.serialization.Serializable
  * con la clave JSON (regla MUST de `CONSTRAINTS.md` §«Serialización»).
  */
 @Serializable
-data class PublicacionDto(
+data class PublicationDto(
     @SerialName("id")
     val id: String,
     @SerialName("titulo")
-    val titulo: String,
+    val title: String,
     @SerialName("fechaPublicacion")
-    val fechaPublicacion: String,
+    val publicationDate: String,
     @SerialName("organismo")
-    val organismo: String?,
+    val issuingBody: String?,
     @SerialName("seccion")
-    val seccion: SeccionBoeDto,
+    val section: SeccionBoeDto,
     @SerialName("epigrafe")
-    val epigrafe: String?,
+    val heading: String?,
     @SerialName("categoria")
-    val categoria: CategoriaDto,
+    val category: CategoriaDto,
     @SerialName("urlOficial")
-    val urlOficial: String,
+    val officialUrl: String,
     @SerialName("resumen")
-    val resumen: ResumenDto? = null,
+    val summary: SummaryDto? = null,
     @SerialName("plazo")
-    val plazo: PlazoDto? = null,
+    val deadline: DeadlineDto? = null,
 )

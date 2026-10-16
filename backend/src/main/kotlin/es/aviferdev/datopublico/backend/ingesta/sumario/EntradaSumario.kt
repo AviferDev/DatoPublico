@@ -10,7 +10,7 @@ import es.aviferdev.datopublico.model.SeccionBoeDto
  * persistencia (FT00008) y el job de ingesta (FT00009).
  *
  * [fechaPublicacion] es una fecha ISO-8601 (`2026-10-09`) como `String`,
- * coherente con `PublicacionDto`. [organismo] y [epigrafe] son opcionales porque
+ * coherente con `PublicationDto`. [organismo] y [epigrafe] son opcionales porque
  * la estructura varía entre secciones; [control] falta en las entradas que el BOE
  * publica directamente bajo un departamento (sin epígrafe).
  *
@@ -20,12 +20,12 @@ import es.aviferdev.datopublico.model.SeccionBoeDto
 data class EntradaSumario(
     val identificador: String,
     val control: String?,
-    val titulo: String,
-    val fechaPublicacion: String,
-    val seccion: SeccionBoeDto,
-    val organismo: String?,
-    val epigrafe: String?,
-    val urlOficial: String,
+    val title: String,
+    val publicationDate: String,
+    val section: SeccionBoeDto,
+    val issuingBody: String?,
+    val heading: String?,
+    val officialUrl: String,
     val urlXml: String?,
     val urlPdf: String?,
 )

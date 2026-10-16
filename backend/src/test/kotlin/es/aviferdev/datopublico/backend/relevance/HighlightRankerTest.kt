@@ -2,7 +2,7 @@ package es.aviferdev.datopublico.backend.relevance
 
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.PlazoDto
+import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.SeccionBoeDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -168,22 +168,22 @@ class HighlightRankerTest {
         section: SeccionBoeDto = SeccionBoeDto.I,
         rank: String? = null,
         category: CategoriaDto? = null,
-        deadline: PlazoDto? = null,
+        deadline: DeadlineDto? = null,
         body: String? = null,
     ): Publicacion = Publicacion(
         id = id,
-        titulo = "Publicación $id",
-        fechaPublicacion = PUBLISHED_DATE,
-        organismo = body,
-        seccion = section,
-        epigrafe = null,
+        title = "Publicación $id",
+        publicationDate = PUBLISHED_DATE,
+        issuingBody = body,
+        section = section,
+        heading = null,
         texto = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = null,
         urlPdf = null,
         rango = rank,
-        categoria = category,
-        plazo = deadline,
+        category = category,
+        deadline = deadline,
     )
 
     private fun organicLaw(id: String): Publicacion =
@@ -215,6 +215,6 @@ class HighlightRankerTest {
         const val PUBLISHED_DATE = "2026-10-09"
 
         /** Plazo de prueba para las convocatorias accionables. */
-        val DEADLINE = PlazoDto(fechaLimite = "2026-10-30", descripcion = "plazo de prueba")
+        val DEADLINE = DeadlineDto(deadlineDate = "2026-10-30", description = "plazo de prueba")
     }
 }

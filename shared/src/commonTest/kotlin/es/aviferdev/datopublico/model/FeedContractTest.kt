@@ -7,7 +7,7 @@ import kotlin.test.assertTrue
 
 /**
  * Tests de gate del **contrato de wire del feed diario** (FT00026) en `:shared`:
- * el *round-trip* de [HighlightDto]/[HighlightReasonDto] y de [ResumenDiarioDto]
+ * el *round-trip* de [HighlightDto]/[HighlightReasonDto] y de [DailySummaryDto]
  * ampliado, los **tokens `@SerialName`** estables y la **compatibilidad hacia
  * atrás** (un wire sin los campos nuevos sigue decodificando con sus defaults).
  *
@@ -15,21 +15,21 @@ import kotlin.test.assertTrue
  */
 class FeedContractTest {
 
-    private val publication = PublicacionDto(
+    private val publication = PublicationDto(
         id = "BOE-A-2026-1",
-        titulo = "Real Decreto de prueba",
-        fechaPublicacion = "2026-10-11",
-        organismo = "Ministerio de la Presidencia",
-        seccion = SeccionBoeDto.I,
-        epigrafe = "Disposiciones generales",
-        categoria = CategoriaDto.NORMAS_Y_LEGISLACION,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
-        resumen = ResumenDto(
-            queCambia = "Cambia algo",
-            aQuienAfecta = "A la ciudadanía",
-            fuenteOficial = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
+        title = "Real Decreto de prueba",
+        publicationDate = "2026-10-11",
+        issuingBody = "Ministerio de la Presidencia",
+        section = SeccionBoeDto.I,
+        heading = "Disposiciones generales",
+        category = CategoriaDto.NORMAS_Y_LEGISLACION,
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
+        summary = SummaryDto(
+            whatChanges = "Cambia algo",
+            whoIsAffected = "A la ciudadanía",
+            officialSource = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-1",
         ),
-        plazo = PlazoDto(fechaLimite = "2026-10-30"),
+        deadline = DeadlineDto(deadlineDate = "2026-10-30"),
     )
 
     @Test
@@ -63,9 +63,9 @@ class FeedContractTest {
 
     @Test
     fun dailyFeedRoundTripsWithPaginationAndHighlights() {
-        val feed = ResumenDiarioDto(
-            fecha = "2026-10-11",
-            publicaciones = listOf(publication),
+        val feed = DailySummaryDto(
+            date = "2026-10-11",
+            publications = listOf(publication),
             highlights = listOf(HighlightDto(publication, listOf(HighlightReasonDto.NORMATIVE_RANK))),
             page = 2,
             pageSize = 5,
@@ -73,8 +73,8 @@ class FeedContractTest {
             totalPages = 3,
         )
 
-        val json = DatoPublicoJson.encodeToString(ResumenDiarioDto.serializer(), feed)
-        val decoded = DatoPublicoJson.decodeFromString(ResumenDiarioDto.serializer(), json)
+        val json = DatoPublicoJson.encodeToString(DailySummaryDto.serializer(), feed)
+        val decoded = DatoPublicoJson.decodeFromString(DailySummaryDto.serializer(), json)
 
         assertEquals(feed, decoded)
         assertTrue(json.contains("\"destacados\""))
@@ -87,7 +87,7 @@ class FeedContractTest {
     @Test
     fun dailyFeedWithoutNewFieldsDefaultsThem() {
         val decoded = DatoPublicoJson.decodeFromString(
-            ResumenDiarioDto.serializer(),
+            DailySummaryDto.serializer(),
             """{"fecha":"2026-10-11","publicaciones":[]}""",
         )
 

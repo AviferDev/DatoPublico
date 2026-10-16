@@ -34,9 +34,9 @@ class BoeSumarioLiveTest {
                 )
                 assertEquals(
                     SeccionBoeDto.entries.toSet(),
-                    entradas.map { it.seccion }.toSet(),
+                    entradas.map { it.section }.toSet(),
                 )
-                assertTrue(entradas.all { it.identificador.isNotBlank() && it.urlOficial.isNotBlank() })
+                assertTrue(entradas.all { it.identificador.isNotBlank() && it.officialUrl.isNotBlank() })
                 assertTrue(entradas.all { it.urlPdf != null })
             } finally {
                 httpClient.close()

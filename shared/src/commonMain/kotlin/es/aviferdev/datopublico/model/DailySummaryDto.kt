@@ -19,11 +19,11 @@ import kotlinx.serialization.Serializable
  * con la clave JSON (regla MUST de `CONSTRAINTS.md` §«Serialización»).
  */
 @Serializable
-data class ResumenDiarioDto(
+data class DailySummaryDto(
     @SerialName("fecha")
-    val fecha: String,
+    val date: String,
     @SerialName("publicaciones")
-    val publicaciones: List<PublicacionDto> = emptyList(),
+    val publications: List<PublicationDto> = emptyList(),
     @SerialName("destacados")
     val highlights: List<HighlightDto> = emptyList(),
     @SerialName("pagina")

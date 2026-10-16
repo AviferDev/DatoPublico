@@ -34,11 +34,11 @@ class CategoriaWireTest {
     @Test
     fun categoriasUseStableSnakeCaseWireTokens() {
         assertEquals(11, CategoriaDto.entries.size)
-        tokensEsperados.forEach { (categoria, token) ->
-            val json = DatoPublicoJson.encodeToString(CategoriaDto.serializer(), categoria)
+        tokensEsperados.forEach { (category, token) ->
+            val json = DatoPublicoJson.encodeToString(CategoriaDto.serializer(), category)
             assertEquals("\"$token\"", json)
             assertEquals(
-                categoria,
+                category,
                 DatoPublicoJson.decodeFromString(CategoriaDto.serializer(), json),
             )
         }
@@ -52,11 +52,11 @@ class CategoriaWireTest {
     @Test
     fun seccionBoeUsesOfficialNotation() {
         assertEquals(8, SeccionBoeDto.entries.size)
-        tokensSeccion.forEach { (seccion, token) ->
-            val json = DatoPublicoJson.encodeToString(SeccionBoeDto.serializer(), seccion)
+        tokensSeccion.forEach { (section, token) ->
+            val json = DatoPublicoJson.encodeToString(SeccionBoeDto.serializer(), section)
             assertEquals("\"$token\"", json)
             assertEquals(
-                seccion,
+                section,
                 DatoPublicoJson.decodeFromString(SeccionBoeDto.serializer(), json),
             )
         }

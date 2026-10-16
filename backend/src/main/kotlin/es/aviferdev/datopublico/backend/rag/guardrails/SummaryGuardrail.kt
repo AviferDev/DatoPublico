@@ -3,7 +3,7 @@ package es.aviferdev.datopublico.backend.rag.guardrails
 import es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.model.CategoriaDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.SummaryDto
 import es.aviferdev.datopublico.validation.CitizenSummaryValidator
 
 /**
@@ -42,14 +42,14 @@ class SummaryGuardrail(private val reachability: SourceReachability? = null) {
      */
     suspend fun evaluate(
         publication: Publicacion,
-        summary: ResumenDto,
+        summary: SummaryDto,
         context: List<FragmentEntity>,
     ): SummaryGuardrailResult {
         val category = requireCategory(publication)
-        val sourceValid = OfficialSourceValidator.isOfficial(summary.fuenteOficial, publication.urlOficial)
+        val sourceValid = OfficialSourceValidator.isOfficial(summary.officialSource, publication.officialUrl)
         val contract = CitizenSummaryValidator.validate(summary, category)
         val grounding = SummaryGroundingChecker.check(summary, context)
-        val reachable = reachable(sourceValid, summary.fuenteOficial)
+        val reachable = reachable(sourceValid, summary.officialSource)
         val violations = violationsOf(sourceValid, context, reachable, grounding)
         val decision = decide(contract.isValid, sourceValid, reachable, grounding)
         return SummaryGuardrailResult(decision, contract.violations, violations, grounding.score)
@@ -57,7 +57,7 @@ class SummaryGuardrail(private val reachability: SourceReachability? = null) {
 
     /** Categoría obligatoria de la publicación (fail-fast si falta). */
     private fun requireCategory(publication: Publicacion): CategoriaDto =
-        publication.categoria
+        publication.category
             ?: throw IllegalArgumentException(
                 "La publicación ${publication.id} no tiene categoría; no se puede evaluar el guardrail."
             )

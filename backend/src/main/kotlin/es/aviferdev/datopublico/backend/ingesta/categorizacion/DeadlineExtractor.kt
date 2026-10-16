@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.ingesta.categorizacion
 
-import es.aviferdev.datopublico.model.PlazoDto
+import es.aviferdev.datopublico.model.DeadlineDto
 import java.text.Normalizer
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -10,7 +10,7 @@ import java.time.LocalDate
  * del BOE (empleo público, becas o subvenciones).
  *
  * Es **puro y determinista**: no usa IA, ni red, ni base de datos, ni reloj del
- * sistema; recibe el texto y la fecha de publicación y devuelve un [PlazoDto] o
+ * sistema; recibe el texto y la fecha de publicación y devuelve un [DeadlineDto] o
  * `null`. **Nunca inventa una fecha**: si el patrón no es fiable, devuelve `null`.
  *
  * Reconoce dos formas de plazo:
@@ -40,7 +40,7 @@ class DeadlineExtractor {
      * @param publishedDate fecha de publicación ISO-8601 (`2024-01-02`).
      * @return plazo de solicitud, o `null` si no hay un plazo fiable.
      */
-    fun extract(text: String?, publishedDate: String): PlazoDto? {
+    fun extract(text: String?, publishedDate: String): DeadlineDto? {
         val paragraphs = text?.split(PARAGRAPH_SEPARATOR).orEmpty()
         return paragraphs.asSequence().mapNotNull { relativeDeadline(it, publishedDate) }.firstOrNull()
             ?: paragraphs.asSequence().mapNotNull { explicitDeadline(it) }.firstOrNull()
@@ -52,15 +52,15 @@ class DeadlineExtractor {
      * @param paragraph párrafo original (para construir la descripción legible).
      * @param publishedDate fecha de publicación ISO-8601.
      */
-    private fun relativeDeadline(paragraph: String, publishedDate: String): PlazoDto? {
+    private fun relativeDeadline(paragraph: String, publishedDate: String): DeadlineDto? {
         val normalized = normalize(paragraph)
         return RELATIVE_DAYS.find(normalized)?.let { match ->
             val days = daysOf(match.groupValues[1], match.groupValues[2])
             val confirmed = days?.takeIf { passesDayGates(normalized, match) }
             confirmed?.let { count ->
-                PlazoDto(
-                    fechaLimite = deadlineDate(publishedDate, count, isBusinessDays(match.groupValues[3])),
-                    descripcion = description(paragraph),
+                DeadlineDto(
+                    deadlineDate = deadlineDate(publishedDate, count, isBusinessDays(match.groupValues[3])),
+                    description = description(paragraph),
                 )
             }
         }
@@ -81,11 +81,11 @@ class DeadlineExtractor {
             (PRESENTAR.containsMatchIn(normalized) && REQUEST_OBJECT.containsMatchIn(normalized))
 
     /** Plazo por **fecha explícita** de un párrafo, o `null` si no pasa las puertas. */
-    private fun explicitDeadline(paragraph: String): PlazoDto? {
+    private fun explicitDeadline(paragraph: String): DeadlineDto? {
         val normalized = normalize(paragraph)
         val date = explicitDate(normalized)
             ?.takeIf { hasRequestContext(normalized) && EXCLUDED.none { phrase -> normalized.contains(phrase) } }
-        return date?.let { PlazoDto(fechaLimite = it, descripcion = description(paragraph)) }
+        return date?.let { DeadlineDto(deadlineDate = it, description = description(paragraph)) }
     }
 
     /** Fecha ISO de la primera fecha explícita reconocida en [normalized], o `null`. */

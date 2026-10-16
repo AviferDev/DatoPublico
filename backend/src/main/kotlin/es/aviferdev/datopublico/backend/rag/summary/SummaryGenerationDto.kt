@@ -1,7 +1,7 @@
 package es.aviferdev.datopublico.backend.rag.summary
 
-import es.aviferdev.datopublico.model.PlazoDto
-import es.aviferdev.datopublico.model.ResumenDto
+import es.aviferdev.datopublico.model.DeadlineDto
+import es.aviferdev.datopublico.model.SummaryDto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -24,14 +24,14 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class SummaryGenerationDto(
-    @SerialName("queCambia") val queCambia: String,
-    @SerialName("aQuienAfecta") val aQuienAfecta: String,
-    @SerialName("cifrasClave") val cifrasClave: List<String> = emptyList(),
-    @SerialName("plazo") val plazo: PlazoDto? = null,
+    @SerialName("queCambia") val whatChanges: String,
+    @SerialName("aQuienAfecta") val whoIsAffected: String,
+    @SerialName("cifrasClave") val keyFigures: List<String> = emptyList(),
+    @SerialName("plazo") val deadline: DeadlineDto? = null,
 )
 
 /**
- * Convierte la salida del modelo en el contrato de wire [ResumenDto],
+ * Convierte la salida del modelo en el contrato de wire [SummaryDto],
  * **inyectando** la fuente oficial y el aviso de IA.
  *
  * La fuente **no** la produce el modelo (así la cita a la fuente oficial siempre
@@ -41,11 +41,11 @@ data class SummaryGenerationDto(
  * @param source URL oficial de la publicación de origen.
  * @return el resumen listo para validar con `CitizenSummaryValidator`.
  */
-fun SummaryGenerationDto.toResumenDto(source: String): ResumenDto = ResumenDto(
-    queCambia = queCambia,
-    aQuienAfecta = aQuienAfecta,
-    cifrasClave = cifrasClave,
-    fuenteOficial = source,
-    avisoIA = true,
-    plazo = plazo,
+fun SummaryGenerationDto.toResumenDto(source: String): SummaryDto = SummaryDto(
+    whatChanges = whatChanges,
+    whoIsAffected = whoIsAffected,
+    keyFigures = keyFigures,
+    officialSource = source,
+    aiNotice = true,
+    deadline = deadline,
 )

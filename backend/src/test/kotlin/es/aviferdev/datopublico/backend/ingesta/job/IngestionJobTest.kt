@@ -120,12 +120,12 @@ class IngestionJobTest {
     private fun entry(id: String): EntradaSumario = EntradaSumario(
         identificador = id,
         control = null,
-        titulo = "Título de $id",
-        fechaPublicacion = date.toString(),
-        seccion = SeccionBoeDto.I,
-        organismo = "MINISTERIO X",
-        epigrafe = null,
-        urlOficial = "https://www.boe.es/diario_boe/txt.php?id=$id",
+        title = "Título de $id",
+        publicationDate = date.toString(),
+        section = SeccionBoeDto.I,
+        issuingBody = "MINISTERIO X",
+        heading = null,
+        officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
         urlXml = "https://www.boe.es/diario_boe/xml.php?id=$id",
         urlPdf = null,
     )
@@ -135,7 +135,7 @@ class IngestionJobTest {
         private val entries: List<EntradaSumario> = emptyList(),
         private val error: BoeSumarioException? = null,
     ) : BoeSumarioClient {
-        override suspend fun obtenerSumario(fecha: LocalDate): List<EntradaSumario> =
+        override suspend fun obtenerSumario(date: LocalDate): List<EntradaSumario> =
             error?.let { throw it } ?: entries
     }
 
@@ -168,20 +168,20 @@ class IngestionJobTest {
         override fun findById(id: String): Publicacion? = saved[id]
 
         override fun listByDate(publicationDate: String): List<Publicacion> =
-            saved.values.filter { it.fechaPublicacion == publicationDate }
+            saved.values.filter { it.publicationDate == publicationDate }
     }
 
     private companion object {
         /** Proyecta la entrada a la publicación que produciría el parser. */
         fun publicationFrom(entrada: EntradaSumario): Publicacion = Publicacion(
             id = entrada.identificador,
-            titulo = entrada.titulo,
-            fechaPublicacion = entrada.fechaPublicacion,
-            organismo = entrada.organismo,
-            seccion = entrada.seccion,
-            epigrafe = entrada.epigrafe,
+            title = entrada.title,
+            publicationDate = entrada.publicationDate,
+            issuingBody = entrada.issuingBody,
+            section = entrada.section,
+            heading = entrada.heading,
             texto = "texto de ${entrada.identificador}",
-            urlOficial = entrada.urlOficial,
+            officialUrl = entrada.officialUrl,
             urlXml = entrada.urlXml,
             urlPdf = entrada.urlPdf,
             rango = null,

@@ -17,33 +17,33 @@ class SummaryOutputParserTest {
     fun `parses a plain json output`() {
         val parsed = parser.parse(PLAIN_JSON)
 
-        assertEquals("Cambia el plazo", parsed.queCambia)
-        assertEquals("A la ciudadanía", parsed.aQuienAfecta)
-        assertEquals(listOf("30 días"), parsed.cifrasClave)
-        assertNull(parsed.plazo)
+        assertEquals("Cambia el plazo", parsed.whatChanges)
+        assertEquals("A la ciudadanía", parsed.whoIsAffected)
+        assertEquals(listOf("30 días"), parsed.keyFigures)
+        assertNull(parsed.deadline)
     }
 
     @Test
     fun `parses a json wrapped in markdown fences`() {
         val parsed = parser.parse("```json\n$PLAIN_JSON\n```")
 
-        assertEquals("Cambia el plazo", parsed.queCambia)
-        assertEquals(listOf("30 días"), parsed.cifrasClave)
+        assertEquals("Cambia el plazo", parsed.whatChanges)
+        assertEquals(listOf("30 días"), parsed.keyFigures)
     }
 
     @Test
     fun `parses a json wrapped in bare fences`() {
         val parsed = parser.parse("```\n$PLAIN_JSON\n```")
 
-        assertEquals("A la ciudadanía", parsed.aQuienAfecta)
+        assertEquals("A la ciudadanía", parsed.whoIsAffected)
     }
 
     @Test
     fun `defaults the key figures and the deadline when absent`() {
         val parsed = parser.parse("""{"queCambia":"a","aQuienAfecta":"b"}""")
 
-        assertEquals(emptyList(), parsed.cifrasClave)
-        assertNull(parsed.plazo)
+        assertEquals(emptyList(), parsed.keyFigures)
+        assertNull(parsed.deadline)
     }
 
     @Test

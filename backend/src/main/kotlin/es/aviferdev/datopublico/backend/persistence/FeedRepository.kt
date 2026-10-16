@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.persistence
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.rag.review.SummaryState
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -13,7 +13,7 @@ import javax.sql.DataSource
  *
  * Es un valor **interno** (sin sufijo: no es DTO de transporte ni `Entity`).
  */
-data class FeedItem(val publication: Publicacion, val summary: SummaryEntity)
+data class FeedItem(val publication: Publication, val summary: SummaryEntity)
 
 /**
  * Lectura del **feed diario** en la tabla `resumen` (FT00026).

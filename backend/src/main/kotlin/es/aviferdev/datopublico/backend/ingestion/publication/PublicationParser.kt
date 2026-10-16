@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publication
+package es.aviferdev.datopublico.backend.ingestion.publication
 
 import es.aviferdev.datopublico.backend.ingesta.categorizacion.DeadlineExtractor
 import es.aviferdev.datopublico.backend.ingesta.categorizacion.PublicationClassifier
@@ -6,7 +6,7 @@ import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
 
 /**
  * Combinador **puro** (sin red) de una [SummaryEntry] del sumario y el
- * [DocumentoBoe] del XML en una [Publicacion].
+ * [BoeDocument] del XML en una [Publication].
  *
  * Es tolerante a `documento = null` (publicación sin `urlXml` o sin texto
  * disponible): produce una publicación válida con `texto = null`. `organismo`,
@@ -20,13 +20,13 @@ import es.aviferdev.datopublico.backend.ingestion.summary.SummaryEntry
  * @param classifier clasificador curado y determinista (puro).
  * @param deadlineExtractor extractor heurístico y acotado del plazo (puro).
  */
-class PublicacionParser(
+class PublicationParser(
     private val classifier: PublicationClassifier = PublicationClassifier(),
     private val deadlineExtractor: DeadlineExtractor = DeadlineExtractor(),
 ) {
 
     /**
-     * Mapea [entrada] y [documento] a una [Publicacion].
+     * Mapea [entry] y [document] a una [Publication].
      *
      * El `organismo` y la `urlPdf` del sumario tienen prioridad; si faltan, se
      * completan desde los metadatos del XML. El texto y el rango proceden del XML.
@@ -37,22 +37,22 @@ class PublicacionParser(
      * @param entrada entrada del sumario del BOE (FT00006).
      * @param documento XML parseado, o `null` si no hay texto disponible.
      */
-    fun parsear(entry: SummaryEntry, documento: DocumentoBoe?): Publicacion {
-        val metadata = documento?.metadata
-        return Publicacion(
+    fun parse(entry: SummaryEntry, document: BoeDocument?): Publication {
+        val metadata = document?.metadata
+        return Publication(
             id = entry.identifier,
             title = entry.title,
             publicationDate = entry.publicationDate,
             issuingBody = entry.issuingBody ?: metadata?.department,
             section = entry.section,
             heading = entry.heading,
-            texto = documento?.texto,
+            body = document?.body,
             officialUrl = entry.officialUrl,
-            urlXml = entry.urlXml,
-            urlPdf = entry.urlPdf ?: metadata?.urlPdf,
-            rango = metadata?.rango,
+            xmlUrl = entry.xmlUrl,
+            pdfUrl = entry.pdfUrl ?: metadata?.pdfUrl,
+            rank = metadata?.rank,
             category = classifier.classify(entry.section, entry.heading, entry.title),
-            deadline = deadlineExtractor.extract(documento?.texto, entry.publicationDate),
+            deadline = deadlineExtractor.extract(document?.body, entry.publicationDate),
         )
     }
 }

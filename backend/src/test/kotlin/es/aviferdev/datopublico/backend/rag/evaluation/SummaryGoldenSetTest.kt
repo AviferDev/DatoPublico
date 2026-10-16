@@ -26,7 +26,7 @@ class SummaryGoldenSetTest {
         dataset.entries.forEach { entry ->
             assertNotNull(entry.publication.category, "la entrada ${entry.id} necesita categoría")
             assertTrue(entry.publication.title.isNotBlank(), "la entrada ${entry.id} necesita título")
-            assertTrue(entry.publication.texto.orEmpty().isNotBlank(), "la entrada ${entry.id} necesita texto")
+            assertTrue(entry.publication.body.orEmpty().isNotBlank(), "la entrada ${entry.id} necesita texto")
             assertTrue(entry.reference.whatChanges.isNotBlank(), "la referencia de ${entry.id} necesita «Qué cambia»")
             assertTrue(entry.reference.whoIsAffected.isNotBlank(), "la referencia de ${entry.id} necesita «A quién afecta»")
         }

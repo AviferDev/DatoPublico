@@ -49,10 +49,10 @@ class SummaryParsingTest {
         assertEquals("MINISTERIO DE ASUNTOS EXTERIORES, UNIÓN EUROPEA Y COOPERACIÓN", entry.issuingBody)
         assertEquals("Acuerdos internacionales administrativos", entry.heading)
         assertEquals("https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-20976", entry.officialUrl)
-        assertEquals("https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-20976", entry.urlXml)
+        assertEquals("https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-20976", entry.xmlUrl)
         assertEquals(
             "https://www.boe.es/boe/dias/2026/10/09/pdfs/BOE-A-2026-20976.pdf",
-            entry.urlPdf,
+            entry.pdfUrl,
         )
         assertTrue(entry.title.startsWith("Acuerdo internacional administrativo"))
     }
@@ -95,7 +95,7 @@ class SummaryParsingTest {
         assertEquals("https://www.boe.es/diario_boe/txt.php?id=BOE-B-2024-1", entry.officialUrl)
         assertEquals(
             "https://www.boe.es/boe/dias/2024/01/02/pdfs/BOE-B-2024-1.pdf",
-            entry.urlPdf,
+            entry.pdfUrl,
         )
     }
 

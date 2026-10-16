@@ -1,13 +1,13 @@
 package es.aviferdev.datopublico.backend.rag.chunking
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.rag.Fragment
 
 /**
  * Fragmentador **puro, determinista y sin red/BD** del texto de una
- * [Publicacion].
+ * [Publication].
  *
- * Divide [Publicacion.texto] (ya normalizado por el parser del BOE) en
+ * Divide [Publication.body] (ya normalizado por el parser del BOE) en
  * [Fragment] por **artículo/disposición** conservando la **referencia**, con
  * **variante por sección** para las secciones sin artículos (II.A/II.B/IV/V.A/
  * V.B/V.C) y con el texto cubierto **sin solapamientos**. Es la tarea `0.3-T01`
@@ -36,16 +36,16 @@ class ArticleChunker(
 ) {
 
     /**
-     * Fragmenta [publicacion] en orden de documento.
+     * Fragmenta [publication] en orden de documento.
      *
      * @param publicacion publicación con su texto ya normalizado
-     *   ([Publicacion.texto]); si es `null` o solo espacios devuelve lista vacía
+     *   ([Publication.body]); si es `null` o solo espacios devuelve lista vacía
      *   (nunca lanza excepción).
      * @return fragmentos con `order` contiguo desde `0`; lista vacía sin texto.
      */
-    fun chunk(publication: Publicacion): List<Fragment> {
+    fun chunk(publication: Publication): List<Fragment> {
         val sectionReference = SECTION_REFERENCE_PREFIX + publication.section.name
-        val lines = nonEmptyLines(publication.texto)
+        val lines = nonEmptyLines(publication.body)
         val blocks = blocksOf(lines, sectionReference)
         return blocks
             .flatMap { block -> packedContents(block).map { content -> block.reference to content } }

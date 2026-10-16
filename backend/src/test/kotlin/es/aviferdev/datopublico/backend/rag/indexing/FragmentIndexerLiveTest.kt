@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.indexing
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.backend.persistence.FragmentRepositoryJdbc
@@ -119,18 +119,18 @@ class FragmentIndexerLiveTest {
     }
 
     /** Publicación de prueba con dos artículos (uno relevante para [QUERY]). */
-    private fun publication(): Publicacion = Publicacion(
+    private fun publication(): Publication = Publication(
         id = PUBLICATION_ID,
         title = "Convocatoria de ayudas para prácticas formativas",
         publicationDate = DATE,
         issuingBody = "Ministerio de Universidades",
         section = BoeSectionDto.III,
         heading = null,
-        texto = RELEVANT_ARTICLE + "\n" + UNRELATED_ARTICLE,
+        body = RELEVANT_ARTICLE + "\n" + UNRELATED_ARTICLE,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$PUBLICATION_ID",
-        urlXml = null,
-        urlPdf = null,
-        rango = null,
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = null,
         category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
     )
 

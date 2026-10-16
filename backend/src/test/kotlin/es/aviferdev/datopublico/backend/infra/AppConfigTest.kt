@@ -59,7 +59,7 @@ class AppConfigTest {
     }
 
     @Test
-    fun `falla con un puerto fuera de rango`() {
+    fun `falla con un puerto fuera de rank`() {
         assertFailsWith<IllegalArgumentException> { AppConfig.fromEnv(mapOf("SERVER_PORT" to "0")) }
         assertFailsWith<IllegalArgumentException> { AppConfig.fromEnv(mapOf("SERVER_PORT" to "70000")) }
     }

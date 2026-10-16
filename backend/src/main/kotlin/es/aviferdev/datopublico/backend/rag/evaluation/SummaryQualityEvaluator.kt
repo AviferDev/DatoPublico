@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.evaluation
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.rag.summary.CitizenSummaryGenerator
 import es.aviferdev.datopublico.backend.rag.summary.CitizenSummaryResult
 import es.aviferdev.datopublico.backend.rag.summary.SummaryGenerationDto
@@ -24,7 +24,7 @@ fun interface SummaryGenerator {
      * @return [CitizenSummaryResult.Valid] si cumple el contrato, o
      *   [CitizenSummaryResult.Invalid] con las violaciones si no.
      */
-    suspend fun generate(publication: Publicacion, limit: Int): CitizenSummaryResult
+    suspend fun generate(publication: Publication, limit: Int): CitizenSummaryResult
 }
 
 /**

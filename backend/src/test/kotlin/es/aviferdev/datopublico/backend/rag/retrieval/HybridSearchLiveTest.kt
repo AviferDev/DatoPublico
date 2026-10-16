@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.retrieval
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.infra.Database
 import es.aviferdev.datopublico.backend.infra.DatabaseConfig
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
@@ -162,18 +162,18 @@ class HybridSearchLiveTest {
         section: BoeSectionDto,
         category: CategoryDto,
         organization: String,
-    ): Publicacion = Publicacion(
+    ): Publication = Publication(
         id = id,
         title = "Publicación de prueba $id",
         publicationDate = date,
         issuingBody = organization,
         section = section,
         heading = null,
-        texto = null,
+        body = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-        urlXml = null,
-        urlPdf = null,
-        rango = null,
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = null,
         category = category,
     )
 

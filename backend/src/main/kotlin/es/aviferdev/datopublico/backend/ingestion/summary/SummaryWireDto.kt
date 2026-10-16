@@ -72,7 +72,7 @@ data class BoeSummaryDailyDto(
     @SerialName("identificador")
     val identifier: String? = null,
     @SerialName("url_pdf")
-    val urlPdf: BoePdfUrlDto? = null,
+    val pdfUrl: BoePdfUrlDto? = null,
 )
 
 @Serializable
@@ -134,9 +134,9 @@ data class BoeSummaryItemDto(
     @SerialName("url_html")
     val htmlUrl: String? = null,
     @SerialName("url_xml")
-    val urlXml: String? = null,
+    val xmlUrl: String? = null,
     @SerialName("url_pdf")
-    val urlPdf: BoePdfUrlDto? = null,
+    val pdfUrl: BoePdfUrlDto? = null,
 )
 
 @Serializable

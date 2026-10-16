@@ -15,9 +15,9 @@ import es.aviferdev.datopublico.backend.ingesta.job.IngestionRunState
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionSchedule
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionScheduler
 import es.aviferdev.datopublico.backend.ingesta.job.IngestionWatchdog
-import es.aviferdev.datopublico.backend.ingesta.publication.BoePublicacionHttpParser
-import es.aviferdev.datopublico.backend.ingesta.publication.BoeTextoHttpClient
-import es.aviferdev.datopublico.backend.ingesta.publication.boeTextoHttpClient
+import es.aviferdev.datopublico.backend.ingestion.publication.BoePublicationHttpParser
+import es.aviferdev.datopublico.backend.ingestion.publication.BoeTextHttpClient
+import es.aviferdev.datopublico.backend.ingestion.publication.boeTextHttpClient
 import es.aviferdev.datopublico.backend.ingestion.summary.BoeSummaryHttpClient
 import es.aviferdev.datopublico.backend.ingestion.summary.boeSummaryHttpClient
 import es.aviferdev.datopublico.backend.persistence.FeedRepositoryJdbc
@@ -290,7 +290,7 @@ private fun Application.createIngestionRuntime(
     dataSource: DataSource,
 ): IngestionRuntime {
     val summaryHttp = boeSummaryHttpClient()
-    val textHttp = boeTextoHttpClient()
+    val textHttp = boeTextHttpClient()
     return try {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         val schedule = IngestionSchedule(config.times, config.zone)
@@ -299,7 +299,7 @@ private fun Application.createIngestionRuntime(
             schedule = schedule,
             job = DailyIngestionJob(
                 summaryClient = BoeSummaryHttpClient(summaryHttp),
-                publicationParser = BoePublicacionHttpParser(BoeTextoHttpClient(textHttp)),
+                publicationParser = BoePublicationHttpParser(BoeTextHttpClient(textHttp)),
                 repository = PublicationRepositoryJdbc(dataSource),
             ),
             zone = config.zone,

@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.feed
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.relevance.Highlight
 import es.aviferdev.datopublico.backend.relevance.HighlightReason
@@ -97,18 +97,18 @@ class FeedDtoMapperTest {
         assertEquals("Cambia algo", dto.publication.summary?.whatChanges)
     }
 
-    private fun publication(): Publicacion = Publicacion(
+    private fun publication(): Publication = Publication(
         id = PUBLICATION_ID,
         title = "Ley de prueba",
         publicationDate = DATE,
         issuingBody = "Jefatura del Estado",
         section = BoeSectionDto.I,
         heading = "Disposiciones generales",
-        texto = null,
+        body = null,
         officialUrl = URL,
-        urlXml = null,
-        urlPdf = null,
-        rango = "Ley",
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = "Ley",
         category = CategoryDto.NORMS_AND_LEGISLATION,
         deadline = DeadlineDto("2026-10-30"),
     )

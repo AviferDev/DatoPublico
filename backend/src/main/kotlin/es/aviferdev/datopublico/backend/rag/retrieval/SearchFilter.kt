@@ -13,7 +13,7 @@ import es.aviferdev.datopublico.model.BoeSectionDto
  * sufijo** (`CONSTRAINTS.md` §«Nombres y contratos»).
  *
  * [publishedFrom] y [publishedTo] son fechas **ISO-8601** (`2026-10-09`) como
- * `String`, coherentes con [es.aviferdev.datopublico.backend.ingesta.publicacion.Publicacion.fechaPublicacion]
+ * `String`, coherentes con [es.aviferdev.datopublico.backend.ingesta.publicacion.Publication.fechaPublicacion]
  * y `PublicationRepository.listByDate`. La conversión a `LocalDate` y el
  * fail-fast de formato viven en [SearchFilterSql] (el filtro es un valor puro).
  *

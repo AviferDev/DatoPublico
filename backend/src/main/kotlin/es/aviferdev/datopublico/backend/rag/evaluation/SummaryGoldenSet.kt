@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.evaluation
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.rag.summary.SummaryGenerationDto
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.BoeSectionDto
@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
  *
  * Es el **modelo interno** del backend (ni DTO ni `Entity`), por eso va **sin
  * sufijo** (`CONSTRAINTS.md` §«Nombres y contratos»). Cada entrada se mapea a
- * [Publicacion] para poder pasarla a
+ * [Publication] para poder pasarla a
  * [es.aviferdev.datopublico.backend.rag.summary.CitizenSummaryGenerator] y medir
  * su resumen contra [SummaryGoldenSetEntry.reference].
  *
@@ -39,7 +39,7 @@ data class SummaryGoldenSet(
  */
 data class SummaryGoldenSetEntry(
     val id: String,
-    val publication: Publicacion,
+    val publication: Publication,
     val reference: SummaryGenerationDto,
 )
 
@@ -118,7 +118,7 @@ object SummaryGoldenSetLoader {
         require(entry.publication.title.isNotBlank()) {
             "La entrada '${entry.id}' no tiene título."
         }
-        require(entry.publication.texto.orEmpty().isNotBlank()) {
+        require(entry.publication.body.orEmpty().isNotBlank()) {
             "La entrada '${entry.id}' no tiene texto."
         }
         require(entry.reference.whatChanges.isNotBlank()) {
@@ -165,18 +165,18 @@ private fun SummaryGoldenSetDto.toGoldenSet(): SummaryGoldenSet = SummaryGoldenS
 /** Mapea una entrada del DTO a su modelo interno [SummaryGoldenSetEntry]. */
 private fun SummaryGoldenSetEntryDto.toEntry(): SummaryGoldenSetEntry = SummaryGoldenSetEntry(
     id = id,
-    publication = Publicacion(
+    publication = Publication(
         id = id,
         title = title,
         publicationDate = date,
         issuingBody = organization,
         section = section,
         heading = null,
-        texto = text,
+        body = text,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-        urlXml = null,
-        urlPdf = null,
-        rango = null,
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = null,
         category = category,
     ),
     reference = reference,

@@ -16,7 +16,7 @@ import kotlin.test.assertNull
  * Clasificador curado de publicaciones (FT00012), sin red ni base de datos.
  *
  * La muestra real de las ocho secciones se toma de los **fixtures del sumario ya
- * versionados** (los mismos que ejercita `BoePublicacionParserTest`): no se
+ * versionados** (los mismos que ejercita `BoePublicationParserTest`): no se
  * inventan datos. Escenarios 1, 3 y 4 del spec.
  */
 class PublicationClassifierTest {

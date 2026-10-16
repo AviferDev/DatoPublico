@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.search
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FeedItem
 import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
@@ -156,18 +156,18 @@ class SearchServiceTest {
         FragmentSpec(publicationId, category, date)
 
     private fun published(publicationId: String, category: CategoryDto, date: String): FeedItem = FeedItem(
-        publication = Publicacion(
+        publication = Publication(
             id = publicationId,
             title = "Publicación $publicationId",
             publicationDate = date,
             issuingBody = "Ministerio de prueba",
             section = BoeSectionDto.I,
             heading = null,
-            texto = null,
+            body = null,
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$publicationId",
-            urlXml = null,
-            urlPdf = null,
-            rango = null,
+            xmlUrl = null,
+            pdfUrl = null,
+            rank = null,
             category = category,
             deadline = DeadlineDto(deadlineDate = "2026-12-31"),
         ),

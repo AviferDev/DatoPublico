@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.publication
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.PublicationRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.persistence.SummaryRepository
@@ -119,7 +119,7 @@ class PublicationDetailServiceTest {
     }
 
     private fun service(
-        publications: List<Publicacion>,
+        publications: List<Publication>,
         summaries: List<SummaryEntity>,
     ): PublicationDetailService = PublicationDetailService(
         InMemoryPublicationRepository(publications),
@@ -129,18 +129,18 @@ class PublicationDetailServiceTest {
     private fun publication(
         id: String,
         category: CategoryDto? = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
-    ): Publicacion = Publicacion(
+    ): Publication = Publication(
         id = id,
         title = "Convocatoria de prueba",
         publicationDate = DATE,
         issuingBody = "Ministerio de prueba",
         section = BoeSectionDto.II_B,
         heading = "Becas y ayudas",
-        texto = null,
+        body = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-        urlXml = null,
-        urlPdf = null,
-        rango = "Resolución",
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = "Resolución",
         category = category,
         deadline = DeadlineDto("2026-10-30", "20 días hábiles"),
     )
@@ -157,14 +157,14 @@ class PublicationDetailServiceTest {
 
     /** Doble en memoria de [PublicationRepository] para el gate. */
     private class InMemoryPublicationRepository(
-        private val publications: List<Publicacion>,
+        private val publications: List<Publication>,
     ) : PublicationRepository {
-        override fun save(publication: Publicacion): Publicacion = publication
+        override fun save(publication: Publication): Publication = publication
 
-        override fun findById(id: String): Publicacion? =
+        override fun findById(id: String): Publication? =
             publications.firstOrNull { publication -> publication.id == id }
 
-        override fun listByDate(publicationDate: String): List<Publicacion> =
+        override fun listByDate(publicationDate: String): List<Publication> =
             publications.filter { publication -> publication.publicationDate == publicationDate }
     }
 

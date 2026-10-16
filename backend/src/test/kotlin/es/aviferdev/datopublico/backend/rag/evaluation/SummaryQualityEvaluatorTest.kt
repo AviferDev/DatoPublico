@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.evaluation
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.rag.summary.CitizenSummaryResult
 import es.aviferdev.datopublico.backend.rag.summary.SummaryGenerationDto
 import es.aviferdev.datopublico.model.CategoryDto
@@ -141,18 +141,18 @@ class SummaryQualityEvaluatorTest {
         SummaryGoldenSetEntry(id = id, publication = publication(id), reference = reference)
 
     /** Publicación mínima con categoría y texto (el evaluador solo usa el id). */
-    private fun publication(id: String): Publicacion = Publicacion(
+    private fun publication(id: String): Publication = Publication(
         id = id,
         title = "Título",
         publicationDate = "2026-10-09",
         issuingBody = "Organismo",
         section = BoeSectionDto.III,
         heading = null,
-        texto = "Artículo 1\nTexto.",
+        body = "Artículo 1\nTexto.",
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-        urlXml = null,
-        urlPdf = null,
-        rango = null,
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = null,
         category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
     )
 
@@ -207,7 +207,7 @@ private class ScriptedSummaryGenerator(
     /** Llamadas recibidas, en orden. */
     val calls = mutableListOf<GeneratorCall>()
 
-    override suspend fun generate(publication: Publicacion, limit: Int): CitizenSummaryResult {
+    override suspend fun generate(publication: Publication, limit: Int): CitizenSummaryResult {
         calls.add(GeneratorCall(publication.id, limit))
         return results[publication.id] ?: CitizenSummaryResult.Invalid(emptyList())
     }

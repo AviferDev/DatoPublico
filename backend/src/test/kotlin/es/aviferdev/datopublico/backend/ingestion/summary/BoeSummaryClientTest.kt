@@ -78,8 +78,8 @@ class BoeSummaryClientTest {
             issuingBody = "MINISTERIO X",
             heading = "Epi",
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-1",
-            urlXml = "https://www.boe.es/diario_boe/xml.php?id=BOE-A-1",
-            urlPdf = "https://www.boe.es/boe/dias/2026/10/09/pdfs/BOE-A-1.pdf",
+            xmlUrl = "https://www.boe.es/diario_boe/xml.php?id=BOE-A-1",
+            pdfUrl = "https://www.boe.es/boe/dias/2026/10/09/pdfs/BOE-A-1.pdf",
         )
 
         val conObjeto = clientCon(engineDeTexto(SUMARIO_ITEM_OBJETO)).let {

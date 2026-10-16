@@ -1,4 +1,4 @@
-package es.aviferdev.datopublico.backend.ingesta.publication
+package es.aviferdev.datopublico.backend.ingestion.publication
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -22,10 +22,10 @@ import kotlinx.coroutines.test.runTest
  * Cliente del texto del BOE con [MockEngine] (sin red): cubre los escenarios 5 y
  * 6 del spec — petición correcta, `404` → `null`, error tipado y cuerpo ilegible.
  */
-class BoeTextoClientTest {
+class BoeTextClientTest {
 
     @Test
-    fun `pide GET a la url absoluta con Accept application xml y parsea el documento`() = runTest {
+    fun `pide GET a la url absoluta con Accept application xml y parsea el document`() = runTest {
         var capturada: HttpRequestData? = null
         val client = clientCon(
             MockEngine { request ->
@@ -38,14 +38,14 @@ class BoeTextoClientTest {
             },
         )
 
-        val documento = assertNotNull(BoeTextoHttpClient(client).obtenerDocumento(URL_XML))
+        val document = assertNotNull(BoeTextHttpClient(client).fetchDocument(URL_XML))
         val request = assertNotNull(capturada)
 
         assertEquals(HttpMethod.Get, request.method)
         assertEquals(URL_XML, request.url.toString())
         assertEquals("application/xml", request.headers[HttpHeaders.Accept])
-        assertEquals("JUZGADOS DE PRIMERA INSTANCIA E INSTRUCCIÓN", documento.metadata.department)
-        assertNotNull(documento.texto)
+        assertEquals("JUZGADOS DE PRIMERA INSTANCIA E INSTRUCCIÓN", document.metadata.department)
+        assertNotNull(document.body)
     }
 
     @Test
@@ -60,24 +60,24 @@ class BoeTextoClientTest {
             },
         )
 
-        val documento = assertNotNull(BoeTextoHttpClient(client).obtenerDocumento(URL_XML))
+        val document = assertNotNull(BoeTextHttpClient(client).fetchDocument(URL_XML))
 
-        assertTrue(assertNotNull(documento.texto).contains("vía de apremio"), documento.texto!!)
+        assertTrue(assertNotNull(document.body).contains("vía de apremio"), document.body!!)
     }
 
     @Test
     fun `un 404 devuelve null`() = runTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.NotFound, "sin texto") })
 
-        assertNull(BoeTextoHttpClient(client).obtenerDocumento(URL_XML))
+        assertNull(BoeTextHttpClient(client).fetchDocument(URL_XML))
     }
 
     @Test
-    fun `un estado distinto de 200 y 404 lanza BoeTextoException`() = runTest {
+    fun `un estado distinto de 200 y 404 lanza BoeTextException`() = runTest {
         val client = clientCon(MockEngine { respondError(HttpStatusCode.InternalServerError, "boom") })
 
-        val error = assertFailsWith<BoeTextoException> {
-            BoeTextoHttpClient(client).obtenerDocumento(URL_XML)
+        val error = assertFailsWith<BoeTextException> {
+            BoeTextHttpClient(client).fetchDocument(URL_XML)
         }
 
         assertTrue(error.message!!.contains("500"), error.message!!)
@@ -85,11 +85,11 @@ class BoeTextoClientTest {
     }
 
     @Test
-    fun `un fallo de red lanza BoeTextoException`() = runTest {
+    fun `un fallo de red lanza BoeTextException`() = runTest {
         val client = clientCon(MockEngine { throw IOException("sin conexión") })
 
-        val error = assertFailsWith<BoeTextoException> {
-            BoeTextoHttpClient(client).obtenerDocumento(URL_XML)
+        val error = assertFailsWith<BoeTextException> {
+            BoeTextHttpClient(client).fetchDocument(URL_XML)
         }
 
         assertTrue(error.message!!.contains("BOE-A-1"), error.message!!)
@@ -97,7 +97,7 @@ class BoeTextoClientTest {
     }
 
     @Test
-    fun `un cuerpo xml malformado lanza BoeTextoException`() = runTest {
+    fun `un cuerpo xml malformado lanza BoeTextException`() = runTest {
         val client = clientCon(
             MockEngine {
                 respond(
@@ -108,8 +108,8 @@ class BoeTextoClientTest {
             },
         )
 
-        val error = assertFailsWith<BoeTextoException> {
-            BoeTextoHttpClient(client).obtenerDocumento(URL_XML)
+        val error = assertFailsWith<BoeTextException> {
+            BoeTextHttpClient(client).fetchDocument(URL_XML)
         }
 
         assertTrue(error.message!!.contains("ilegible"), error.message!!)

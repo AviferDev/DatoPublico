@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.review
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.ReviewQueueEntity
 import es.aviferdev.datopublico.backend.persistence.ReviewQueueRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
@@ -117,18 +117,18 @@ class SummaryDispositionServiceTest {
         groundingScore = groundingScore,
     )
 
-    private fun publication(): Publicacion = Publicacion(
+    private fun publication(): Publication = Publication(
         id = PUBLICATION_ID,
         title = "Real Decreto de prueba",
         publicationDate = DATE,
         issuingBody = "MINISTERIO DE PRUEBA",
         section = BoeSectionDto.I,
         heading = "Disposiciones generales",
-        texto = null,
+        body = null,
         officialUrl = URL,
-        urlXml = null,
-        urlPdf = null,
-        rango = "Real Decreto",
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = "Real Decreto",
         category = CategoryDto.NORMS_AND_LEGISLATION,
     )
 

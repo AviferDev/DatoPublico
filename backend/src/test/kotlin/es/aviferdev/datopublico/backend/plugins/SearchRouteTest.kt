@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.plugins
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FeedItem
 import es.aviferdev.datopublico.backend.persistence.FeedRepository
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
@@ -119,18 +119,18 @@ class SearchRouteTest {
     }
 
     private fun item(id: String): FeedItem = FeedItem(
-        publication = Publicacion(
+        publication = Publication(
             id = id,
             title = "Publicación $id",
             publicationDate = DATE,
             issuingBody = "Ministerio de prueba",
             section = BoeSectionDto.I,
             heading = null,
-            texto = null,
+            body = null,
             officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-            urlXml = null,
-            urlPdf = null,
-            rango = null,
+            xmlUrl = null,
+            pdfUrl = null,
+            rank = null,
             category = CategoryDto.SCHOLARSHIPS_GRANTS_AND_AID,
         ),
         summary = SummaryEntity(

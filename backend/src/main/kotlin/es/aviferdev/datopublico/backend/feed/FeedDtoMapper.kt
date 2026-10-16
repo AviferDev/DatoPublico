@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.feed
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.SummaryEntity
 import es.aviferdev.datopublico.backend.relevance.Highlight
 import es.aviferdev.datopublico.backend.relevance.HighlightReason
@@ -13,7 +13,7 @@ import es.aviferdev.datopublico.model.SummaryDto
  * Mapeo **puro** (sin red, base de datos ni Ktor) del dominio al contrato de
  * `:shared` del feed diario (FT00026).
  *
- * Reutiliza `Publicacion`/`SummaryEntity`/`Highlight` tal cual y **no** conoce los
+ * Reutiliza `Publication`/`SummaryEntity`/`Highlight` tal cual y **no** conoce los
  * repositorios. Es reutilizable por `api-detalle-norma` (FT00027) para el mapeo de
  * la publicación.
  *
@@ -29,7 +29,7 @@ object FeedDtoMapper {
      * @throws IllegalArgumentException si [publication] no tiene categoría
      *   (dato corrupto: el repositorio ya lo excluye; aquí es fail-fast).
      */
-    fun toPublicacionDto(publication: Publicacion, summary: SummaryEntity): PublicationDto =
+    fun toPublicacionDto(publication: Publication, summary: SummaryEntity): PublicationDto =
         PublicationDto(
             id = publication.id,
             title = publication.title,

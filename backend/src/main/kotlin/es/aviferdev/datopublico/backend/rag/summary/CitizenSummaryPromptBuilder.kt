@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.summary
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.backend.rag.generation.GenerationRequest
 import es.aviferdev.datopublico.validation.CitizenSummaryVariant
@@ -11,7 +11,7 @@ import es.aviferdev.datopublico.validation.CitizenSummaryVariantResolver
  * estado).
  *
  * Compone la petición ([GenerationRequest]) a partir de los metadatos de la
- * [Publicacion] y de los fragmentos recuperados ([FragmentEntity]): el prompt de
+ * [Publication] y de los fragmentos recuperados ([FragmentEntity]): el prompt de
  * sistema fija el rol, el idioma y el formato JSON, y **prohíbe** usar
  * conocimiento propio; el prompt de usuario incluye los metadatos, el contexto
  * delimitado como **datos** (no instrucciones) y el esquema de salida. En la
@@ -30,7 +30,7 @@ class CitizenSummaryPromptBuilder {
      * @param fragments fragmentos recuperados; pueden ser pocos o ninguno.
      * @return la petición con prompt de sistema y de usuario.
      */
-    fun build(publication: Publicacion, fragments: List<FragmentEntity>): GenerationRequest = GenerationRequest(
+    fun build(publication: Publication, fragments: List<FragmentEntity>): GenerationRequest = GenerationRequest(
         systemPrompt = SYSTEM_PROMPT,
         userPrompt = renderUserPrompt(publication, renderContext(fragments)),
     )
@@ -52,7 +52,7 @@ class CitizenSummaryPromptBuilder {
         fragment.reference?.takeIf { reference -> reference.isNotBlank() } ?: "Fragmento ${fragment.order + 1}"
 
     /** Prompt de usuario: metadatos, contexto delimitado y esquema de salida. */
-    private fun renderUserPrompt(publication: Publicacion, context: String): String = buildString {
+    private fun renderUserPrompt(publication: Publication, context: String): String = buildString {
         appendLine("Publicación del BOE:")
         appendLine("- Título: ${publication.title}")
         appendLine("- Fecha de publicación: ${publication.publicationDate}")
@@ -71,7 +71,7 @@ class CitizenSummaryPromptBuilder {
     }
 
     /** Variante del contrato; sin categoría se asume la general. */
-    private fun variantOf(publication: Publicacion): CitizenSummaryVariant =
+    private fun variantOf(publication: Publication): CitizenSummaryVariant =
         publication.category?.let { category -> CitizenSummaryVariantResolver.variantFor(category) }
             ?: CitizenSummaryVariant.GENERAL
 

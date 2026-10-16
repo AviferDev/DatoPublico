@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.relevance
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.DeadlineDto
 import es.aviferdev.datopublico.model.BoeSectionDto
@@ -170,32 +170,32 @@ class HighlightRankerTest {
         category: CategoryDto? = null,
         deadline: DeadlineDto? = null,
         body: String? = null,
-    ): Publicacion = Publicacion(
+    ): Publication = Publication(
         id = id,
         title = "Publicación $id",
         publicationDate = PUBLISHED_DATE,
         issuingBody = body,
         section = section,
         heading = null,
-        texto = null,
+        body = null,
         officialUrl = "https://www.boe.es/diario_boe/txt.php?id=$id",
-        urlXml = null,
-        urlPdf = null,
-        rango = rank,
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = rank,
         category = category,
         deadline = deadline,
     )
 
-    private fun organicLaw(id: String): Publicacion =
+    private fun organicLaw(id: String): Publication =
         publication(id = id, section = BoeSectionDto.I, rank = "Ley Orgánica")
 
-    private fun realDecree(id: String): Publicacion =
+    private fun realDecree(id: String): Publication =
         publication(id = id, section = BoeSectionDto.I, rank = "Real Decreto")
 
-    private fun order(id: String): Publicacion =
+    private fun order(id: String): Publication =
         publication(id = id, section = BoeSectionDto.I, rank = "Orden")
 
-    private fun publicSectorCall(id: String): Publicacion =
+    private fun publicSectorCall(id: String): Publication =
         publication(
             id = id,
             section = BoeSectionDto.II_B,
@@ -203,7 +203,7 @@ class HighlightRankerTest {
             deadline = DEADLINE,
         )
 
-    private fun notice(id: String): Publicacion =
+    private fun notice(id: String): Publication =
         publication(
             id = id,
             section = BoeSectionDto.V_C,

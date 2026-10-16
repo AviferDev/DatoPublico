@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.summary
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.GenerationUsageEntity
 import es.aviferdev.datopublico.backend.persistence.GenerationUsageRepository
 import es.aviferdev.datopublico.backend.persistence.SummaryCacheEntity
@@ -64,7 +64,7 @@ class CachedCitizenSummaryGenerator(
      *   interpretable.
      */
     suspend fun generate(
-        publication: Publicacion,
+        publication: Publication,
         limit: Int = CitizenSummaryGenerator.DEFAULT_LIMIT,
     ): CachedSummaryResult {
         val cacheKey = SummaryCacheKey.of(publication.id, model, promptVersion)
@@ -84,7 +84,7 @@ class CachedCitizenSummaryGenerator(
 
     /** Fallo: genera, registra el uso real y cachea solo si el resumen es `Valid`. */
     private suspend fun miss(
-        publication: Publicacion,
+        publication: Publication,
         limit: Int,
         cacheKey: String,
     ): CachedSummaryResult {

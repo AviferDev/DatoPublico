@@ -1,6 +1,6 @@
 package es.aviferdev.datopublico.backend.rag.guardrails
 
-import es.aviferdev.datopublico.backend.ingesta.publication.Publicacion
+import es.aviferdev.datopublico.backend.ingestion.publication.Publication
 import es.aviferdev.datopublico.backend.persistence.FragmentEntity
 import es.aviferdev.datopublico.model.CategoryDto
 import es.aviferdev.datopublico.model.SummaryDto
@@ -167,18 +167,18 @@ class SummaryGuardrailTest {
     private fun guardrailCon(reachable: Boolean): SummaryGuardrail =
         SummaryGuardrail(FakeSourceReachability(reachable))
 
-    private fun publication(): Publicacion = Publicacion(
+    private fun publication(): Publication = Publication(
         id = "BOE-A-2026-1",
         title = "Real Decreto de prueba",
         publicationDate = "2026-10-10",
         issuingBody = "MINISTERIO DE PRUEBA",
         section = BoeSectionDto.I,
         heading = "Disposiciones generales",
-        texto = CONTEXT_TEXT,
+        body = CONTEXT_TEXT,
         officialUrl = URL,
-        urlXml = null,
-        urlPdf = null,
-        rango = "Real Decreto",
+        xmlUrl = null,
+        pdfUrl = null,
+        rank = "Real Decreto",
         category = CategoryDto.NORMS_AND_LEGISLATION,
     )
 

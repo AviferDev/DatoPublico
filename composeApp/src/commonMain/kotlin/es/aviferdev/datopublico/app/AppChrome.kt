@@ -1,6 +1,8 @@
 // Los composables se nombran en PascalCase (convención de Compose), pero el
-// chasis vive en `app/` (fuera de las exclusiones `ui/**` de `detekt.yml`).
-@file:Suppress("FunctionNaming")
+// chasis vive en `app/` (fuera de las exclusiones `ui/**` de `detekt.yml`). El
+// fichero agrupa las barras, sus piezas y sus `@Preview`, por encima del umbral de
+// funciones por fichero.
+@file:Suppress("FunctionNaming", "TooManyFunctions")
 
 package es.aviferdev.datopublico.app
 
@@ -338,6 +340,93 @@ private fun DetailTopBarPreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
             DetailTopBar(onBack = {}, onNavigate = {})
+        }
+    }
+}
+
+/** Previsualización del chasis completo con el contenido de una pantalla. */
+@Preview
+@Composable
+private fun DatoPublicoScaffoldPreview() {
+    DatoPublicoTheme {
+        DatoPublicoScaffold(currentRoute = AppRoutes.FEED, onNavigate = {}, onBack = {}) { padding ->
+            Column(modifier = Modifier.padding(padding)) {
+                Text(text = "Contenido de ejemplo")
+            }
+        }
+    }
+}
+
+/** Previsualización de la superficie común de las barras superiores. */
+@Preview
+@Composable
+private fun AppTopBarSurfacePreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            AppTopBarSurface {
+                Text(text = "Barra superior de ejemplo")
+            }
+        }
+    }
+}
+
+/** Previsualización del bloque de marca. */
+@Preview
+@Composable
+private fun BrandBlockPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            BrandBlock(modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización de la acción «Preguntar al BOE». */
+@Preview
+@Composable
+private fun AskPillPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            AskPill(onClick = {})
+        }
+    }
+}
+
+/** Previsualización de la acción «buscar» como icono plano. */
+@Preview
+@Composable
+private fun SearchActionPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SearchAction(onClick = {})
+        }
+    }
+}
+
+/** Previsualización de la acción «preguntar» como icono plano. */
+@Preview
+@Composable
+private fun AskIconActionPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            AskIconAction(onClick = {})
+        }
+    }
+}
+
+/** Previsualización de la pestaña inferior activa e inactiva. */
+@Preview
+@Composable
+private fun AppTabItemPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Row(
+                modifier = Modifier.padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                AppTabItem(tab = AppTab.FEED, isSelected = true, onClick = {}, modifier = Modifier.weight(1f))
+                AppTabItem(tab = AppTab.SEARCH, isSelected = false, onClick = {}, modifier = Modifier.weight(1f))
+            }
         }
     }
 }

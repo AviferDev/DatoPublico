@@ -261,3 +261,40 @@ private fun PublicationCardContentPreview() {
         }
     }
 }
+
+/** Previsualización de la fila de metadatos (identificador y fecha). */
+@Preview
+@Composable
+private fun PublicationMetaRowPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            PublicationMetaRow(publication = previewHighlightedPublication(), modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización de la fila de badges (categoría, destacado y plazo). */
+@Preview
+@Composable
+private fun PublicationBadgesRowPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            PublicationBadgesRow(publication = previewHighlightedPublication(), modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización del enlace a la fuente oficial. */
+@Preview
+@Composable
+private fun SourceTextLinkPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            SourceTextLink(
+                url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-21002",
+                label = Res.string.feed_card_source_link,
+                modifier = Modifier.padding(8.dp),
+            )
+        }
+    }
+}

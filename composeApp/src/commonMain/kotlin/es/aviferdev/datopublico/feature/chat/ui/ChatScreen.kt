@@ -1,3 +1,7 @@
+// El fichero agrupa la pantalla, sus sub-composables y sus `@Preview`, lo que
+// supera el umbral de funciones por fichero de `detekt.yml`.
+@file:Suppress("TooManyFunctions")
+
 package es.aviferdev.datopublico.feature.chat.ui
 
 import androidx.compose.foundation.background
@@ -448,6 +452,66 @@ private fun ChatContentHeaderPreview() {
     DatoPublicoTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
             ChatContentHeader(onBack = {})
+        }
+    }
+}
+
+/** Previsualización del título con la pastilla de estado. */
+@Preview
+@Composable
+private fun ChatTitleRowPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ChatTitleRow(modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización de la pastilla «RAG Activo». */
+@Preview
+@Composable
+private fun RagActivePillPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            RagActivePill(modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización de la invitación inicial. */
+@Preview
+@Composable
+private fun ChatIntroPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ChatIntro(modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización de la burbuja de la pregunta enviada. */
+@Preview
+@Composable
+private fun ChatQuestionBubblePreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ChatQuestionBubble(question = "¿Cuál es el plazo de solicitud?", modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+/** Previsualización del contenido de una respuesta `respondida`. */
+@Preview
+@Composable
+private fun ChatAnswerContentPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            ChatAnswerContent(
+                question = "¿Cuál es el plazo de solicitud?",
+                answer = previewAnswer(ChatStatus.ANSWERED),
+                onSuggestionClick = {},
+                modifier = Modifier.padding(8.dp),
+            )
         }
     }
 }

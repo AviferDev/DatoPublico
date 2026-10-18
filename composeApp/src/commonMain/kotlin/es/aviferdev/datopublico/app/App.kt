@@ -31,13 +31,14 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  *
  * El *composition root* es **manual** (sin framework de DI): aquí se construye,
  * de forma **app-scoped**, un único cliente HTTP común (`ktor-client`) compartido
- * por las APIs del **feed** (FT00035), la **búsqueda** (FT00036) y el **chat**
- * (FT00037), sus repositorios HTTP y las *factories* de sus ViewModels (vía
- * `GetDailyFeed`, `SearchPublications` y `ChatViewModel`). Los repositorios **en
- * memoria** quedan para `@Preview` y tests. La URL base la resuelve la plataforma
- * (`expect/actual`), no este código común. El grafo ya monta la pantalla de detalle
- * real (FT00033), que hoy lee de un repositorio en memoria (su cliente HTTP es una
- * feature posterior).
+ * por las APIs del **feed** (FT00035), la **búsqueda** (FT00036), el **chat**
+ * (FT00037) y el **detalle** (FT00048), sus repositorios HTTP y las *factories* de
+ * sus ViewModels (vía `GetDailyFeed`, `SearchPublications` y `ChatViewModel`). Los
+ * repositorios **en memoria** quedan para `@Preview` y tests. La URL base la
+ * resuelve la plataforma (`expect/actual`), no este código común. El grafo monta la
+ * pantalla de detalle real (FT00033) y desde FT00048 su contenido lo sirve
+ * `HttpDetailRepository` sobre `core/network` (`DetailApi`); el repositorio en
+ * memoria queda solo para `@Preview` y tests.
  *
  * El contenido se pinta con `safeDrawingPadding()` para no quedar bajo las barras
  * del sistema (en Android el modo *edge-to-edge* está forzado por `targetSdk 35`).

@@ -52,8 +52,9 @@ FT00035: la capa común `core/network/` resuelve la **URL base por plataforma**
 wire del cliente** (capa anti-corrupción), su **mapeo al dominio**, el cliente de
 la API (`GET /v1/feed?fecha=<ISO>`) y una **cache offline en memoria**: si la red
 falla y hay feed cacheado, el contenido sigue visible; si no hay cache, aparece el
-estado de error. El **detalle** usa un repositorio en memoria y su pantalla real
-(FT00033) ya está **integrada** en el grafo: pulsar una tarjeta abre
+estado de error. El **detalle** lo sirve el cliente HTTP real desde FT00048
+(`HttpDetailRepository` sobre `DetailApi`, `GET /v1/publicacion/{id}`) y su pantalla
+real (FT00033) ya está **integrada** en el grafo: pulsar una tarjeta abre
 `DetailRoute` (`AppNavHost`). La navegación y el ViewModel con `StateFlow` son
 FT00034.
 
@@ -118,10 +119,12 @@ Notas:
   conserva su estado al volver del detalle en vez de reejecutar la carga. El
   atrás funciona tanto con el botón de la UI como con el atrás del
   sistema/navegador (lo resuelve `navigation-compose`).
-- **Detalle**: la pantalla se abre al pulsar una tarjeta del feed. Usa un
-  repositorio en memoria (`DetailStateHolder(id, GetPublicationDetail(InMemoryDetailRepository()))`)
-  con los modos `SAMPLE`, `NOT_FOUND` y `UNAVAILABLE`; el cliente HTTP del detalle
-  será una feature posterior.
+- **Detalle (FT00048)**: la pantalla se abre al pulsar una tarjeta del feed y su
+  contenido viene de la API (`HttpDetailRepository` sobre `GET /v1/publicacion/{id}`),
+  cableado en el *composition root* (`App`). El repositorio en memoria
+  (`DetailStateHolder(id, GetPublicationDetail(InMemoryDetailRepository()))`, con
+  los modos `SAMPLE`, `NOT_FOUND` y `UNAVAILABLE`) queda solo como valor por defecto
+  para `@Preview` y tests.
 - **Búsqueda (FT00036)**: la consulta en blanco **no** lanza ninguna petición (se
   queda en el estado inicial) y una fecha que no es ISO (`aaaa-mm-dd`) se marca y
   se **omite** sin enviarse; un rango invertido no es un error (el endpoint
@@ -444,6 +447,44 @@ EMBEDDING_LIVE_TEST=1 ./gradlew :backend:test --tests '*E5EmbeddingLiveTest'
 
 Decisión durable en el ADR 0010 (harness privado).
 
+## Arranque del entorno de desarrollo (`scripts/dev-up.sh`)
+
+Camino de **un solo comando** (FT00050) que prepara todo lo de arriba de una vez:
+
+```sh
+./scripts/dev-up.sh
+```
+
+Qué hace, en orden:
+
+1. Baja los **stacks Compose hermanos** de este mismo repositorio y de sus
+   *worktrees* (filtrados por `com.docker.compose.project.working_dir`), **nunca**
+   stacks de otros proyectos.
+2. Levanta PostgreSQL/pgvector (`docker compose up -d --wait`) y espera a
+   `Healthy`.
+3. Aplica las migraciones Flyway (`:backend:flywayMigrate`).
+4. Arranca el backend (`:backend:run`) en segundo plano y espera a `/health`
+   comprobando que responde **el backend propio** (cuerpo `{"status":"ok"}` y
+   `/openapi.json`), no cualquier servicio que ocupe el puerto; si no arranca en el
+   plazo, **falla con error** en lugar de dar un falso «listo».
+
+- La **`.env` de la raíz es la fuente de verdad** (se exporta al proceso del
+  backend): es donde debe estar `OPENCODE_API_KEY` para habilitar el chat y la
+  generación de resúmenes.
+- La búsqueda y el chat solo se registran si está el modelo E5
+  (`backend/models/multilingual-e5-small/`); si no, el backend arranca igual.
+- Flags: `--no-backend` (no arranca el backend) y `--no-migrate` (no aplica
+  Flyway).
+- El log del backend en segundo plano queda en `build/dev-up/backend.log`
+  (ignorado por git).
+- El **cliente** (app Android/iOS o Web) se arranca a mano (ver el inicio de este
+  documento).
+
+Efectos conocidos: reinicia el backend de este repositorio que ya estuviera
+corriendo (mata el proceso de `ApplicationKt`), y el puerto del backend es el
+**8080** por defecto, así que si otro servicio lo ocupa el paso 4 fallará con un
+error claro. Ver `docs/specs/dev-up-local.md`.
+
 ## Arranque de la base de datos
 
 ```sh
@@ -692,7 +733,10 @@ publicación a partir de los fragmentos recuperados, sin cablearse en el arranqu
   texto (`suspend`); `OpenCodeTextGenerationProvider` la implementa contra la API
   OpenAI-compatible de OpenCode (`POST {baseUrl}/chat/completions` con
   `Authorization: Bearer`), con DTOs de wire y `openCodeHttpClient` (CIO +
-  `ContentNegotiation` + `HttpTimeout`).
+  `ContentNegotiation` + `HttpTimeout`). Desde FT00049 la petición envía además la
+  cabecera **`x-opencode-session`** (id estable por proceso; `OPENCODE_SESSION_ID`
+  opcional, si no se genera uno) y un **`User-Agent`** propio: **sin ella, OpenCode
+  Go responde `400 MissingSessionID`**. Es la misma cabecera que usa el chat RAG.
 - `CitizenSummaryPromptBuilder` (puro) construye el prompt: metadatos de la
   publicación, contexto delimitado como **datos, no instrucciones** y esquema JSON;
   la variante de empleo/beca pide el **plazo**.
@@ -721,6 +765,52 @@ OPENCODE_LIVE_TEST=1 OPENCODE_API_KEY=<clave> \
 ```
 
 Decisión durable en el ADR 0015 (harness privado).
+
+## Generación one-shot de resúmenes (`:backend:generateSummaries`)
+
+La tarea `:backend:generateSummaries` (FT00049) **genera y publica resúmenes
+ciudadanos reales** de un rango de fechas: encadena el indexado con el modelo E5
+(`FragmentIndexer`), la generación con OpenCode
+(`CitizenSummaryGenerator`), los **guardrails** anti-alucinación (FT00022) y la
+**disposición** del resumen (FT00023): `publicado`, `en_cola_revision` o
+`descartado`. Solo los `publicado` aparecen en `GET /v1/feed` y en la búsqueda.
+Es **reejecutable**: salta las publicaciones que ya tienen resumen con confianza
+(no vuelve a gastar tokens) y hace *upsert* idempotente.
+
+Queda **fuera** de `build`/`check`, de `.harness/init.sh` y de la CI: es una tarea
+de operación, no del gate.
+
+Precondiciones: PostgreSQL migrado, el modelo E5 descargado y `OPENCODE_API_KEY`.
+
+```sh
+backend/tools/download-embedding-model.sh
+cp .env.example .env && docker compose up -d
+./gradlew :backend:flywayMigrate
+# La CLI lee el entorno del proceso (no la .env): exporta la conexión y la clave.
+set -a; . ./.env; set +a
+SUMMARY_FROM=2026-10-01 SUMMARY_TO=2026-10-15 SUMMARY_LIMIT=25 \
+  ./gradlew :backend:generateSummaries
+```
+
+Variables de entorno (opcionales; la CLI hereda el entorno del proceso):
+
+- `SUMMARY_FROM`/`SUMMARY_TO`: rango de fechas **ISO, ambas inclusivas** (por
+  defecto, hoy). `SUMMARY_FROM` posterior a `SUMMARY_TO` → fail-fast.
+- `SUMMARY_LIMIT`: máximo de publicaciones a procesar (por defecto `25`; entero
+  `> 0`).
+- `SUMMARY_DELAY_MS`: pausa entre generaciones (por defecto `250`; `>= 0`).
+- `POSTGRES_*`: conexión a la base (`POSTGRES_PASSWORD` debe estar **exportada**;
+  la CLI no lee la `.env` de la raíz, a diferencia de Flyway).
+- `OPENCODE_API_KEY` (obligatoria, fail-fast), `OPENCODE_BASE_URL`,
+  `OPENCODE_MODEL`, `OPENCODE_TEMPERATURE` y `OPENCODE_SESSION_ID` (opcional).
+- `EMBEDDING_MODEL_PATH`/`EMBEDDING_TOKENIZER_PATH`: rutas del modelo (o el
+  directorio por defecto `backend/models/multilingual-e5-small/`).
+
+El reparto por ejecución se registra en el log JSON
+`event=summary.generation.completed` (con el balance `publicado`/`en_cola_revision`/
+`descartado`/`inválido`) y por publicación en stdout; no se registran prompt ni
+contenido. El gate cubre la configuración (`GenerateSummariesConfigTest`) sin red
+ni BD.
 
 ## Chat RAG (`:backend`)
 

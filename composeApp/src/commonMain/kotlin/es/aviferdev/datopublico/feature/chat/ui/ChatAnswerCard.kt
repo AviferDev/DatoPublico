@@ -1,3 +1,7 @@
+// El fichero agrupa la tarjeta, sus piezas internas y sus `@Preview`, lo que
+// alcanza el umbral de funciones por fichero de `detekt.yml`.
+@file:Suppress("TooManyFunctions")
+
 package es.aviferdev.datopublico.feature.chat.ui
 
 import androidx.compose.foundation.layout.Arrangement
@@ -309,6 +313,47 @@ private fun ChatSuggestionChipPreview() {
                 onClick = {},
                 modifier = Modifier.padding(8.dp),
             )
+        }
+    }
+}
+
+/** Previsualización de la pastilla de estado en sus tres variantes. */
+@Preview
+@Composable
+private fun ChatStatusPillPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ChatStatusPill(status = ChatStatus.ANSWERED)
+                ChatStatusPill(status = ChatStatus.REFUTED)
+                ChatStatusPill(status = ChatStatus.UNFOUNDED)
+            }
+        }
+    }
+}
+
+/** Previsualización del bloque de síntesis con y sin la nota de `sin_fundamento`. */
+@Preview
+@Composable
+private fun ChatSynthesisBlockPreview() {
+    DatoPublicoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                ChatSynthesisBlock(
+                    text = "Texto de síntesis de ejemplo.",
+                    showUnfoundedMessage = false,
+                )
+                ChatSynthesisBlock(
+                    text = "Texto de síntesis de ejemplo.",
+                    showUnfoundedMessage = true,
+                )
+            }
         }
     }
 }

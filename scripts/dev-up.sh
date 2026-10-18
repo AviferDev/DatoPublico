@@ -112,17 +112,40 @@ enable_embeddings_if_available() {
     echo "==> Modelo E5 detectado: búsqueda y chat habilitados."
 }
 
-# Espera (acotado) a que el backend responda en /health.
+# ¿Sigue vivo el proceso del backend que lanzamos (PID del job en segundo plano)?
+backend_process_alive() {
+    kill -0 "$1" 2>/dev/null
+}
+
+# ¿Responde el backend de *este* proyecto? No basta un `200` cualquiera: el cuerpo
+# de `/health` debe ser `{"status":"ok"}` y `/openapi.json` debe responder (un
+# túnel SSH u otro servidor ocupando el 8080 no lo cumple).
+backend_is_ours() {
+    local body
+    body="$(curl -fsS -m 2 "http://localhost:8080/health" 2>/dev/null | tr -d '[:space:]')"
+    [ "$body" = '{"status":"ok"}' ] && curl -fsS -m 2 -o /dev/null "http://localhost:8080/openapi.json" 2>/dev/null
+}
+
+# Espera (acotado) a que *nuestro* backend esté listo: exige que el job lanzado
+# siga vivo y que responda como el backend de este proyecto. Si el proceso muere
+# o se agota el tiempo, es un **fallo**: mensaje a stderr y salida distinta de 0.
 wait_for_health() {
-    local i
+    local pid="$1" i ready=1
     for i in $(seq 1 180); do
-        if curl -fsS -m 2 "http://localhost:8080/health" >/dev/null 2>&1; then
+        if backend_process_alive "$pid" && backend_is_ours; then
             echo "==> Backend listo en http://localhost:8080 (tras ${i}s)."
-            return 0
+            ready=0
+        fi
+        if [ "$ready" -eq 0 ] || ! backend_process_alive "$pid"; then
+            break
         fi
         sleep 1
     done
-    echo "==> Aviso: el backend no respondió en 180s; revisa el log." >&2
+    if [ "$ready" -ne 0 ]; then
+        echo "ERROR: el backend no llegó a estar listo en 180s (o su proceso murió antes);" >&2
+        echo "       revisa build/dev-up/backend.log." >&2
+    fi
+    return "$ready"
 }
 
 # Para el backend anterior, si lo hubiera (se relanza siempre para garantizar la
@@ -139,7 +162,9 @@ stop_backend() {
     pkill -9 -f "datopublico.backend.ApplicationKt" 2>/dev/null || true
 }
 
-# Arranca el backend en segundo plano (reiniciándolo si ya había uno).
+# Arranca el backend en segundo plano (reiniciándolo si ya había uno) y espera a
+# que responda; si no llega a estar listo, propaga el fallo (con `set -e` el script
+# termina sin imprimir el mensaje de éxito).
 start_backend() {
     stop_backend
     local log_dir="build/dev-up" log
@@ -147,8 +172,9 @@ start_backend() {
     log="$log_dir/backend.log"
     echo "==> Arrancando backend (:backend:run); log: $log"
     nohup ./gradlew --no-daemon --quiet :backend:run >"$log" 2>&1 &
+    backend_pid=$!
     disown 2>/dev/null || true
-    wait_for_health
+    wait_for_health "$backend_pid"
 }
 
 ensure_dotenv

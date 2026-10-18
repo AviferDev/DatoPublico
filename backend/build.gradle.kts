@@ -153,7 +153,7 @@ tasks.withType<org.flywaydb.gradle.task.AbstractFlywayTask>().configureEach {
 tasks.register<JavaExec>("backfill") {
     group = "application"
     description = "Carga por lotes el histórico del BOE (one-shot, reanudable)."
-    mainClass.set("es.aviferdev.datopublico.backend.ingesta.backfill.BackfillMainKt")
+    mainClass.set("es.aviferdev.datopublico.backend.ingestion.backfill.BackfillMainKt")
     classpath = sourceSets["main"].runtimeClasspath
 }
 
